@@ -1,0 +1,127 @@
+---
+---
+<section class="section use-cases" id="use-cases">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Einsatzgebiete</span>
+      <h2>Anwendungsfälle</h2>
+      <p>
+        PrivacyProxy schützt überall dort, wo sensible Daten auf KI treffen.
+      </p>
+    </div>
+
+    <div class="grid grid-2 uc-grid">
+      <!-- Unternehmen -->
+      <div class="card card-glow animate-slide-up animate-delay-1">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+          </svg>
+        </div>
+        <h3>Unternehmen</h3>
+        <p class="uc-desc">
+          Nutze KI für E-Mails, Zusammenfassungen und Analysen — ohne Kundendaten, IBANs oder Vertragsinformationen preiszugeben.
+        </p>
+        <div class="uc-example">
+          <span class="uc-example-label">Beispiel:</span>
+          Ein Vertriebsmitarbeiter lässt eine Angebotsmail von der KI formulieren. PrivacyProxy anonymisiert Kundennamen, Firmendaten und Beträge automatisch.
+        </div>
+      </div>
+
+      <!-- Gesundheitswesen -->
+      <div class="card card-glow animate-slide-up animate-delay-2">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h3>Gesundheitswesen</h3>
+        <p class="uc-desc">
+          Medizinische Befunde von KI zusammenfassen lassen — ohne Patientennamen, SVNr oder Adressen an den LLM-Anbieter weiterzugeben.
+        </p>
+        <div class="uc-example">
+          <span class="uc-example-label">Beispiel:</span>
+          Eine Ärztin lässt einen Befundbericht in Laiensprache übersetzen. Patientendaten werden vor dem Senden automatisch maskiert.
+        </div>
+      </div>
+
+      <!-- Rechtsberatung -->
+      <div class="card card-glow-purple animate-slide-up animate-delay-3">
+        <div class="card-icon card-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+        </div>
+        <h3>Rechtsberatung</h3>
+        <p class="uc-desc">
+          Verträge und Schriftsätze von KI prüfen lassen — Mandantendaten, Firmenbuchnummern und Beträge bleiben geschützt.
+        </p>
+        <div class="uc-example">
+          <span class="uc-example-label">Beispiel:</span>
+          Ein Anwalt lässt eine Vertragsklausel auf Schwachstellen prüfen. Parteiennamen und Geschäftszahlen werden durch Platzhalter ersetzt.
+        </div>
+      </div>
+
+      <!-- Entwickler -->
+      <div class="card card-glow-purple animate-slide-up animate-delay-4">
+        <div class="card-icon card-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+            <line x1="14" y1="4" x2="10" y2="20"/>
+          </svg>
+        </div>
+        <h3>Entwickler</h3>
+        <p class="uc-desc">
+          Integriere PrivacyProxy als Middleware in deine App. REST-API, Docker-ready, MIT-lizenziert.
+        </p>
+        <div class="uc-example">
+          <span class="uc-example-label">Beispiel:</span>
+          Ein SaaS-Startup baut einen KI-Assistenten und nutzt PrivacyProxy als Proxy-Layer, um DSGVO-Konformität sicherzustellen.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .use-cases {
+    background: var(--color-bg-alt);
+  }
+
+  .uc-grid {
+    gap: 1.5rem;
+  }
+
+  .uc-desc {
+    font-size: 0.9375rem;
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .uc-example {
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    border-left: 3px solid var(--color-border);
+  }
+
+  .uc-example-label {
+    font-weight: 600;
+    color: var(--color-text-dim);
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+</style>

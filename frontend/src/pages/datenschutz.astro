@@ -1,0 +1,202 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Datenschutz — AUSTR.AI PrivacyProxy" description="Datenschutzerklärung für AUSTR.AI PrivacyProxy. Informationen zur Datenverarbeitung.">
+  <section class="section legal-page">
+    <div class="container">
+      <div class="legal-content">
+        <h1>Datenschutzerklärung</h1>
+        <p class="legal-subtitle">Informationen zur Verarbeitung personenbezogener Daten</p>
+
+        <div class="legal-block">
+          <h2>1. Verantwortlicher</h2>
+          <p>
+            Florian Bieche<br />
+            Wien, Österreich<br />
+            E-Mail: kontakt [at] flb.co.at
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>2. Grundsätze von PrivacyProxy</h2>
+          <p>
+            PrivacyProxy wurde entwickelt, um personenbezogene Daten zu <strong>schützen</strong>, nicht zu sammeln. Die folgenden Grundsätze leiten unser Projekt:
+          </p>
+          <ul class="legal-list">
+            <li><strong>Keine Cookies</strong> — Diese Website setzt keine Cookies.</li>
+            <li><strong>Kein Tracking</strong> — Es werden keine Analytics-, Tracking- oder Marketing-Tools eingesetzt.</li>
+            <li><strong>Keine dauerhafte Datenspeicherung</strong> — Eingegebene Texte werden nicht auf dem Server gespeichert.</li>
+            <li><strong>Keine Weitergabe</strong> — Personenbezogene Daten werden nicht an Dritte weitergegeben.</li>
+          </ul>
+        </div>
+
+        <div class="legal-block">
+          <h2>3. Datenverarbeitung in der Demo</h2>
+          <p>
+            Wenn Sie die Live-Demo verwenden, geschieht Folgendes:
+          </p>
+          <ul class="legal-list">
+            <li>Ihr eingegebener Text wird an unseren Server gesendet (gehostet bei Hetzner, Nürnberg, Deutschland).</li>
+            <li>Der Text wird mittels <strong>Microsoft Presidio</strong> und <strong>SpaCy</strong> auf personenbezogene Daten analysiert.</li>
+            <li>Erkannte Entitäten (Namen, IBANs, Telefonnummern etc.) werden durch Platzhalter ersetzt.</li>
+            <li>Nur der <strong>anonymisierte Text</strong> wird an das LLM (Mistral AI, gehostet in der EU) weitergeleitet.</li>
+            <li>Die LLM-Antwort wird mit den Originaldaten re-hydriert und an Sie zurückgesendet.</li>
+          </ul>
+        </div>
+
+        <div class="legal-block">
+          <h2>4. Session-Mapping</h2>
+          <p>
+            Um die Re-Hydrierung zu ermöglichen, wird ein temporäres Mapping (Platzhalter → Originaldaten) im Arbeitsspeicher des Servers gehalten. Dieses Mapping:
+          </p>
+          <ul class="legal-list">
+            <li>Wird <strong>nur im RAM</strong> gespeichert, nicht auf der Festplatte.</li>
+            <li>Wird <strong>nach maximal 30 Minuten</strong> automatisch gelöscht.</li>
+            <li>Ist an eine zufällige Session-ID gebunden, die keinen Rückschluss auf den Benutzer erlaubt.</li>
+            <li>Wird bei einem Server-Neustart vollständig gelöscht.</li>
+          </ul>
+        </div>
+
+        <div class="legal-block">
+          <h2>5. LLM-Verarbeitung (Mistral AI)</h2>
+          <p>
+            Für die KI-Verarbeitung wird die API von <strong>Mistral AI</strong> (Paris, Frankreich) verwendet. Wichtig:
+          </p>
+          <ul class="legal-list">
+            <li>An Mistral wird <strong>ausschließlich der anonymisierte Text</strong> gesendet — keine echten Personendaten.</li>
+            <li>Mistral AI ist ein europäisches Unternehmen mit Servern in der EU.</li>
+            <li>Mistral AI speichert keine API-Anfragen zu Trainingszwecken (gemäß deren API-Nutzungsbedingungen).</li>
+          </ul>
+        </div>
+
+        <div class="legal-block">
+          <h2>6. Server und Hosting</h2>
+          <p>
+            Diese Website und die PrivacyProxy-API werden auf einem <strong>Hetzner VPS</strong> in Nürnberg, Deutschland gehostet. Es werden Standard-Server-Logs erstellt (IP-Adresse, Zeitstempel, HTTP-Statuscode), die nach 7 Tagen automatisch gelöscht werden.
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>7. Ihre Rechte (DSGVO)</h2>
+          <p>
+            Da wir keine personenbezogenen Daten dauerhaft speichern, sind die meisten Betroffenenrechte de facto bereits erfüllt. Sie haben dennoch das Recht auf:
+          </p>
+          <ul class="legal-list">
+            <li>Auskunft über Ihre gespeicherten Daten (Art. 15 DSGVO)</li>
+            <li>Löschung Ihrer Daten (Art. 17 DSGVO)</li>
+            <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+            <li>Beschwerde bei der Datenschutzbehörde (dsb.gv.at)</li>
+          </ul>
+          <p>
+            Kontakt: kontakt [at] flb.co.at
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>8. Open Source</h2>
+          <p>
+            Der gesamte Quellcode von PrivacyProxy ist öffentlich einsehbar. Sie können selbst überprüfen, wie Daten verarbeitet werden:
+          </p>
+          <p>
+            <a href="https://github.com/florianbieche/privacyproxy" target="_blank" rel="noopener noreferrer">github.com/florianbieche/privacyproxy</a>
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <p class="legal-updated">
+            Stand: März 2026
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal-page {
+    padding-top: 8rem;
+  }
+
+  .legal-content {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .legal-content h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-subtitle {
+    font-size: 1.0625rem;
+    color: var(--color-text-dim);
+    margin-bottom: 3rem;
+  }
+
+  .legal-block {
+    margin-bottom: 2.25rem;
+  }
+
+  .legal-block h2 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+  }
+
+  .legal-block p {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+    max-width: none;
+  }
+
+  .legal-block p strong {
+    color: var(--color-text);
+  }
+
+  .legal-block a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .legal-list {
+    margin-top: 0.75rem;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .legal-list li {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    position: relative;
+    padding-left: 1rem;
+  }
+
+  .legal-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .legal-list li strong {
+    color: var(--color-text);
+  }
+
+  .legal-updated {
+    font-size: 0.8125rem !important;
+    color: var(--color-text-dim) !important;
+    font-style: italic;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+</style>

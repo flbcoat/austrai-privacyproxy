@@ -1,0 +1,257 @@
+---
+---
+<section class="section how-it-works" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Technologie</span>
+      <h2>So funktioniert PrivacyProxy</h2>
+      <p>
+        Vier Schritte stehen zwischen deinen sensiblen Daten und dem LLM. Vollautomatisch, transparent, und reversibel.
+      </p>
+    </div>
+
+    <div class="hiw-pipeline">
+      <!-- Step 1 -->
+      <div class="hiw-step animate-slide-up animate-delay-1">
+        <div class="hiw-step-number">01</div>
+        <div class="hiw-step-card">
+          <div class="hiw-step-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <h3>Eingabe</h3>
+          <p>Der Benutzer gibt einen Text mit sensiblen Daten ein.</p>
+          <div class="hiw-example">
+            <code>"Bitte erstellen Sie ein Schreiben an <span class="hl-person">Herrn Thomas Gruber</span>, UID <span class="hl-uid">ATU12345678</span>..."</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="hiw-connector" aria-hidden="true">
+        <div class="hiw-connector-line"></div>
+        <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#06b6d4" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+        </svg>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="hiw-step animate-slide-up animate-delay-2">
+        <div class="hiw-step-number">02</div>
+        <div class="hiw-step-card hiw-step-card-accent">
+          <div class="hiw-step-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <h3>Erkennung</h3>
+          <p>Presidio + SpaCy erkennen personenbezogene Daten: Namen, IBANs, SVNr, UIDs und mehr.</p>
+          <div class="hiw-example">
+            <code>"...an <mark class="entity-mark entity-PERSON">Herrn Thomas Gruber</mark>, UID <mark class="entity-mark entity-AT_UID_NR">ATU12345678</mark>..."</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="hiw-connector" aria-hidden="true">
+        <div class="hiw-connector-line"></div>
+        <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#06b6d4" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+        </svg>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="hiw-step animate-slide-up animate-delay-3">
+        <div class="hiw-step-number">03</div>
+        <div class="hiw-step-card hiw-step-card-accent">
+          <div class="hiw-step-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3>Anonymisierung</h3>
+          <p>Erkannte Entitäten werden durch typisierte Platzhalter ersetzt. Ein Mapping wird temporär gespeichert.</p>
+          <div class="hiw-example">
+            <code>"...an <span class="hl-placeholder">&lt;PERSON_1&gt;</span>, UID <span class="hl-placeholder">&lt;AT_UID_NR_1&gt;</span>..."</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="hiw-connector" aria-hidden="true">
+        <div class="hiw-connector-line hiw-connector-line-purple"></div>
+        <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#8b5cf6" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+        </svg>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="hiw-step animate-slide-up animate-delay-4">
+        <div class="hiw-step-number">04</div>
+        <div class="hiw-step-card hiw-step-card-purple">
+          <div class="hiw-step-icon hiw-icon-purple">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="16,3 21,3 21,8"/>
+              <line x1="4" y1="20" x2="21" y2="3"/>
+              <polyline points="21,16 21,21 16,21"/>
+              <line x1="15" y1="15" x2="21" y2="21"/>
+              <line x1="4" y1="4" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <h3>Re-Hydrierung</h3>
+          <p>Die LLM-Antwort kommt mit Platzhaltern zurück. PrivacyProxy ersetzt sie mit den echten Daten.</p>
+          <div class="hiw-example hiw-example-success">
+            <code>"...Sehr geehrter <span class="hl-person">Herr Thomas Gruber</span>, Ihre UID <span class="hl-uid">ATU12345678</span> wurde erfolgreich..."</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .how-it-works {
+    background: var(--color-bg-alt);
+    position: relative;
+  }
+
+  .hiw-pipeline {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 1rem 0;
+  }
+
+  .hiw-step {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .hiw-step-number {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .hiw-step-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    height: 100%;
+  }
+
+  .hiw-step-card-accent {
+    border-color: rgba(6, 182, 212, 0.2);
+  }
+
+  .hiw-step-card-purple {
+    border-color: rgba(139, 92, 246, 0.2);
+  }
+
+  .hiw-step-icon {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+  }
+
+  .hiw-icon-purple {
+    color: var(--color-accent-purple);
+  }
+
+  .hiw-step-card h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hiw-step-card p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  .hiw-example {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .hiw-example code {
+    color: var(--color-text-muted);
+    word-break: break-word;
+  }
+
+  .hiw-example-success {
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .hl-person { color: #22d3ee; font-weight: 600; }
+  .hl-uid { color: #a78bfa; font-weight: 600; }
+  .hl-placeholder {
+    color: var(--color-accent);
+    background: rgba(6, 182, 212, 0.1);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .hiw-connector {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 5rem;
+    width: 40px;
+  }
+
+  .hiw-connector-line {
+    flex: 1;
+    height: 2px;
+    background: var(--color-accent);
+    opacity: 0.4;
+  }
+
+  .hiw-connector-line-purple {
+    background: var(--color-accent-purple);
+  }
+
+  .hiw-connector-arrow {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 900px) {
+    .hiw-pipeline {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .hiw-step {
+      min-width: auto;
+    }
+
+    .hiw-connector {
+      width: auto;
+      height: 32px;
+      flex-direction: column;
+      padding-top: 0;
+      padding-left: 2rem;
+    }
+
+    .hiw-connector-line {
+      width: 2px;
+      height: 100%;
+      flex: 1;
+    }
+
+    .hiw-connector-arrow {
+      transform: rotate(90deg);
+    }
+  }
+</style>

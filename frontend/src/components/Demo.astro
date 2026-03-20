@@ -1,0 +1,681 @@
+---
+---
+<section class="section demo-section" id="demo">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Ausprobieren</span>
+      <h2>Live-Demo</h2>
+      <p>
+        Teste PrivacyProxy mit echten österreichischen Beispieldaten — oder gib deinen eigenen Text ein.
+      </p>
+    </div>
+
+    <div class="demo-wrapper">
+      <!-- Input Area -->
+      <div class="demo-input-area" id="demo-input-area">
+        <div class="example-buttons" role="group" aria-label="Beispieltexte laden">
+          <span class="example-label">Beispiele:</span>
+          <button class="example-btn" data-example="0">Geschäfts-E-Mail</button>
+          <button class="example-btn" data-example="1">Arzt-Befund</button>
+          <button class="example-btn" data-example="2">Vertragsklausel</button>
+        </div>
+
+        <label for="demo-input" class="sr-only">Text eingeben</label>
+        <textarea
+          id="demo-input"
+          class="demo-textarea"
+          placeholder="Gib hier einen Text mit sensiblen Daten ein..."
+          maxlength="2000"
+          rows="7"
+        ></textarea>
+        <div class="demo-char-count" id="demo-char-count">0 / 2000</div>
+
+        <button class="demo-prompt-toggle" id="demo-prompt-toggle" type="button">
+          <span class="arrow" id="prompt-arrow">&#9654;</span>
+          Optionaler System-Prompt
+        </button>
+        <div class="demo-prompt-field" id="demo-prompt-field">
+          <textarea
+            id="demo-prompt"
+            placeholder="z.B. 'Fasse den folgenden Text zusammen' oder 'Beantworte diese E-Mail höflich'"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="demo-actions">
+          <button class="btn btn-primary btn-lg" id="demo-start-btn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+            Analyse starten
+          </button>
+          <button class="btn btn-secondary btn-sm" id="demo-reset-btn" style="display:none;">
+            Neuer Text
+          </button>
+        </div>
+      </div>
+
+      <!-- Step Indicator -->
+      <div class="step-indicator" id="step-indicator" style="display:none;">
+        <div class="step-item disabled" data-step="0">
+          <div class="step-dot">1</div>
+          <span class="step-label">Original</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled" data-step="1">
+          <div class="step-dot">2</div>
+          <span class="step-label">Erkennung</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled" data-step="2">
+          <div class="step-dot">3</div>
+          <span class="step-label">Anonymisiert</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled" data-step="3">
+          <div class="step-dot">4</div>
+          <span class="step-label">LLM-Antwort</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled" data-step="4">
+          <div class="step-dot">5</div>
+          <span class="step-label">Re-hydriert</span>
+        </div>
+      </div>
+
+      <!-- Step Panels -->
+      <div class="step-panels" id="step-panels" style="display:none;">
+        <!-- Step 0: Original -->
+        <div class="step-panel" id="panel-0">
+          <div class="step-panel-title">01 — Originaltext</div>
+          <div class="step-panel-content" id="panel-0-content"></div>
+        </div>
+
+        <!-- Step 1: Erkennung -->
+        <div class="step-panel" id="panel-1">
+          <div class="step-panel-title">02 — Erkannte Entitäten</div>
+          <div class="step-panel-content" id="panel-1-content"></div>
+          <div class="entity-legend" id="entity-legend"></div>
+        </div>
+
+        <!-- Step 2: Anonymisiert -->
+        <div class="step-panel" id="panel-2">
+          <div class="step-panel-title">03 — Anonymisierter Text</div>
+          <div class="step-panel-content" id="panel-2-content"></div>
+        </div>
+
+        <!-- Step 3: LLM-Antwort -->
+        <div class="step-panel" id="panel-3">
+          <div class="step-panel-title">04 — LLM-Antwort (anonymisiert)</div>
+          <div class="step-panel-content" id="panel-3-content">
+            <div class="spinner"></div>
+            <div class="loading-text">KI verarbeitet anonymisierten Text...</div>
+          </div>
+        </div>
+
+        <!-- Step 4: Re-hydriert -->
+        <div class="step-panel" id="panel-4">
+          <div class="step-panel-title">05 — Re-hydrierte Antwort</div>
+          <div class="step-panel-content" id="panel-4-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .demo-section {
+    position: relative;
+  }
+
+  .demo-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .demo-input-area {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+
+  .example-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+  }
+
+  .demo-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  #demo-start-btn {
+    transition: all var(--transition-base);
+  }
+
+  #demo-start-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  #demo-start-btn svg {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .step-panels {
+    margin-top: 0;
+  }
+
+  /* Anonymized text styling */
+  .anon-placeholder {
+    display: inline;
+    padding: 0.1em 0.4em;
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--color-accent-light);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    font-weight: 600;
+    border: 1px solid rgba(6, 182, 212, 0.25);
+  }
+
+  /* Re-hydrated highlight */
+  .rehydrated-mark {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-weight: 600;
+    border-bottom: 2px solid #10b981;
+  }
+
+  @media (max-width: 768px) {
+    .demo-input-area {
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<script>
+(function() {
+  // ==========================================
+  // Configuration
+  // ==========================================
+  const API_BASE = ''; // same origin; change to 'http://localhost:8000' for dev
+  const MAX_CHARS = 2000;
+
+  // ==========================================
+  // Example texts (matching backend examples.py)
+  // ==========================================
+  const EXAMPLES = [
+    {
+      label: 'Geschäfts-E-Mail',
+      text: `Sehr geehrter Herr Thomas Gruber,
+
+bezugnehmend auf unser Telefonat vom 14. März 2026 sende ich Ihnen hiermit die Rechnung der Innovatech Solutions GmbH (UID: ATU12345678) für die erbrachten Beratungsleistungen.
+
+Bitte überweisen Sie den Betrag von EUR 4.800,00 auf folgendes Konto:
+IBAN: AT48 3200 0000 1234 5678
+BIC: RLNWATWW
+
+Bei Rückfragen erreichen Sie mich unter +43 1 234 5678 oder per E-Mail an m.steinbauer@innovatech.at.
+
+Mit freundlichen Grüßen,
+Maria Steinbauer
+Innovatech Solutions GmbH`,
+      prompt: 'Bitte bestätige den Erhalt dieser E-Mail höflich und professionell.'
+    },
+    {
+      label: 'Arzt-Befund',
+      text: `Befundbericht
+
+Patient: Elisabeth Moser
+SVNr: 1234 120585
+Geburtsdatum: 12.05.1985
+Adresse: Hauptstraße 42, 1010 Wien
+
+Befund vom 10.03.2026:
+Die Patientin stellte sich mit persistierenden Kopfschmerzen und Schwindel vor. Die neurologische Untersuchung ergab keine Auffälligkeiten. MRT des Schädels unauffällig. Blutbild im Normbereich.
+
+Diagnose: Spannungskopfschmerz (G44.2)
+Therapie: Ibuprofen 400mg bei Bedarf, Physiotherapie empfohlen.
+
+Nächster Termin: 10.04.2026
+
+Dr. Friedrich Haslinger
+Facharzt für Neurologie
+Ordination: Ringstraße 15, 1010 Wien
+Tel: +43 1 987 6543`,
+      prompt: 'Fasse diesen Befund in einfacher Sprache für den Patienten zusammen.'
+    },
+    {
+      label: 'Vertragsklausel',
+      text: `Zwischen der Alpentechnik Consulting GmbH (FN 543210a, Handelsgericht Wien) und der Bergland Industrie AG (FN 987654b, Handelsgericht Graz) wird folgende Vereinbarung getroffen:
+
+§3 Vergütung:
+Alpentechnik Consulting GmbH stellt der Bergland Industrie AG für die Erbringung der vereinbarten Leistungen einen Pauschalbetrag von EUR 125.000,00 (exkl. USt) in Rechnung. Die Zahlung erfolgt auf das Konto der Alpentechnik Consulting GmbH:
+IBAN: AT61 1200 0000 9876 5432
+BIC: BKAUATWW
+
+Die UID-Nummer der Alpentechnik Consulting GmbH lautet ATU98765432.
+
+Ansprechpartner: Dr. Katharina Wieser, Tel: +43 316 123 456, E-Mail: k.wieser@alpentechnik.at
+
+Gerichtsstand: Wien
+Datum: 15. März 2026`,
+      prompt: 'Prüfe diese Vertragsklausel auf mögliche rechtliche Schwachstellen.'
+    }
+  ];
+
+  // ==========================================
+  // Entity type metadata
+  // ==========================================
+  const ENTITY_COLORS = {
+    'PERSON':           { bg: 'rgba(6, 182, 212, 0.2)',   color: '#22d3ee', border: '#06b6d4', dot: '#06b6d4', label: 'Person' },
+    'IBAN':             { bg: 'rgba(16, 185, 129, 0.2)',   color: '#34d399', border: '#10b981', dot: '#10b981', label: 'IBAN' },
+    'PHONE_NUMBER':     { bg: 'rgba(251, 146, 60, 0.2)',   color: '#fb923c', border: '#f97316', dot: '#f97316', label: 'Telefon' },
+    'AT_UID_NR':        { bg: 'rgba(139, 92, 246, 0.2)',   color: '#a78bfa', border: '#8b5cf6', dot: '#8b5cf6', label: 'UID-Nr' },
+    'AT_SVNR':          { bg: 'rgba(239, 68, 68, 0.2)',    color: '#f87171', border: '#ef4444', dot: '#ef4444', label: 'SVNr' },
+    'AT_FIRMENBUCH_NR': { bg: 'rgba(250, 204, 21, 0.2)',   color: '#fbbf24', border: '#eab308', dot: '#eab308', label: 'Firmenbuch' },
+    'LOCATION':         { bg: 'rgba(236, 72, 153, 0.2)',   color: '#f472b6', border: '#ec4899', dot: '#ec4899', label: 'Ort' },
+    'ORG':              { bg: 'rgba(59, 130, 246, 0.2)',    color: '#60a5fa', border: '#3b82f6', dot: '#3b82f6', label: 'Organisation' },
+    'EMAIL_ADDRESS':    { bg: 'rgba(168, 85, 247, 0.2)',    color: '#c084fc', border: '#a855f7', dot: '#a855f7', label: 'E-Mail' },
+    'DATE_TIME':        { bg: 'rgba(20, 184, 166, 0.2)',    color: '#2dd4bf', border: '#14b8a6', dot: '#14b8a6', label: 'Datum' },
+  };
+
+  // ==========================================
+  // DOM references
+  // ==========================================
+  const inputEl = document.getElementById('demo-input');
+  const charCountEl = document.getElementById('demo-char-count');
+  const promptToggle = document.getElementById('demo-prompt-toggle');
+  const promptArrow = document.getElementById('prompt-arrow');
+  const promptField = document.getElementById('demo-prompt-field');
+  const promptEl = document.getElementById('demo-prompt');
+  const startBtn = document.getElementById('demo-start-btn');
+  const resetBtn = document.getElementById('demo-reset-btn');
+  const stepIndicator = document.getElementById('step-indicator');
+  const stepPanels = document.getElementById('step-panels');
+  const inputArea = document.getElementById('demo-input-area');
+
+  // ==========================================
+  // State
+  // ==========================================
+  let state = 'idle'; // idle | analyzing | analyzed | processing | complete | error
+  let currentStep = -1;
+  let sessionId = null;
+  let analyzeResult = null;
+  let processResult = null;
+
+  // ==========================================
+  // Helpers
+  // ==========================================
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function updateCharCount() {
+    const len = inputEl.value.length;
+    charCountEl.textContent = len + ' / ' + MAX_CHARS;
+    charCountEl.className = 'demo-char-count';
+    if (len > MAX_CHARS * 0.9) charCountEl.classList.add('warn');
+    if (len >= MAX_CHARS) charCountEl.classList.add('error');
+    startBtn.disabled = len === 0 || state !== 'idle';
+  }
+
+  function setStep(idx) {
+    currentStep = idx;
+    // Update step indicator
+    const items = stepIndicator.querySelectorAll('.step-item');
+    const connectors = stepIndicator.querySelectorAll('.step-connector');
+
+    items.forEach((item, i) => {
+      item.classList.remove('active', 'completed', 'disabled');
+      if (i < idx) {
+        item.classList.add('completed');
+      } else if (i === idx) {
+        item.classList.add('active');
+      } else {
+        item.classList.add('disabled');
+      }
+    });
+
+    connectors.forEach((conn, i) => {
+      conn.classList.toggle('completed', i < idx);
+    });
+
+    // Show correct panel
+    const panels = stepPanels.querySelectorAll('.step-panel');
+    panels.forEach((panel, i) => {
+      panel.classList.toggle('active', i === idx);
+    });
+  }
+
+  function enableStepClick(upTo) {
+    const items = stepIndicator.querySelectorAll('.step-item');
+    items.forEach((item, i) => {
+      if (i <= upTo) {
+        item.style.pointerEvents = 'auto';
+        item.style.cursor = 'pointer';
+      }
+    });
+  }
+
+  function showError(panelId, message) {
+    const el = document.getElementById(panelId);
+    if (el) {
+      el.innerHTML = '<div class="error-message">' + escapeHtml(message) + '</div>';
+    }
+  }
+
+  function buildAnnotatedHtml(text, entities) {
+    if (!entities || entities.length === 0) return escapeHtml(text);
+
+    // Sort entities by start position (descending) to replace from end
+    const sorted = [...entities].sort((a, b) => b.start - a.start);
+    let result = text;
+
+    sorted.forEach(ent => {
+      const before = result.slice(0, ent.start);
+      const match = result.slice(ent.start, ent.end);
+      const after = result.slice(ent.end);
+      const cls = 'entity-mark entity-' + ent.entity_type;
+      result = before + '<mark class="' + cls + '" title="' + ent.entity_type + '">' + escapeHtml(match) + '</mark>' + after;
+    });
+
+    // Escape remaining text segments (already handled by escaping match above)
+    // Actually, we need to handle this differently — escape everything first, then insert marks
+    // Let's redo with a forward approach:
+
+    const sortedFwd = [...entities].sort((a, b) => a.start - b.start);
+    let html = '';
+    let pos = 0;
+
+    sortedFwd.forEach(ent => {
+      // Add text before this entity
+      html += escapeHtml(text.slice(pos, ent.start));
+      // Add the annotated entity
+      const matchText = text.slice(ent.start, ent.end);
+      const cls = 'entity-mark entity-' + ent.entity_type;
+      html += '<mark class="' + cls + '" title="' + ent.entity_type + '">' + escapeHtml(matchText) + '</mark>';
+      pos = ent.end;
+    });
+
+    // Remaining text
+    html += escapeHtml(text.slice(pos));
+    return html;
+  }
+
+  function buildEntityLegend(entities) {
+    const types = new Set();
+    entities.forEach(e => types.add(e.entity_type));
+    const legend = document.getElementById('entity-legend');
+    legend.innerHTML = '';
+
+    types.forEach(type => {
+      const info = ENTITY_COLORS[type] || { dot: '#94a3b8', label: type };
+      const item = document.createElement('span');
+      item.className = 'entity-legend-item';
+      item.innerHTML = '<span class="entity-legend-dot" style="background:' + info.dot + '"></span>' + info.label;
+      legend.appendChild(item);
+    });
+  }
+
+  function buildAnonymizedHtml(anonymizedText) {
+    // Replace placeholders like <PERSON_1> with styled spans
+    return escapeHtml(anonymizedText).replace(/&lt;(\w+?)&gt;/g, function(match, name) {
+      return '<span class="anon-placeholder">&lt;' + name + '&gt;</span>';
+    });
+  }
+
+  function buildRehydratedHtml(rehydratedText, entities) {
+    if (!entities || entities.length === 0) return escapeHtml(rehydratedText);
+
+    // Find original values in the rehydrated text and highlight them
+    let html = escapeHtml(rehydratedText);
+    const uniqueValues = new Set();
+    entities.forEach(ent => {
+      if (ent.original_value) uniqueValues.add(ent.original_value);
+    });
+
+    uniqueValues.forEach(val => {
+      const escaped = escapeHtml(val);
+      if (escaped && escaped.length > 1) {
+        const regex = new RegExp(escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        html = html.replace(regex, '<span class="rehydrated-mark">' + escaped + '</span>');
+      }
+    });
+
+    return html;
+  }
+
+  // ==========================================
+  // API calls
+  // ==========================================
+  async function callAnalyze(text) {
+    const resp = await fetch(API_BASE + '/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text })
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Analyse fehlgeschlagen (HTTP ' + resp.status + ')');
+    }
+    return resp.json();
+  }
+
+  async function callProcess(text, prompt) {
+    const body = { text: text };
+    if (prompt && prompt.trim()) body.prompt = prompt.trim();
+    if (sessionId) body.session_id = sessionId;
+
+    const resp = await fetch(API_BASE + '/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Verarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
+    }
+    return resp.json();
+  }
+
+  // ==========================================
+  // Main flow
+  // ==========================================
+  async function startDemo() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    state = 'analyzing';
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0;border-width:2px;"></div> Analysiere...';
+    resetBtn.style.display = 'inline-flex';
+    stepIndicator.style.display = 'flex';
+    stepPanels.style.display = 'block';
+
+    // Step 0: Show original
+    document.getElementById('panel-0-content').innerHTML = escapeHtml(text);
+    setStep(0);
+
+    try {
+      // Call analyze API
+      const analyzeData = await callAnalyze(text);
+      analyzeResult = analyzeData;
+      sessionId = analyzeData.session_id || null;
+
+      state = 'analyzed';
+
+      // Step 1: Show recognized entities
+      const entities = analyzeData.entities || [];
+      document.getElementById('panel-1-content').innerHTML = buildAnnotatedHtml(text, entities);
+      buildEntityLegend(entities);
+      setStep(1);
+      enableStepClick(1);
+
+      // Brief pause for UX
+      await new Promise(r => setTimeout(r, 600));
+
+      // Step 2: Show anonymized text
+      if (analyzeData.anonymized_text) {
+        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(analyzeData.anonymized_text);
+      } else {
+        document.getElementById('panel-2-content').innerHTML = '<span style="color:var(--color-text-dim)">Kein anonymisierter Text verfügbar.</span>';
+      }
+      setStep(2);
+      enableStepClick(2);
+
+      // Now call process API
+      state = 'processing';
+      await new Promise(r => setTimeout(r, 400));
+      setStep(3);
+      enableStepClick(2); // Don't allow clicking step 3/4 yet
+
+      // Show loading in step 3
+      document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
+
+      const processData = await callProcess(text, promptEl ? promptEl.value : '');
+      processResult = processData;
+
+      // Step 3: LLM response (anonymized)
+      if (processData.llm_response_anonymized) {
+        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(processData.llm_response_anonymized);
+      } else if (processData.llm_response) {
+        document.getElementById('panel-3-content').innerHTML = escapeHtml(processData.llm_response);
+      }
+      enableStepClick(3);
+
+      await new Promise(r => setTimeout(r, 500));
+
+      // Step 4: Re-hydrated response
+      if (processData.rehydrated_response) {
+        const ents = (analyzeResult.entities || []).map(e => ({
+          ...e,
+          original_value: e.text || e.original_value
+        }));
+        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(processData.rehydrated_response, ents);
+      } else if (processData.response) {
+        document.getElementById('panel-4-content').innerHTML = escapeHtml(processData.response);
+      } else {
+        document.getElementById('panel-4-content').innerHTML = escapeHtml(processData.llm_response || 'Keine Antwort erhalten.');
+      }
+
+      setStep(4);
+      enableStepClick(4);
+      state = 'complete';
+      startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
+
+    } catch (err) {
+      state = 'error';
+      const panelContent = document.getElementById('panel-' + currentStep + '-content');
+      if (panelContent) {
+        panelContent.innerHTML = '<div class="error-message">Fehler: ' + escapeHtml(err.message) + '</div>';
+      }
+      startBtn.innerHTML = 'Fehler — nochmal versuchen';
+      startBtn.disabled = false;
+      startBtn.onclick = function() {
+        resetDemo();
+        setTimeout(startDemo, 100);
+      };
+    }
+  }
+
+  function resetDemo() {
+    state = 'idle';
+    currentStep = -1;
+    sessionId = null;
+    analyzeResult = null;
+    processResult = null;
+
+    inputEl.value = '';
+    if (promptEl) promptEl.value = '';
+    updateCharCount();
+
+    stepIndicator.style.display = 'none';
+    stepPanels.style.display = 'none';
+    resetBtn.style.display = 'none';
+
+    startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21"/></svg> Analyse starten';
+    startBtn.disabled = true;
+    startBtn.onclick = startDemo;
+
+    // Reset panels
+    for (let i = 0; i < 5; i++) {
+      const content = document.getElementById('panel-' + i + '-content');
+      if (content) content.innerHTML = '';
+    }
+
+    // Reset step items
+    const items = stepIndicator.querySelectorAll('.step-item');
+    items.forEach(item => {
+      item.classList.add('disabled');
+      item.classList.remove('active', 'completed');
+      item.style.pointerEvents = '';
+      item.style.cursor = '';
+    });
+    stepIndicator.querySelectorAll('.step-connector').forEach(c => c.classList.remove('completed'));
+
+    inputEl.focus();
+  }
+
+  // ==========================================
+  // Event listeners
+  // ==========================================
+  inputEl.addEventListener('input', updateCharCount);
+
+  promptToggle.addEventListener('click', function() {
+    const isOpen = promptField.classList.toggle('open');
+    promptArrow.classList.toggle('open', isOpen);
+  });
+
+  startBtn.addEventListener('click', startDemo);
+  resetBtn.addEventListener('click', resetDemo);
+
+  // Example buttons
+  document.querySelectorAll('.example-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const idx = parseInt(this.dataset.example, 10);
+      const ex = EXAMPLES[idx];
+      if (ex) {
+        if (state !== 'idle') resetDemo();
+        inputEl.value = ex.text;
+        if (promptEl && ex.prompt) {
+          promptEl.value = ex.prompt;
+          promptField.classList.add('open');
+          promptArrow.classList.add('open');
+        }
+        updateCharCount();
+        inputEl.focus();
+      }
+    });
+  });
+
+  // Step indicator clicks
+  stepIndicator.querySelectorAll('.step-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const idx = parseInt(this.dataset.step, 10);
+      if (!this.classList.contains('disabled')) {
+        // Only switch panel view, don't change completed/active logic on the dots
+        const panels = stepPanels.querySelectorAll('.step-panel');
+        panels.forEach((p, i) => p.classList.toggle('active', i === idx));
+      }
+    });
+  });
+
+  // Init
+  updateCharCount();
+})();
+</script>

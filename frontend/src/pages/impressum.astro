@@ -1,0 +1,116 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Impressum — AUSTR.AI PrivacyProxy" description="Impressum und rechtliche Angaben zu AUSTR.AI PrivacyProxy.">
+  <section class="section legal-page">
+    <div class="container">
+      <div class="legal-content">
+        <h1>Impressum</h1>
+        <p class="legal-subtitle">Angaben gemäß § 5 ECG und § 25 MedienG</p>
+
+        <div class="legal-block">
+          <h2>Diensteanbieter</h2>
+          <p>
+            Florian Bieche<br />
+            Kommunikationsberatung & Digitale Medien
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Anschrift</h2>
+          <p>
+            Wien, Österreich
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Kontakt</h2>
+          <p>
+            E-Mail: kontakt [at] flb.co.at<br />
+            Web: <a href="https://flb.co.at" target="_blank" rel="noopener noreferrer">flb.co.at</a>
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Gegenstand des Unternehmens</h2>
+          <p>
+            Kommunikationsberatung, Webentwicklung, KI-Consulting und digitale Medien.
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Über AUSTR.AI PrivacyProxy</h2>
+          <p>
+            AUSTR.AI PrivacyProxy ist ein Open-Source-Projekt zur Anonymisierung sensibler Daten in KI-Prompts. Der Quellcode ist öffentlich zugänglich und unter der MIT-Lizenz veröffentlicht.
+          </p>
+          <p>
+            <a href="https://github.com/florianbieche/privacyproxy" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Haftungsausschluss</h2>
+          <p>
+            Die Inhalte dieser Website wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte wird jedoch keine Gewähr übernommen. PrivacyProxy ist ein Demonstrationsprojekt — für den produktiven Einsatz ist eine eigene Evaluierung und ggf. Anpassung erforderlich.
+          </p>
+          <p>
+            Die Anonymisierung erfolgt automatisiert mittels NLP und kann nicht garantieren, dass alle sensiblen Daten erkannt werden. Die Nutzung erfolgt auf eigene Verantwortung.
+          </p>
+        </div>
+
+        <div class="legal-block">
+          <h2>Urheberrecht</h2>
+          <p>
+            Der Quellcode von PrivacyProxy ist unter der MIT-Lizenz veröffentlicht. Die Inhalte dieser Website (Texte, Grafiken, Design) unterliegen dem österreichischen Urheberrecht.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal-page {
+    padding-top: 8rem;
+  }
+
+  .legal-content {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .legal-content h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-subtitle {
+    font-size: 1.0625rem;
+    color: var(--color-text-dim);
+    margin-bottom: 3rem;
+  }
+
+  .legal-block {
+    margin-bottom: 2.25rem;
+  }
+
+  .legal-block h2 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+  }
+
+  .legal-block p {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+    max-width: none;
+  }
+
+  .legal-block a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+</style>

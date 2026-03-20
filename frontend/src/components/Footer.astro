@@ -1,0 +1,96 @@
+---
+---
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-copy">&copy; 2026 AUSTR.AI</span>
+        <span class="footer-sep" aria-hidden="true">&middot;</span>
+        <span class="footer-credit">Ein Projekt von <a href="https://flb.co.at" target="_blank" rel="noopener noreferrer">Florian Bieche</a></span>
+      </div>
+      <div class="footer-links">
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutz</a>
+        <a href="https://github.com/florianbieche/privacyproxy" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding: 2rem 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-copy {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .footer-sep {
+    color: var(--color-text-dim);
+  }
+
+  .footer-credit {
+    font-size: 0.8125rem;
+    color: var(--color-text-dim);
+  }
+
+  .footer-credit a {
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .footer-credit a:hover {
+    color: var(--color-accent);
+  }
+
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .footer-links a {
+    font-size: 0.8125rem;
+    color: var(--color-text-dim);
+    transition: color var(--transition-fast);
+  }
+
+  .footer-links a:hover {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 640px) {
+    .footer-inner {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .footer-left {
+      justify-content: center;
+    }
+
+    .footer-links {
+      justify-content: center;
+    }
+  }
+</style>

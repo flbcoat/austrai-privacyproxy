@@ -1,0 +1,110 @@
+---
+---
+<section class="section problem" id="problem">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Das Problem</span>
+      <h2>Jeder Prompt ist ein Datenleck</h2>
+      <p>
+        Wenn du sensible Daten in ein KI-Tool eingibst, verlassen sie dein Unternehmen. Unwiderruflich. PrivacyProxy verhindert genau das.
+      </p>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card card-glow animate-slide-up animate-delay-1">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <h3>Personendaten</h3>
+        <p class="problem-desc">
+          Namen, Sozialversicherungsnummern, Adressen, Telefonnummern — all das landet in Prompts und auf fremden Servern.
+        </p>
+        <div class="problem-stat">
+          <span class="problem-stat-number">82%</span>
+          <span class="problem-stat-label">der Unternehmen geben an, dass Mitarbeitende sensible Daten in KI-Tools eingeben</span>
+        </div>
+      </div>
+
+      <div class="card card-glow animate-slide-up animate-delay-2">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+            <line x1="6" y1="11" x2="10" y2="11"/>
+            <line x1="14" y1="11" x2="18" y2="11"/>
+          </svg>
+        </div>
+        <h3>Geschäftsdaten</h3>
+        <p class="problem-desc">
+          UIDs, IBANs, Firmenbuchnummern, Vertragsdetails — vertrauliche Geschäftsinformationen in KI-Prompts sind ein Compliance-Risiko.
+        </p>
+        <div class="problem-stat">
+          <span class="problem-stat-number">DSGVO</span>
+          <span class="problem-stat-label">Verstöße können bis zu 20 Mio. EUR oder 4% des Jahresumsatzes kosten</span>
+        </div>
+      </div>
+
+      <div class="card card-glow animate-slide-up animate-delay-3">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h3>Gesundheitsdaten</h3>
+        <p class="problem-desc">
+          Befunde, Diagnosen, Patientennamen — medizinische Daten sind besonders schützenswert und unterliegen strengen Regulierungen.
+        </p>
+        <div class="problem-stat">
+          <span class="problem-stat-number">Art. 9</span>
+          <span class="problem-stat-label">DSGVO: Gesundheitsdaten sind "besondere Kategorien" mit erhöhtem Schutzbedarf</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .problem {
+    position: relative;
+  }
+
+  .problem::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border), transparent);
+  }
+
+  .problem-desc {
+    font-size: 0.9375rem;
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .problem-stat {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .problem-stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+    margin-bottom: 0.25rem;
+  }
+
+  .problem-stat-label {
+    font-size: 0.8125rem;
+    color: var(--color-text-dim);
+    line-height: 1.4;
+  }
+</style>
