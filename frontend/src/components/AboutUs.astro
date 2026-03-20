@@ -1,0 +1,237 @@
+---
+---
+<section class="section about" id="about">
+  <div class="container">
+    <div class="about-wrapper">
+      <div class="about-content">
+        <span class="section-label">Wer dahinter steht</span>
+        <h2>KI verantwortungsvoll einsetzen.</h2>
+        <p class="about-desc">
+          AUSTR.AI ist ein Projekt von <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer">Florian Bieche</a> — Kommunikationsberater und KI-Enabler aus Wien. Ich helfe Unternehmen, künstliche Intelligenz sinnvoll und datenschutzkonform in ihre Prozesse zu integrieren.
+        </p>
+        <p class="about-desc">
+          PrivacyProxy entstand aus der täglichen Arbeit mit Unternehmen, die KI nutzen wollen, aber Bedenken beim Datenschutz haben. Die Lösung: Sensible Daten verlassen nie die eigene Infrastruktur.
+        </p>
+        <div class="about-services">
+          <h4>Neben PrivacyProxy bietet AUSTR.AI:</h4>
+          <ul>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>KI-Beratung für Unternehmen</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Entwicklung maßgeschneiderter KI-Lösungen</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Workshops & Trainings zu KI-Anwendungen</span>
+            </li>
+          </ul>
+        </div>
+        <div class="about-actions">
+          <a href="https://www.flb.co.at" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+            Mehr erfahren auf FLB.CO.AT
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-card-inner">
+          <div class="about-avatar">FB</div>
+          <div class="about-meta">
+            <strong>Florian Bieche</strong>
+            <span>Kommunikationsberater & KI-Enabler</span>
+            <span class="about-location">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Wien, Österreich
+            </span>
+          </div>
+          <div class="about-card-divider"></div>
+          <div class="about-brand">
+            <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer" class="about-brand-link">
+              <strong>FLB.CO.AT</strong>
+              <span>Kommunikation & KI-Beratung</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    position: relative;
+  }
+
+  .about::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border), transparent);
+  }
+
+  .about-wrapper {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .about-desc {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    margin-top: 1.25rem;
+  }
+
+  .about-desc a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(6, 182, 212, 0.4);
+    transition: text-decoration-color var(--transition-fast);
+  }
+
+  .about-desc a:hover {
+    text-decoration-color: var(--color-accent);
+  }
+
+  .about-services {
+    margin-top: 2rem;
+  }
+
+  .about-services h4 {
+    font-size: 0.9375rem;
+    color: var(--color-text);
+    margin-bottom: 1rem;
+  }
+
+  .about-services ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .about-services li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+  }
+
+  .about-services li svg {
+    flex-shrink: 0;
+    color: var(--color-accent);
+  }
+
+  .about-actions {
+    margin-top: 2rem;
+  }
+
+  .about-card {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .about-card-inner {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    transition: border-color var(--transition-base);
+  }
+
+  .about-card-inner:hover {
+    border-color: rgba(6, 182, 212, 0.3);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .about-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-accent-dark), var(--color-accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  .about-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .about-meta strong {
+    font-size: 1.125rem;
+    color: var(--color-text);
+  }
+
+  .about-meta span {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .about-location {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+    color: var(--color-text-dim) !important;
+  }
+
+  .about-card-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 1.5rem 0;
+  }
+
+  .about-brand-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+  }
+
+  .about-brand-link:hover {
+    background: rgba(6, 182, 212, 0.06);
+  }
+
+  .about-brand-link strong {
+    font-size: 1rem;
+    color: var(--color-accent);
+    letter-spacing: 0.02em;
+  }
+
+  .about-brand-link span {
+    font-size: 0.8125rem;
+    color: var(--color-text-dim);
+  }
+
+  @media (max-width: 900px) {
+    .about-wrapper {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .about-card {
+      position: static;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+  }
+</style>

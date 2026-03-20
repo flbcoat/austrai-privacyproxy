@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "https://austr.ai,https://www.austr.ai,http://localhost:4321"
     RATE_LIMIT_PER_IP: int = 20
     RATE_LIMIT_GLOBAL: int = 200
-    MIN_REQUEST_DELAY: float = 3.0
+    MIN_REQUEST_DELAY: float = 1.0
     MAX_TEXT_LENGTH: int = 2000
     SESSION_TTL: int = 1800
     CONFIDENCE_THRESHOLD: float = 0.6

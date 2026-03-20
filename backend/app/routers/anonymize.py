@@ -27,7 +27,7 @@ async def anonymize_text(request: Request, body: TextRequest) -> AnonymizeRespon
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
 
-    entities = detect(body.text)
+    entities = detect(body.text, entity_types=body.entity_types, deny_list=body.deny_list)
     anonymized_text, mappings = anonymize(body.text, entities)
     session_id = session_store.create_session(mappings)
 

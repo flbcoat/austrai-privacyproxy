@@ -2,6 +2,7 @@
 
 import html
 import logging
+import re
 
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -27,19 +28,25 @@ ENTITY_COLORS: dict[str, str] = {
     "ORGANIZATION": "#06b6d4",      # cyan
     "NRP": "#84cc16",               # lime
     "CREDIT_CARD": "#f43f5e",       # rose
+    "DOC_METADATA": "#d946ef",      # fuchsia
 }
 
 DEFAULT_COLOR = "#9ca3af"  # gray fallback
+
+# Known false-positive LOCATIONs to filter out
+LOCATION_FALSE_POSITIVES = {
+    "tel", "tel.", "dr", "dr.", "nr", "nr.", "str", "str.",
+    "gmbh", "ag", "kg", "og", "e.u.", "eur", "usd", "chf",
+    "bic", "iban", "svnr", "sv-nr", "uid", "fn",
+    "mrt", "ct", "ekg",
+}
 
 # Module-level analyzer instance, initialized via init_analyzer()
 _analyzer: AnalyzerEngine | None = None
 
 
 def init_analyzer() -> AnalyzerEngine:
-    """Initialize the Presidio AnalyzerEngine with SpaCy de_core_news_lg.
-
-    This should be called once at application startup.
-    """
+    """Initialize the Presidio AnalyzerEngine with SpaCy de_core_news_lg."""
     global _analyzer
 
     logger.info("Initialisiere Presidio AnalyzerEngine mit SpaCy de_core_news_lg...")
@@ -70,71 +77,90 @@ def init_analyzer() -> AnalyzerEngine:
 def get_analyzer() -> AnalyzerEngine:
     """Get the initialized analyzer instance."""
     if _analyzer is None:
-        raise RuntimeError("AnalyzerEngine wurde noch nicht initialisiert. Bitte init_analyzer() aufrufen.")
+        raise RuntimeError("AnalyzerEngine wurde noch nicht initialisiert.")
     return _analyzer
 
 
-def detect(text: str, language: str = "de") -> list[Entity]:
+def detect(
+    text: str,
+    language: str = "de",
+    entity_types: list[str] | None = None,
+    deny_list: list[str] | None = None,
+) -> list[Entity]:
     """Detect PII entities in the given text.
 
     Args:
         text: Input text to analyze.
-        language: Language code (default "de" for German).
+        language: Language code (default "de").
+        entity_types: Optional list of entity types to detect.
+            If None, all supported types are detected.
+        deny_list: Optional list of additional words/phrases to detect as PII.
+            These are matched as-is (case-insensitive).
 
     Returns:
         List of detected Entity objects filtered by confidence threshold.
     """
     analyzer = get_analyzer()
 
+    # If custom deny_list provided, create a temporary recognizer
+    ad_hoc_recognizers = None
+    if deny_list:
+        from presidio_analyzer import PatternRecognizer
+        deny_recognizer = PatternRecognizer(
+            supported_entity="CUSTOM",
+            deny_list=deny_list,
+            name="Custom Deny List",
+            supported_language=language,
+        )
+        ad_hoc_recognizers = [deny_recognizer]
+
     results = analyzer.analyze(
         text=text,
         language=language,
-        entities=None,  # detect all supported entities
+        entities=entity_types,
+        ad_hoc_recognizers=ad_hoc_recognizers,
     )
 
     entities: list[Entity] = []
     for result in results:
         if result.score >= settings.CONFIDENCE_THRESHOLD:
+            entity_text = text[result.start : result.end]
+
+            # Filter false-positive LOCATIONs
+            if result.entity_type == "LOCATION":
+                if entity_text.strip().lower() in LOCATION_FALSE_POSITIVES:
+                    continue
+                # Skip very short locations (1-2 chars)
+                if len(entity_text.strip()) <= 2:
+                    continue
+
             entities.append(
                 Entity(
                     entity_type=result.entity_type,
                     start=result.start,
                     end=result.end,
                     score=result.score,
-                    text=text[result.start : result.end],
+                    text=entity_text,
                 )
             )
 
     # Sort by start position
     entities.sort(key=lambda e: e.start)
 
+    # Remove entities that are fully contained within a higher-scored entity
+    entities = _remove_contained(entities)
+
     return entities
 
 
 def generate_annotated_html(text: str, entities: list[Entity]) -> str:
-    """Generate HTML with colored <mark> spans for each detected entity.
-
-    Args:
-        text: Original input text.
-        entities: List of detected entities.
-
-    Returns:
-        HTML string with entity annotations.
-    """
+    """Generate HTML with colored <mark> spans for each detected entity."""
     if not entities:
         return html.escape(text)
 
     # Remove overlapping entities: keep the one with higher score
     filtered = _resolve_overlaps(entities)
 
-    # Sort by start position descending so we can replace from the end
-    filtered.sort(key=lambda e: e.start, reverse=True)
-
-    # Work on the text as a list for efficient manipulation
-    result = html.escape(text)
-
-    # We need to map positions from original text to escaped text
-    # Instead, build the result by iterating forward through non-overlapping entities
     filtered.sort(key=lambda e: e.start)
 
     parts: list[str] = []
@@ -162,14 +188,34 @@ def generate_annotated_html(text: str, entities: list[Entity]) -> str:
     return "".join(parts)
 
 
+def _remove_contained(entities: list[Entity]) -> list[Entity]:
+    """Remove entities that are fully contained within a higher-scored entity."""
+    if len(entities) <= 1:
+        return entities
+
+    result = []
+    for i, ent in enumerate(entities):
+        is_contained = False
+        for j, other in enumerate(entities):
+            if i == j:
+                continue
+            # Check if ent is fully inside other AND other has higher/equal score
+            if (other.start <= ent.start and ent.end <= other.end
+                    and other.score >= ent.score
+                    and (other.end - other.start) > (ent.end - ent.start)):
+                is_contained = True
+                break
+        if not is_contained:
+            result.append(ent)
+    return result
+
+
 def _resolve_overlaps(entities: list[Entity]) -> list[Entity]:
     """Remove overlapping entities, keeping the one with the highest score.
 
-    Args:
-        entities: List of entities, possibly overlapping.
-
-    Returns:
-        List of non-overlapping entities.
+    When two entities overlap:
+    - Prefer the one with higher score
+    - On equal score, prefer the longer span (more specific match)
     """
     if not entities:
         return []

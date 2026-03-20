@@ -10,8 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.data.examples import EXAMPLES
-from app.routers import analyze, anonymize, health, process
+from app.services.extractor import SUPPORTED_FORMATS
+from app.routers import analyze, anonymize, health, process, sensitivity, upload
 from app.services.detector import init_analyzer
+from app.services.sensitivity_analyzer import init_sensitivity_model
 from app.services.session_store import session_store
 
 logging.basicConfig(
@@ -37,6 +39,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starte AUSTR.AI PrivacyProxy Backend...")
     init_analyzer()
     logger.info("SpaCy-Modell und Presidio Analyzer geladen.")
+    init_sensitivity_model()
+    logger.info("Sensitivity-Modell geladen.")
 
     # Start periodic session cleanup task
     cleanup_task = asyncio.create_task(_periodic_session_cleanup())
@@ -73,9 +77,17 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(analyze.router, tags=["Analyse"])
 app.include_router(anonymize.router, tags=["Anonymisierung"])
 app.include_router(process.router, tags=["Pipeline"])
+app.include_router(upload.router, tags=["Upload"])
+app.include_router(sensitivity.router, tags=["Sensitivitaet"])
 
 
 @app.get("/api/examples")
 async def get_examples() -> list[dict[str, str]]:
     """Return example texts for the demo interface."""
     return EXAMPLES
+
+
+@app.get("/api/supported-formats")
+async def get_supported_formats() -> list[dict[str, str]]:
+    """Return the list of supported file formats for upload."""
+    return SUPPORTED_FORMATS

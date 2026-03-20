@@ -8,6 +8,7 @@ from app.services.detector import detect, generate_annotated_html
 from app.services.llm_client import call_llm
 from app.services.rate_limiter import rate_limiter
 from app.services.rehydrator import rehydrate
+from app.services.sensitivity_analyzer import analyze_sensitivity
 from app.services.session_store import session_store
 
 router = APIRouter()
@@ -36,8 +37,11 @@ async def process_text(request: Request, body: ProcessRequest) -> ProcessRespons
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
 
+    # Step 0: Sensitivity analysis
+    sensitivity_report = analyze_sensitivity(body.text)
+
     # Step 1: Detect PII entities
-    entities = detect(body.text)
+    entities = detect(body.text, entity_types=body.entity_types, deny_list=body.deny_list)
 
     # Step 2: Generate annotated HTML
     annotated_html = generate_annotated_html(body.text, entities)
@@ -63,4 +67,5 @@ async def process_text(request: Request, body: ProcessRequest) -> ProcessRespons
         llm_response_anonymized=llm_response_anonymized,
         llm_response_rehydrated=llm_response_rehydrated,
         session_id=session_id,
+        sensitivity=sensitivity_report,
     )

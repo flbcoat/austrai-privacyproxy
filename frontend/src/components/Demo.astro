@@ -7,10 +7,19 @@
       <h2>Live-Demo</h2>
       <p>
         Teste PrivacyProxy mit echten österreichischen Beispieldaten — oder gib deinen eigenen Text ein.
+        Klick dich nach der Analyse Schritt für Schritt durch die Pipeline.
       </p>
     </div>
 
     <div class="demo-wrapper">
+      <!-- Privacy Notice -->
+      <div class="demo-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <p>
+          Diese Demo nutzt die <strong>Mistral API</strong> (EU-gehostet) zur Verarbeitung. Dein Text wird vorher anonymisiert — das LLM sieht nur Platzhalter, nie deine echten Daten. Session-Daten werden nach 30 Minuten automatisch gelöscht. Verwende trotzdem keine hochsensiblen Echtdaten, sondern nutze die Beispiele oder fiktive Texte.
+        </p>
+      </div>
+
       <!-- Input Area -->
       <div class="demo-input-area" id="demo-input-area">
         <div class="example-buttons" role="group" aria-label="Beispieltexte laden">
@@ -20,26 +29,85 @@
           <button class="example-btn" data-example="2">Vertragsklausel</button>
         </div>
 
-        <label for="demo-input" class="sr-only">Text eingeben</label>
-        <textarea
-          id="demo-input"
-          class="demo-textarea"
-          placeholder="Gib hier einen Text mit sensiblen Daten ein..."
-          maxlength="2000"
-          rows="7"
-        ></textarea>
-        <div class="demo-char-count" id="demo-char-count">0 / 2000</div>
+        <!-- Input Mode Tabs -->
+        <div class="demo-tabs" id="demo-tabs">
+          <button class="demo-tab active" data-tab="text" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Text eingeben
+          </button>
+          <button class="demo-tab" data-tab="file" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Datei hochladen
+          </button>
+        </div>
 
-        <button class="demo-prompt-toggle" id="demo-prompt-toggle" type="button">
-          <span class="arrow" id="prompt-arrow">&#9654;</span>
-          Optionaler System-Prompt
-        </button>
-        <div class="demo-prompt-field" id="demo-prompt-field">
+        <!-- Tab Content: Text Input -->
+        <div class="demo-tab-content active" id="tab-text">
+          <label for="demo-input" class="sr-only">Text eingeben</label>
           <textarea
-            id="demo-prompt"
-            placeholder="z.B. 'Fasse den folgenden Text zusammen' oder 'Beantworte diese E-Mail höflich'"
-            rows="3"
+            id="demo-input"
+            class="demo-textarea"
+            placeholder="Gib hier einen Text mit sensiblen Daten ein..."
+            maxlength="2000"
+            rows="7"
           ></textarea>
+          <div class="demo-char-count" id="demo-char-count">0 / 2000</div>
+        </div>
+
+        <!-- Tab Content: File Upload -->
+        <div class="demo-tab-content" id="tab-file">
+          <div class="demo-dropzone" id="demo-dropzone">
+            <input type="file" id="demo-file-input" class="sr-only" accept=".pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.tiff,.tif,.bmp,.webp" />
+            <div class="demo-dropzone-inner" id="demo-dropzone-inner">
+              <svg class="demo-dropzone-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p class="demo-dropzone-text">Datei hierher ziehen oder <span class="demo-dropzone-link">klicken</span></p>
+              <p class="demo-dropzone-formats">PDF, DOCX, XLSX, TXT, CSV, Bilder (PNG, JPG, TIFF, BMP, WebP)</p>
+              <p class="demo-dropzone-limit">Max. 10 MB</p>
+            </div>
+          </div>
+          <div class="demo-file-info" id="demo-file-info" style="display:none;">
+            <div class="demo-file-icon" id="demo-file-icon"></div>
+            <div class="demo-file-details">
+              <span class="demo-file-name" id="demo-file-name"></span>
+              <span class="demo-file-size" id="demo-file-size"></span>
+            </div>
+            <button class="demo-file-remove" id="demo-file-remove" type="button" title="Datei entfernen">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Entfernen
+            </button>
+          </div>
+        </div>
+
+        <!-- Erweiterte Optionen -->
+        <div class="demo-options">
+          <button class="demo-options-toggle" id="demo-options-toggle" type="button">
+            <span class="arrow" id="options-arrow">&#9654;</span>
+            Erweiterte Optionen
+          </button>
+          <div class="demo-options-panel" id="demo-options-panel">
+            <div class="demo-option-group">
+              <label for="demo-prompt" class="demo-option-label">
+                System-Prompt
+                <span class="demo-option-hint">Anweisung an das LLM, wie es antworten soll</span>
+              </label>
+              <textarea
+                id="demo-prompt"
+                placeholder="z.B. 'Fasse den folgenden Text zusammen' oder 'Beantworte diese E-Mail höflich'"
+                rows="2"
+              ></textarea>
+            </div>
+            <div class="demo-option-group">
+              <label for="demo-denylist" class="demo-option-label">
+                Zusätzliche Begriffe erkennen
+                <span class="demo-option-hint">Firmen-, Projekt- oder Produktnamen die zusätzlich anonymisiert werden sollen (einer pro Zeile)</span>
+              </label>
+              <textarea
+                id="demo-denylist"
+                placeholder="z.B.&#10;Innovatech Solutions GmbH&#10;Projekt Phoenix&#10;AlpenCloud Pro"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
         </div>
 
         <div class="demo-actions">
@@ -53,6 +121,12 @@
             Neuer Text
           </button>
         </div>
+      </div>
+
+      <!-- Step Navigation Hint (shown after analysis) -->
+      <div class="step-hint" id="step-hint" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Klicke auf die Schritte, um zwischen den einzelnen Phasen der Pipeline zu wechseln.
       </div>
 
       <!-- Step Indicator -->
@@ -83,30 +157,45 @@
         </div>
       </div>
 
+      <!-- Sensitivity Warning Container -->
+      <div id="sensitivity-container"></div>
+
       <!-- Step Panels -->
       <div class="step-panels" id="step-panels" style="display:none;">
         <!-- Step 0: Original -->
         <div class="step-panel" id="panel-0">
-          <div class="step-panel-title">01 — Originaltext</div>
+          <div class="step-panel-header">
+            <div class="step-panel-title">01 — Originaltext</div>
+            <div class="step-panel-info">Dein eingegebener Text mit allen sensiblen Daten — so wie er normalerweise direkt an ein LLM gesendet werden würde.</div>
+          </div>
           <div class="step-panel-content" id="panel-0-content"></div>
         </div>
 
         <!-- Step 1: Erkennung -->
         <div class="step-panel" id="panel-1">
-          <div class="step-panel-title">02 — Erkannte Entitäten</div>
+          <div class="step-panel-header">
+            <div class="step-panel-title">02 — Erkannte Entitäten</div>
+            <div class="step-panel-info">Presidio + SpaCy analysieren den Text lokal und erkennen sensible Daten: Namen, IBANs, Telefonnummern, Sozialversicherungsnummern und mehr. Farbig markiert nach Typ.</div>
+          </div>
           <div class="step-panel-content" id="panel-1-content"></div>
           <div class="entity-legend" id="entity-legend"></div>
         </div>
 
         <!-- Step 2: Anonymisiert -->
         <div class="step-panel" id="panel-2">
-          <div class="step-panel-title">03 — Anonymisierter Text</div>
+          <div class="step-panel-header">
+            <div class="step-panel-title">03 — Anonymisierter Text</div>
+            <div class="step-panel-info">Alle erkannten Entitäten werden durch typisierte Platzhalter ersetzt (z.B. [PERSON_1], [AT_IBAN_1]). <strong>Nur dieser Text wird an das LLM gesendet</strong> — deine echten Daten verlassen nie den Server.</div>
+          </div>
           <div class="step-panel-content" id="panel-2-content"></div>
         </div>
 
         <!-- Step 3: LLM-Antwort -->
         <div class="step-panel" id="panel-3">
-          <div class="step-panel-title">04 — LLM-Antwort (anonymisiert)</div>
+          <div class="step-panel-header">
+            <div class="step-panel-title">04 — LLM-Antwort (anonymisiert)</div>
+            <div class="step-panel-info">Die Antwort von Mistral AI — das Modell hat nur mit Platzhaltern gearbeitet und kennt deine echten Daten nicht. Beachte: Die Platzhalter tauchen in der Antwort wieder auf.</div>
+          </div>
           <div class="step-panel-content" id="panel-3-content">
             <div class="spinner"></div>
             <div class="loading-text">KI verarbeitet anonymisierten Text...</div>
@@ -115,7 +204,10 @@
 
         <!-- Step 4: Re-hydriert -->
         <div class="step-panel" id="panel-4">
-          <div class="step-panel-title">05 — Re-hydrierte Antwort</div>
+          <div class="step-panel-header">
+            <div class="step-panel-title">05 — Re-hydrierte Antwort</div>
+            <div class="step-panel-info">Die Platzhalter in der LLM-Antwort werden lokal wieder durch deine echten Daten ersetzt. Das Ergebnis: Eine vollständige, personalisierte Antwort — ohne dass das LLM jemals deine Daten gesehen hat.</div>
+          </div>
           <div class="step-panel-content" id="panel-4-content"></div>
         </div>
       </div>
@@ -133,11 +225,159 @@
     margin: 0 auto;
   }
 
+  .demo-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: rgba(6, 182, 212, 0.06);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+  }
+
+  .demo-notice svg {
+    flex-shrink: 0;
+    color: var(--color-accent);
+    margin-top: 2px;
+  }
+
+  .demo-notice p {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    max-width: none;
+  }
+
+  .demo-notice strong {
+    color: var(--color-text);
+  }
+
+  .step-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-accent);
+    background: rgba(6, 182, 212, 0.06);
+    border-radius: var(--radius-md);
+    animation: fadeSlideUp 0.4s ease both;
+  }
+
+  .step-hint svg {
+    flex-shrink: 0;
+  }
+
+  .step-panel-header {
+    margin-bottom: 1rem;
+  }
+
+  .step-panel-info {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-dim);
+    margin-top: 0.4rem;
+  }
+
+  .step-panel-info strong {
+    color: var(--color-accent);
+  }
+
   .demo-input-area {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 2rem;
+  }
+
+  .demo-options {
+    margin-top: 1rem;
+  }
+
+  .demo-options-toggle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    border: none;
+    transition: color var(--transition-fast);
+  }
+
+  .demo-options-toggle:hover {
+    color: var(--color-accent);
+  }
+
+  .demo-options-toggle .arrow {
+    transition: transform var(--transition-fast);
+    display: inline-block;
+    font-size: 0.7rem;
+  }
+
+  .demo-options-toggle .arrow.open {
+    transform: rotate(90deg);
+  }
+
+  .demo-options-panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height var(--transition-slow);
+    padding-top: 0;
+  }
+
+  .demo-options-panel.open {
+    max-height: 400px;
+    padding-top: 1rem;
+  }
+
+  .demo-option-group {
+    margin-bottom: 1rem;
+  }
+
+  .demo-option-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .demo-option-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.4rem;
+  }
+
+  .demo-option-hint {
+    display: block;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    margin-top: 0.15rem;
+  }
+
+  .demo-option-group textarea {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color var(--transition-fast);
+  }
+
+  .demo-option-group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 
   .example-label {
@@ -198,9 +438,473 @@
     border-bottom: 2px solid #10b981;
   }
 
+  /* ==========================================
+     File Upload Tabs & Dropzone
+     ========================================== */
+  .demo-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1.5px solid var(--color-border);
+  }
+
+  .demo-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    margin-bottom: -1.5px;
+  }
+
+  .demo-tab:hover {
+    color: var(--color-text);
+  }
+
+  .demo-tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .demo-tab svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .demo-tab.active svg {
+    opacity: 1;
+  }
+
+  .demo-tab-content {
+    display: none;
+  }
+
+  .demo-tab-content.active {
+    display: block;
+  }
+
+  .demo-dropzone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+  }
+
+  .demo-dropzone:hover {
+    border-color: var(--color-accent);
+    background: rgba(6, 182, 212, 0.03);
+  }
+
+  .demo-dropzone.drag-over {
+    border-color: var(--color-accent);
+    background: rgba(6, 182, 212, 0.06);
+    box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+  }
+
+  .demo-dropzone-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .demo-dropzone-icon {
+    color: var(--color-text-dim);
+    margin-bottom: 0.25rem;
+    transition: color var(--transition-fast);
+  }
+
+  .demo-dropzone:hover .demo-dropzone-icon,
+  .demo-dropzone.drag-over .demo-dropzone-icon {
+    color: var(--color-accent);
+  }
+
+  .demo-dropzone-text {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .demo-dropzone-link {
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .demo-dropzone-formats {
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    margin: 0;
+  }
+
+  .demo-dropzone-limit {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .demo-file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-top: 0.75rem;
+  }
+
+  .demo-file-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .demo-file-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .demo-file-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .demo-file-name {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .demo-file-size {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+  }
+
+  .demo-file-remove {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .demo-file-remove:hover {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  .demo-metadata-warnings {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #fbbf24;
+  }
+
+  .demo-metadata-warnings svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .demo-extracted-note {
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    padding: 0.5rem 0.75rem;
+    background: rgba(6, 182, 212, 0.05);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+  }
+
+  /* ==========================================
+     Sensitivity Warning
+     ========================================== */
+  @keyframes sensitivitySlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .sensitivity-warning {
+    position: relative;
+    margin: 1.25rem 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-border);
+    border-radius: var(--radius-md);
+    animation: sensitivitySlideIn 0.4s ease both;
+  }
+
+  .sensitivity-warning.medium {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.04);
+  }
+
+  .sensitivity-warning.high {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.04);
+  }
+
+  .sensitivity-warning-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .sensitivity-warning-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+  }
+
+  .sensitivity-warning.medium .sensitivity-warning-icon {
+    color: #f59e0b;
+  }
+
+  .sensitivity-warning.high .sensitivity-warning-icon {
+    color: #ef4444;
+  }
+
+  .sensitivity-warning-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.3;
+  }
+
+  .sensitivity-warning.medium .sensitivity-warning-title {
+    color: #fbbf24;
+  }
+
+  .sensitivity-warning.high .sensitivity-warning-title {
+    color: #f87171;
+  }
+
+  .sensitivity-warning-summary {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .sensitivity-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .sensitivity-flag {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 200px;
+  }
+
+  .sensitivity-flag-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .sensitivity-flag-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .sensitivity-flag-score {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 0.15em 0.45em;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
+  .sensitivity-warning.medium .sensitivity-flag-score {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+  }
+
+  .sensitivity-warning.high .sensitivity-flag-score {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  .sensitivity-excerpt {
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--color-text-dim);
+    font-family: var(--font-mono);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0.35rem 0.5rem;
+    border-radius: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .sensitivity-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .sensitivity-btn-proceed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .sensitivity-btn-proceed:hover {
+    transform: translateY(-1px);
+  }
+
+  .sensitivity-warning.medium .sensitivity-btn-proceed {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+  }
+
+  .sensitivity-warning.medium .sensitivity-btn-proceed:hover {
+    background: rgba(245, 158, 11, 0.25);
+  }
+
+  .sensitivity-warning.high .sensitivity-btn-proceed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+  }
+
+  .sensitivity-warning.high .sensitivity-btn-proceed:hover {
+    background: rgba(239, 68, 68, 0.25);
+  }
+
+  .sensitivity-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .sensitivity-btn-cancel:hover {
+    color: var(--color-text);
+    border-color: var(--color-text-dim);
+  }
+
   @media (max-width: 768px) {
     .demo-input-area {
       padding: 1.25rem;
+    }
+
+    .demo-tabs {
+      gap: 0;
+    }
+
+    .demo-tab {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .demo-dropzone {
+      padding: 1.5rem 1rem;
+    }
+
+    .demo-file-info {
+      flex-wrap: wrap;
+    }
+
+    .demo-file-remove {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.25rem;
+    }
+
+    .sensitivity-warning {
+      padding: 1rem 1.15rem;
+    }
+
+    .sensitivity-flag {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+
+    .sensitivity-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .sensitivity-btn-proceed,
+    .sensitivity-btn-cancel {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>
@@ -212,6 +916,14 @@
   // ==========================================
   const API_BASE = ''; // same origin; change to 'http://localhost:8000' for dev
   const MAX_CHARS = 2000;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const ACCEPTED_EXTENSIONS = ['.pdf','.docx','.xlsx','.txt','.csv','.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'];
+  const ACCEPTED_MIME_TYPES = [
+    'application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain','text/csv',
+    'image/png','image/jpeg','image/tiff','image/bmp','image/webp'
+  ];
 
   // ==========================================
   // Example texts (matching backend examples.py)
@@ -293,19 +1005,45 @@ Datum: 15. März 2026`,
   };
 
   // ==========================================
+  // File type icon SVGs
+  // ==========================================
+  const FILE_TYPE_ICONS = {
+    pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="12" y="17" text-anchor="middle" fill="#ef4444" stroke="none" font-size="6" font-weight="700">PDF</text></svg>',
+    docx: '<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="16" x2="14" y2="16"/></svg>',
+    xlsx: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><rect x="7" y="12" width="10" height="6" rx="1"/><line x1="10" y1="12" x2="10" y2="18"/><line x1="14" y1="12" x2="14" y2="18"/><line x1="7" y1="15" x2="17" y2="15"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    text: '<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="16" x2="12" y2="16"/></svg>'
+  };
+
+  // ==========================================
   // DOM references
   // ==========================================
   const inputEl = document.getElementById('demo-input');
   const charCountEl = document.getElementById('demo-char-count');
-  const promptToggle = document.getElementById('demo-prompt-toggle');
-  const promptArrow = document.getElementById('prompt-arrow');
-  const promptField = document.getElementById('demo-prompt-field');
+  const optionsToggle = document.getElementById('demo-options-toggle');
+  const optionsArrow = document.getElementById('options-arrow');
+  const optionsPanel = document.getElementById('demo-options-panel');
   const promptEl = document.getElementById('demo-prompt');
+  const denylistEl = document.getElementById('demo-denylist');
   const startBtn = document.getElementById('demo-start-btn');
   const resetBtn = document.getElementById('demo-reset-btn');
   const stepIndicator = document.getElementById('step-indicator');
   const stepPanels = document.getElementById('step-panels');
+  const stepHint = document.getElementById('step-hint');
   const inputArea = document.getElementById('demo-input-area');
+  const sensitivityContainer = document.getElementById('sensitivity-container');
+
+  // File upload DOM references
+  const tabBtns = document.querySelectorAll('.demo-tab');
+  const tabText = document.getElementById('tab-text');
+  const tabFile = document.getElementById('tab-file');
+  const dropzone = document.getElementById('demo-dropzone');
+  const fileInput = document.getElementById('demo-file-input');
+  const fileInfo = document.getElementById('demo-file-info');
+  const fileIcon = document.getElementById('demo-file-icon');
+  const fileName = document.getElementById('demo-file-name');
+  const fileSize = document.getElementById('demo-file-size');
+  const fileRemove = document.getElementById('demo-file-remove');
 
   // ==========================================
   // State
@@ -315,6 +1053,8 @@ Datum: 15. März 2026`,
   let sessionId = null;
   let analyzeResult = null;
   let processResult = null;
+  let activeTab = 'text'; // 'text' | 'file'
+  let selectedFile = null;
 
   // ==========================================
   // Helpers
@@ -325,13 +1065,56 @@ Datum: 15. März 2026`,
     return div.innerHTML;
   }
 
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function getFileExtension(name) {
+    const dot = name.lastIndexOf('.');
+    return dot >= 0 ? name.slice(dot).toLowerCase() : '';
+  }
+
+  function getFileTypeIcon(name) {
+    const ext = getFileExtension(name);
+    if (ext === '.pdf') return FILE_TYPE_ICONS.pdf;
+    if (ext === '.docx') return FILE_TYPE_ICONS.docx;
+    if (ext === '.xlsx') return FILE_TYPE_ICONS.xlsx;
+    if (['.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'].includes(ext)) return FILE_TYPE_ICONS.image;
+    return FILE_TYPE_ICONS.text;
+  }
+
+  function getFileFormatLabel(name) {
+    const ext = getFileExtension(name);
+    const labels = {
+      '.pdf': 'PDF-Dokument', '.docx': 'Word-Dokument', '.xlsx': 'Excel-Tabelle',
+      '.txt': 'Textdatei', '.csv': 'CSV-Datei',
+      '.png': 'PNG-Bild', '.jpg': 'JPEG-Bild', '.jpeg': 'JPEG-Bild',
+      '.tiff': 'TIFF-Bild', '.tif': 'TIFF-Bild', '.bmp': 'BMP-Bild', '.webp': 'WebP-Bild'
+    };
+    return labels[ext] || 'Datei';
+  }
+
+  function updateStartButton() {
+    if (state !== 'idle') {
+      startBtn.disabled = true;
+      return;
+    }
+    if (activeTab === 'text') {
+      startBtn.disabled = inputEl.value.length === 0;
+    } else {
+      startBtn.disabled = selectedFile === null;
+    }
+  }
+
   function updateCharCount() {
     const len = inputEl.value.length;
     charCountEl.textContent = len + ' / ' + MAX_CHARS;
     charCountEl.className = 'demo-char-count';
     if (len > MAX_CHARS * 0.9) charCountEl.classList.add('warn');
     if (len >= MAX_CHARS) charCountEl.classList.add('error');
-    startBtn.disabled = len === 0 || state !== 'idle';
+    updateStartButton();
   }
 
   function setStep(idx) {
@@ -433,9 +1216,9 @@ Datum: 15. März 2026`,
   }
 
   function buildAnonymizedHtml(anonymizedText) {
-    // Replace placeholders like <PERSON_1> with styled spans
-    return escapeHtml(anonymizedText).replace(/&lt;(\w+?)&gt;/g, function(match, name) {
-      return '<span class="anon-placeholder">&lt;' + name + '&gt;</span>';
+    // Replace placeholders like [PERSON_1] with styled spans
+    return escapeHtml(anonymizedText).replace(/\[(\w+?)\]/g, function(match, name) {
+      return '<span class="anon-placeholder">[' + name + ']</span>';
     });
   }
 
@@ -461,25 +1244,153 @@ Datum: 15. März 2026`,
   }
 
   // ==========================================
-  // API calls
+  // Sensitivity warning
   // ==========================================
-  async function callAnalyze(text) {
-    const resp = await fetch(API_BASE + '/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text })
+  function buildSensitivityWarning(sensitivity) {
+    return new Promise(function(resolve, reject) {
+      var level = sensitivity.risk_level || 'medium';
+
+      // Icon SVGs
+      var iconSvg = level === 'high'
+        ? '<svg class="sensitivity-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        : '<svg class="sensitivity-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+      var title = level === 'high'
+        ? 'Hohe Sensibilit\u00e4t erkannt'
+        : 'Erh\u00f6hte Sensibilit\u00e4t erkannt';
+
+      // Build flags HTML
+      var flagsHtml = '';
+      if (sensitivity.flags && sensitivity.flags.length > 0) {
+        flagsHtml = '<div class="sensitivity-flags">';
+        sensitivity.flags.forEach(function(flag) {
+          var scorePercent = Math.round((flag.score || 0) * 100);
+          var excerpt = flag.excerpt || '';
+          if (excerpt.length > 150) {
+            excerpt = excerpt.slice(0, 147) + '...';
+          }
+          flagsHtml += '<div class="sensitivity-flag">';
+          flagsHtml += '<div class="sensitivity-flag-top">';
+          flagsHtml += '<span class="sensitivity-flag-label">' + escapeHtml(flag.label || flag.category) + '</span>';
+          flagsHtml += '<span class="sensitivity-flag-score">' + scorePercent + '%</span>';
+          flagsHtml += '</div>';
+          if (excerpt) {
+            flagsHtml += '<div class="sensitivity-excerpt" title="' + escapeHtml(excerpt) + '">' + escapeHtml(excerpt) + '</div>';
+          }
+          flagsHtml += '</div>';
+        });
+        flagsHtml += '</div>';
+      }
+
+      var html = '<div class="sensitivity-warning ' + level + '">';
+      html += '<div class="sensitivity-warning-header">';
+      html += iconSvg;
+      html += '<div class="sensitivity-warning-title">' + escapeHtml(title) + '</div>';
+      html += '</div>';
+      if (sensitivity.summary) {
+        html += '<div class="sensitivity-warning-summary">' + escapeHtml(sensitivity.summary) + '</div>';
+      }
+      html += flagsHtml;
+      html += '<div class="sensitivity-actions">';
+      html += '<button class="sensitivity-btn-proceed" id="sensitivity-proceed" type="button">Trotzdem fortfahren</button>';
+      html += '<button class="sensitivity-btn-cancel" id="sensitivity-cancel" type="button">Abbrechen</button>';
+      html += '</div>';
+      html += '</div>';
+
+      sensitivityContainer.innerHTML = html;
+
+      document.getElementById('sensitivity-proceed').addEventListener('click', function() {
+        sensitivityContainer.innerHTML = '';
+        resolve();
+      });
+
+      document.getElementById('sensitivity-cancel').addEventListener('click', function() {
+        sensitivityContainer.innerHTML = '';
+        reject(new Error('cancelled'));
+      });
     });
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Analyse fehlgeschlagen (HTTP ' + resp.status + ')');
+  }
+
+  function hasSensitivityWarning(data) {
+    return data.sensitivity
+      && data.sensitivity.is_sensitive
+      && data.sensitivity.risk_level !== 'low';
+  }
+
+  // ==========================================
+  // Tab switching
+  // ==========================================
+  function switchTab(tab) {
+    activeTab = tab;
+    tabBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    tabText.classList.toggle('active', tab === 'text');
+    tabFile.classList.toggle('active', tab === 'file');
+
+    // Show/hide example buttons in text mode only
+    const exampleRow = inputArea.querySelector('.example-buttons');
+    if (exampleRow) exampleRow.style.display = tab === 'text' ? '' : 'none';
+
+    updateStartButton();
+  }
+
+  // ==========================================
+  // File validation & selection
+  // ==========================================
+  function validateFile(file) {
+    const ext = getFileExtension(file.name);
+    if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+      return 'Nicht unterstütztes Dateiformat: ' + ext + '. Erlaubt sind: ' + ACCEPTED_EXTENSIONS.join(', ');
     }
-    return resp.json();
+    if (file.size > MAX_FILE_SIZE) {
+      return 'Datei ist zu groß (' + formatFileSize(file.size) + '). Maximum: 10 MB.';
+    }
+    if (file.size === 0) {
+      return 'Die Datei ist leer.';
+    }
+    return null;
+  }
+
+  function selectFile(file) {
+    const error = validateFile(file);
+    if (error) {
+      alert(error);
+      return;
+    }
+    selectedFile = file;
+    fileIcon.innerHTML = getFileTypeIcon(file.name);
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+    dropzone.style.display = 'none';
+    fileInfo.style.display = 'flex';
+    updateStartButton();
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    dropzone.style.display = '';
+    fileInfo.style.display = 'none';
+    updateStartButton();
+  }
+
+  // ==========================================
+  // API calls — single call to /api/process
+  // ==========================================
+  function getDenyList() {
+    if (!denylistEl) return null;
+    const val = denylistEl.value.trim();
+    if (!val) return null;
+    const items = val.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    return items.length > 0 ? items : null;
   }
 
   async function callProcess(text, prompt) {
     const body = { text: text };
     if (prompt && prompt.trim()) body.prompt = prompt.trim();
-    if (sessionId) body.session_id = sessionId;
+    const denyList = getDenyList();
+    if (denyList) body.deny_list = denyList;
 
     const resp = await fetch(API_BASE + '/api/process', {
       method: 'POST',
@@ -493,84 +1404,137 @@ Datum: 15. März 2026`,
     return resp.json();
   }
 
+  async function callUpload(file, prompt) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (prompt && prompt.trim()) formData.append('prompt', prompt.trim());
+    const denyList = getDenyList();
+    if (denyList) formData.append('deny_list', denyList.join('\n'));
+
+    const resp = await fetch(API_BASE + '/api/upload', {
+      method: 'POST',
+      body: formData
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Dateiverarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
+    }
+    return resp.json();
+  }
+
+  // Helper: wait ms
+  function wait(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
   // ==========================================
-  // Main flow
+  // Build Step 0 content for file uploads
+  // ==========================================
+  function buildFileStep0(data) {
+    let html = '';
+
+    // Metadata warnings
+    if (data.metadata_warnings && data.metadata_warnings.length > 0) {
+      html += '<div class="demo-metadata-warnings">';
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      html += '<div>' + escapeHtml(data.metadata_warnings.join('; ')) + '</div>';
+      html += '</div>';
+    }
+
+    // Extracted text note
+    const formatLabel = selectedFile ? getFileFormatLabel(selectedFile.name) : 'Datei';
+    let noteText = formatLabel + ' verarbeitet';
+    if (data.page_count) {
+      noteText += ' (' + data.page_count + (data.page_count === 1 ? ' Seite' : ' Seiten') + ')';
+    }
+    html += '<div class="demo-extracted-note">' + escapeHtml(noteText) + '</div>';
+
+    // The extracted text
+    html += escapeHtml(data.extracted_text || '');
+    return html;
+  }
+
+  // ==========================================
+  // Main flow — single API call, progressive display
   // ==========================================
   async function startDemo() {
+    if (activeTab === 'file') {
+      return startFileDemo();
+    }
+
     const text = inputEl.value.trim();
     if (!text) return;
 
-    state = 'analyzing';
+    state = 'processing';
     startBtn.disabled = true;
-    startBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0;border-width:2px;"></div> Analysiere...';
+    startBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0;border-width:2px;"></div> Verarbeite...';
     resetBtn.style.display = 'inline-flex';
     stepIndicator.style.display = 'flex';
     stepPanels.style.display = 'block';
+    stepHint.style.display = 'flex';
 
-    // Step 0: Show original
+    // Step 0: Show original text immediately
     document.getElementById('panel-0-content').innerHTML = escapeHtml(text);
     setStep(0);
 
+    // Show loading hint for upcoming steps
+    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
+
     try {
-      // Call analyze API
-      const analyzeData = await callAnalyze(text);
-      analyzeResult = analyzeData;
-      sessionId = analyzeData.session_id || null;
+      // Single API call — gets all intermediate results
+      const data = await callProcess(text, promptEl ? promptEl.value : '');
+      processResult = data;
+      analyzeResult = data;
+      sessionId = data.session_id || null;
 
-      state = 'analyzed';
+      const entities = data.entities || [];
 
-      // Step 1: Show recognized entities
-      const entities = analyzeData.entities || [];
-      document.getElementById('panel-1-content').innerHTML = buildAnnotatedHtml(text, entities);
+      // === Sensitivity check — pause if sensitive ===
+      if (hasSensitivityWarning(data)) {
+        try {
+          await buildSensitivityWarning(data.sensitivity);
+        } catch (e) {
+          // User clicked "Abbrechen"
+          resetDemo();
+          return;
+        }
+      }
+
+      // === Step 1: Erkennung — pause so user can read ===
+      await wait(800);
+      document.getElementById('panel-1-content').innerHTML =
+        data.annotated_html || buildAnnotatedHtml(text, entities);
       buildEntityLegend(entities);
       setStep(1);
       enableStepClick(1);
 
-      // Brief pause for UX
-      await new Promise(r => setTimeout(r, 600));
-
-      // Step 2: Show anonymized text
-      if (analyzeData.anonymized_text) {
-        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(analyzeData.anonymized_text);
-      } else {
-        document.getElementById('panel-2-content').innerHTML = '<span style="color:var(--color-text-dim)">Kein anonymisierter Text verfügbar.</span>';
+      // === Step 2: Anonymisierung — pause again ===
+      await wait(1500);
+      if (data.anonymized_text) {
+        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(data.anonymized_text);
       }
       setStep(2);
       enableStepClick(2);
 
-      // Now call process API
-      state = 'processing';
-      await new Promise(r => setTimeout(r, 400));
-      setStep(3);
-      enableStepClick(2); // Don't allow clicking step 3/4 yet
-
-      // Show loading in step 3
-      document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
-
-      const processData = await callProcess(text, promptEl ? promptEl.value : '');
-      processResult = processData;
-
-      // Step 3: LLM response (anonymized)
-      if (processData.llm_response_anonymized) {
-        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(processData.llm_response_anonymized);
-      } else if (processData.llm_response) {
-        document.getElementById('panel-3-content').innerHTML = escapeHtml(processData.llm_response);
+      // === Step 3: LLM-Antwort ===
+      await wait(1500);
+      if (data.llm_response_anonymized) {
+        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(data.llm_response_anonymized);
       }
+      setStep(3);
       enableStepClick(3);
 
-      await new Promise(r => setTimeout(r, 500));
-
-      // Step 4: Re-hydrated response
-      if (processData.rehydrated_response) {
-        const ents = (analyzeResult.entities || []).map(e => ({
+      // === Step 4: Re-hydrierte Antwort ===
+      await wait(2000);
+      const rehydrated = data.llm_response_rehydrated || data.rehydrated_response;
+      if (rehydrated) {
+        const ents = entities.map(e => ({
           ...e,
           original_value: e.text || e.original_value
         }));
-        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(processData.rehydrated_response, ents);
-      } else if (processData.response) {
-        document.getElementById('panel-4-content').innerHTML = escapeHtml(processData.response);
+        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(rehydrated, ents);
       } else {
-        document.getElementById('panel-4-content').innerHTML = escapeHtml(processData.llm_response || 'Keine Antwort erhalten.');
+        document.getElementById('panel-4-content').innerHTML = escapeHtml(data.llm_response_anonymized || 'Keine Antwort erhalten.');
       }
 
       setStep(4);
@@ -579,6 +1543,7 @@ Datum: 15. März 2026`,
       startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
 
     } catch (err) {
+      if (err.message === 'cancelled') return;
       state = 'error';
       const panelContent = document.getElementById('panel-' + currentStep + '-content');
       if (panelContent) {
@@ -593,6 +1558,108 @@ Datum: 15. März 2026`,
     }
   }
 
+  // ==========================================
+  // File upload flow
+  // ==========================================
+  async function startFileDemo() {
+    if (!selectedFile) return;
+
+    state = 'processing';
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0;border-width:2px;"></div> Datei wird verarbeitet...';
+    resetBtn.style.display = 'inline-flex';
+    stepIndicator.style.display = 'flex';
+    stepPanels.style.display = 'block';
+    stepHint.style.display = 'flex';
+
+    // Step 0: Show loading while file is uploaded/extracted
+    document.getElementById('panel-0-content').innerHTML = '<div class="spinner"></div><div class="loading-text">Datei wird hochgeladen und Text extrahiert...</div>';
+    setStep(0);
+
+    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
+
+    try {
+      const data = await callUpload(selectedFile, promptEl ? promptEl.value : '');
+      processResult = data;
+      analyzeResult = data;
+      sessionId = data.session_id || null;
+
+      const entities = data.entities || [];
+      const extractedText = data.extracted_text || '';
+
+      // === Step 0: Show extracted text with metadata warnings ===
+      document.getElementById('panel-0-content').innerHTML = buildFileStep0(data);
+      enableStepClick(0);
+
+      // === Sensitivity check — pause if sensitive ===
+      if (hasSensitivityWarning(data)) {
+        try {
+          await buildSensitivityWarning(data.sensitivity);
+        } catch (e) {
+          // User clicked "Abbrechen"
+          resetDemo();
+          return;
+        }
+      }
+
+      // === Step 1: Erkennung ===
+      await wait(800);
+      document.getElementById('panel-1-content').innerHTML =
+        data.annotated_html || buildAnnotatedHtml(extractedText, entities);
+      buildEntityLegend(entities);
+      setStep(1);
+      enableStepClick(1);
+
+      // === Step 2: Anonymisierung ===
+      await wait(1500);
+      if (data.anonymized_text) {
+        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(data.anonymized_text);
+      }
+      setStep(2);
+      enableStepClick(2);
+
+      // === Step 3: LLM-Antwort ===
+      await wait(1500);
+      if (data.llm_response_anonymized) {
+        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(data.llm_response_anonymized);
+      }
+      setStep(3);
+      enableStepClick(3);
+
+      // === Step 4: Re-hydrierte Antwort ===
+      await wait(2000);
+      const rehydrated = data.llm_response_rehydrated || data.rehydrated_response;
+      if (rehydrated) {
+        const ents = entities.map(e => ({
+          ...e,
+          original_value: e.text || e.original_value
+        }));
+        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(rehydrated, ents);
+      } else {
+        document.getElementById('panel-4-content').innerHTML = escapeHtml(data.llm_response_anonymized || 'Keine Antwort erhalten.');
+      }
+
+      setStep(4);
+      enableStepClick(4);
+      state = 'complete';
+      startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
+
+    } catch (err) {
+      if (err.message === 'cancelled') return;
+      state = 'error';
+      const panelContent = document.getElementById('panel-' + currentStep + '-content');
+      if (panelContent) {
+        panelContent.innerHTML = '<div class="error-message">Fehler: ' + escapeHtml(err.message) + '</div>';
+      }
+      startBtn.innerHTML = 'Fehler — nochmal versuchen';
+      startBtn.disabled = false;
+      startBtn.onclick = function() {
+        resetDemo();
+        setTimeout(startFileDemo, 100);
+      };
+    }
+  }
+
   function resetDemo() {
     state = 'idle';
     currentStep = -1;
@@ -602,10 +1669,17 @@ Datum: 15. März 2026`,
 
     inputEl.value = '';
     if (promptEl) promptEl.value = '';
+    if (denylistEl) denylistEl.value = '';
     updateCharCount();
 
+    // Clear file selection and switch to text tab
+    clearFile();
+    switchTab('text');
+
+    sensitivityContainer.innerHTML = '';
     stepIndicator.style.display = 'none';
     stepPanels.style.display = 'none';
+    stepHint.style.display = 'none';
     resetBtn.style.display = 'none';
 
     startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21"/></svg> Analyse starten';
@@ -636,13 +1710,61 @@ Datum: 15. März 2026`,
   // ==========================================
   inputEl.addEventListener('input', updateCharCount);
 
-  promptToggle.addEventListener('click', function() {
-    const isOpen = promptField.classList.toggle('open');
-    promptArrow.classList.toggle('open', isOpen);
+  optionsToggle.addEventListener('click', function() {
+    const isOpen = optionsPanel.classList.toggle('open');
+    optionsArrow.classList.toggle('open', isOpen);
   });
 
   startBtn.addEventListener('click', startDemo);
   resetBtn.addEventListener('click', resetDemo);
+
+  // Tab switching
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      if (state !== 'idle') return;
+      switchTab(this.dataset.tab);
+    });
+  });
+
+  // Drag-and-drop handlers
+  dropzone.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      selectFile(this.files[0]);
+    }
+  });
+
+  dropzone.addEventListener('dragenter', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.classList.add('drag-over');
+  });
+
+  dropzone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.classList.add('drag-over');
+  });
+
+  dropzone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.classList.remove('drag-over');
+  });
+
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.classList.remove('drag-over');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      selectFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  fileRemove.addEventListener('click', clearFile);
 
   // Example buttons
   document.querySelectorAll('.example-btn').forEach(btn => {
@@ -651,11 +1773,13 @@ Datum: 15. März 2026`,
       const ex = EXAMPLES[idx];
       if (ex) {
         if (state !== 'idle') resetDemo();
+        // Make sure we're on the text tab
+        switchTab('text');
         inputEl.value = ex.text;
         if (promptEl && ex.prompt) {
           promptEl.value = ex.prompt;
-          promptField.classList.add('open');
-          promptArrow.classList.add('open');
+          optionsPanel.classList.add('open');
+          optionsArrow.classList.add('open');
         }
         updateCharCount();
         inputEl.focus();

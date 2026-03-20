@@ -7,11 +7,11 @@ services:
       - "127.0.0.1:8000:8000"
     env_file:
       - .env
-    mem_limit: 1500m
+    mem_limit: 2500m
     cpus: 1.5
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s

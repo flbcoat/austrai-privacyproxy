@@ -25,7 +25,7 @@ async def analyze_text(request: Request, body: TextRequest) -> AnalyzeResponse:
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
 
-    entities = detect(body.text)
+    entities = detect(body.text, entity_types=body.entity_types, deny_list=body.deny_list)
     annotated_html = generate_annotated_html(body.text, entities)
 
     return AnalyzeResponse(
