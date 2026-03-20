@@ -6,7 +6,7 @@ from app.models import HealthResponse
 
 router = APIRouter()
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "2.0.0"
 
 
 @router.get("/api/health", response_model=HealthResponse)

@@ -6,10 +6,13 @@ from app.models import ProcessRequest, ProcessResponse
 from app.services.anonymizer import anonymize
 from app.services.detector import detect, generate_annotated_html
 from app.services.llm_client import call_llm
+from app.services.local_llm import is_available as local_llm_available, summarize_locally
 from app.services.rate_limiter import rate_limiter
 from app.services.rehydrator import rehydrate
 from app.services.sensitivity_analyzer import analyze_sensitivity
 from app.services.session_store import session_store
+
+logger = __import__("logging").getLogger(__name__)
 
 router = APIRouter()
 
@@ -52,10 +55,23 @@ async def process_text(request: Request, body: ProcessRequest) -> ProcessRespons
     # Step 4: Create session for mapping storage
     session_id = session_store.create_session(mappings)
 
-    # Step 5: Call LLM with anonymized text
+    # Step 5: Generate local summary for high-risk content (if local LLM available)
+    local_summary: str | None = None
+    if (
+        sensitivity_report
+        and sensitivity_report.risk_level == "high"
+        and local_llm_available()
+    ):
+        try:
+            local_summary = summarize_locally(body.text)
+            logger.info("Lokale Zusammenfassung fuer hochsensiblen Text erstellt.")
+        except Exception as e:
+            logger.warning("Lokale Zusammenfassung fehlgeschlagen: %s", e)
+
+    # Step 6: Call LLM with anonymized text
     llm_response_anonymized = await call_llm(anonymized_text, body.prompt)
 
-    # Step 6: Rehydrate LLM response
+    # Step 7: Rehydrate LLM response
     llm_response_rehydrated = rehydrate(llm_response_anonymized, mappings)
 
     return ProcessResponse(
@@ -68,4 +84,5 @@ async def process_text(request: Request, body: ProcessRequest) -> ProcessRespons
         llm_response_rehydrated=llm_response_rehydrated,
         session_id=session_id,
         sensitivity=sensitivity_report,
+        local_summary=local_summary,
     )

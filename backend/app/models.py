@@ -94,6 +94,10 @@ class ProcessResponse(BaseModel):
         default=None,
         description="Ergebnis der Inhalts-Sensitivitaetsanalyse (optional)",
     )
+    local_summary: str | None = Field(
+        default=None,
+        description="Lokale datenschutzkonforme Zusammenfassung (nur bei hohem Risiko und verfuegbarem lokalem LLM)",
+    )
 
 
 class UploadResponse(BaseModel):
@@ -122,6 +126,10 @@ class UploadResponse(BaseModel):
     sensitivity: SensitivityReport | None = Field(
         default=None,
         description="Ergebnis der Inhalts-Sensitivitaetsanalyse (optional)",
+    )
+    local_summary: str | None = Field(
+        default=None,
+        description="Lokale datenschutzkonforme Zusammenfassung (nur bei hohem Risiko und verfuegbarem lokalem LLM)",
     )
 
 

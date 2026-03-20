@@ -96,19 +96,41 @@ def detect(
             If None, all supported types are detected.
         deny_list: Optional list of additional words/phrases to detect as PII.
             These are matched as-is (case-insensitive).
+            Automatically merged with persistent custom terms from
+            ~/.privacyproxy/config.yaml.
 
     Returns:
         List of detected Entity objects filtered by confidence threshold.
     """
     analyzer = get_analyzer()
 
+    # Merge persistent custom terms with per-request deny_list
+    merged_deny_list: list[str] = []
+    try:
+        from app.custom_terms import get_custom_terms
+        persistent = get_custom_terms()
+        if persistent:
+            merged_deny_list.extend(persistent)
+    except Exception:
+        # Graceful fallback if config file is unavailable
+        pass
+    if deny_list:
+        merged_deny_list.extend(deny_list)
+    # Deduplicate while preserving order
+    seen: set[str] = set()
+    unique_deny: list[str] = []
+    for term in merged_deny_list:
+        if term not in seen:
+            seen.add(term)
+            unique_deny.append(term)
+
     # If custom deny_list provided, create a temporary recognizer
     ad_hoc_recognizers = None
-    if deny_list:
+    if unique_deny:
         from presidio_analyzer import PatternRecognizer
         deny_recognizer = PatternRecognizer(
             supported_entity="CUSTOM",
-            deny_list=deny_list,
+            deny_list=unique_deny,
             name="Custom Deny List",
             supported_language=language,
         )

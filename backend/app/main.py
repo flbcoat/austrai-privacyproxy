@@ -9,9 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.custom_terms import get_custom_terms
 from app.data.examples import EXAMPLES
 from app.services.extractor import SUPPORTED_FORMATS
-from app.routers import analyze, anonymize, health, process, sensitivity, upload
+from app.routers import analyze, anonymize, health, process, sensitivity, summarize, upload
 from app.services.detector import init_analyzer
 from app.services.sensitivity_analyzer import init_sensitivity_model
 from app.services.session_store import session_store
@@ -36,11 +37,16 @@ async def _periodic_session_cleanup() -> None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: initialize resources at startup, clean up at shutdown."""
     # Startup
-    logger.info("Starte AUSTR.AI PrivacyProxy Backend...")
+    logger.info("Starte AUSTR.AI PrivacyProxy Backend v2.0.0...")
     init_analyzer()
     logger.info("SpaCy-Modell und Presidio Analyzer geladen.")
     init_sensitivity_model()
     logger.info("Sensitivity-Modell geladen.")
+
+    # Log custom terms if any are configured
+    custom_terms = get_custom_terms()
+    if custom_terms:
+        logger.info("Custom Deny-List: %d Begriffe geladen.", len(custom_terms))
 
     # Start periodic session cleanup task
     cleanup_task = asyncio.create_task(_periodic_session_cleanup())
@@ -59,7 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title="AUSTR.AI PrivacyProxy",
     description="Anonymisierungs-Proxy für LLM-Anfragen — Schützt personenbezogene Daten nach österreichischem/EU-Datenschutzrecht.",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -79,6 +85,7 @@ app.include_router(anonymize.router, tags=["Anonymisierung"])
 app.include_router(process.router, tags=["Pipeline"])
 app.include_router(upload.router, tags=["Upload"])
 app.include_router(sensitivity.router, tags=["Sensitivitaet"])
+app.include_router(summarize.router, tags=["Zusammenfassung"])
 
 
 @app.get("/api/examples")

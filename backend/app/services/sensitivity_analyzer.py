@@ -101,8 +101,8 @@ _CREDENTIAL_PATTERN = re.compile(
 # ---------------------------------------------------------------------------
 # Schwellenwerte
 # ---------------------------------------------------------------------------
-SIMILARITY_THRESHOLD = 0.35
-HIGH_RISK_THRESHOLD = 0.6
+SIMILARITY_THRESHOLD = 0.50
+HIGH_RISK_THRESHOLD = 0.7
 CHUNK_SIZE = 200
 
 
@@ -229,9 +229,9 @@ def _compute_risk_level(flags: list[SensitivityFlag]) -> str:
 
     max_score = max(f.score for f in flags)
 
-    if len(flags) >= 3 or max_score >= HIGH_RISK_THRESHOLD:
+    if max_score >= HIGH_RISK_THRESHOLD or len(flags) >= 4:
         return "high"
-    elif len(flags) >= 1:
+    elif len(flags) >= 2 or max_score >= 0.6:
         return "medium"
 
     return "low"
@@ -262,11 +262,9 @@ def _generate_summary(flags: list[SensitivityFlag], risk_level: str) -> str:
 
     risk_label = risk_labels.get(risk_level, risk_level)
 
-    return (
-        f"Risikostufe: {risk_label}. "
-        f"{len(flags)} sensible(r) Inhalt(e) erkannt in den Kategorien: {cat_text}. "
-        f"Bitte pruefen Sie, ob dieser Text an ein externes Sprachmodell gesendet werden soll."
-    )
+    if risk_level == "high":
+        return f"Vertraulicher Inhalt erkannt ({cat_text}). Daten werden vor dem Senden vollstaendig anonymisiert."
+    return f"Moeglicherweise sensibel: {cat_text}."
 
 
 def analyze_sensitivity(text: str) -> SensitivityReport:

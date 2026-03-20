@@ -9,6 +9,7 @@ from app.services.anonymizer import anonymize
 from app.services.detector import detect, generate_annotated_html
 from app.services.extractor import MAX_FILE_SIZE, extract_text
 from app.services.llm_client import call_llm
+from app.services.local_llm import is_available as local_llm_available, summarize_locally
 from app.services.rate_limiter import rate_limiter
 from app.services.rehydrator import rehydrate
 from app.services.sensitivity_analyzer import analyze_sensitivity
@@ -125,10 +126,23 @@ async def upload_file(
     # Schritt 5: Session erstellen
     session_id = session_store.create_session(mappings)
 
-    # Schritt 6: LLM-Aufruf mit anonymisiertem Text
+    # Schritt 6: Lokale Zusammenfassung fuer hochsensible Inhalte (falls lokales LLM verfuegbar)
+    local_summary: str | None = None
+    if (
+        sensitivity_report
+        and sensitivity_report.risk_level == "high"
+        and local_llm_available()
+    ):
+        try:
+            local_summary = summarize_locally(extracted.text)
+            logger.info("Lokale Zusammenfassung fuer hochsensiblen Upload erstellt.")
+        except Exception as e:
+            logger.warning("Lokale Zusammenfassung fuer Upload fehlgeschlagen: %s", e)
+
+    # Schritt 7: LLM-Aufruf mit anonymisiertem Text
     llm_response_anonymized = await call_llm(anonymized_text, prompt)
 
-    # Schritt 7: LLM-Antwort rehydrieren
+    # Schritt 8: LLM-Antwort rehydrieren
     llm_response_rehydrated = rehydrate(llm_response_anonymized, mappings)
 
     logger.info(
@@ -157,4 +171,5 @@ async def upload_file(
         llm_response_rehydrated=llm_response_rehydrated,
         session_id=session_id,
         sensitivity=sensitivity_report,
+        local_summary=local_summary,
     )

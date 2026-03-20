@@ -13,3 +13,8 @@ openpyxl==3.1.5
 Pillow==11.2.1
 pytesseract==0.3.13
 sentence-transformers==4.1.0
+
+# Optional: Local LLM for privacy-preserving summarization (CPU-only)
+# Enables /api/summarize endpoint and local_summary in process/upload responses.
+# Compilation can be tricky — if not installed, these features are gracefully skipped.
+# llama-cpp-python>=0.3

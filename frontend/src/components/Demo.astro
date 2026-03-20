@@ -215,7 +215,7 @@
   </div>
 </section>
 
-<style>
+<style is:global>
   .demo-section {
     position: relative;
   }
@@ -914,84 +914,36 @@
   // ==========================================
   // Configuration
   // ==========================================
-  const API_BASE = ''; // same origin; change to 'http://localhost:8000' for dev
-  const MAX_CHARS = 2000;
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-  const ACCEPTED_EXTENSIONS = ['.pdf','.docx','.xlsx','.txt','.csv','.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'];
-  const ACCEPTED_MIME_TYPES = [
-    'application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain','text/csv',
-    'image/png','image/jpeg','image/tiff','image/bmp','image/webp'
-  ];
+  var API_BASE = '';
+  var MAX_CHARS = 2000;
+  var MAX_FILE_SIZE = 10 * 1024 * 1024;
+  var ACCEPTED_EXTENSIONS = ['.pdf','.docx','.xlsx','.txt','.csv','.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'];
 
   // ==========================================
-  // Example texts (matching backend examples.py)
+  // Example texts
   // ==========================================
-  const EXAMPLES = [
+  var EXAMPLES = [
     {
       label: 'Geschäfts-E-Mail',
-      text: `Sehr geehrter Herr Thomas Gruber,
-
-bezugnehmend auf unser Telefonat vom 14. März 2026 sende ich Ihnen hiermit die Rechnung der Innovatech Solutions GmbH (UID: ATU12345678) für die erbrachten Beratungsleistungen.
-
-Bitte überweisen Sie den Betrag von EUR 4.800,00 auf folgendes Konto:
-IBAN: AT48 3200 0000 1234 5678
-BIC: RLNWATWW
-
-Bei Rückfragen erreichen Sie mich unter +43 1 234 5678 oder per E-Mail an m.steinbauer@innovatech.at.
-
-Mit freundlichen Grüßen,
-Maria Steinbauer
-Innovatech Solutions GmbH`,
-      prompt: 'Bitte bestätige den Erhalt dieser E-Mail höflich und professionell.'
+      text: 'Sehr geehrter Herr Thomas Gruber,\n\nbezugnehmend auf unser Telefonat vom 14. M\u00e4rz 2026 sende ich Ihnen hiermit die Rechnung der Innovatech Solutions GmbH (UID: ATU12345678) f\u00fcr die erbrachten Beratungsleistungen.\n\nBitte \u00fcberweisen Sie den Betrag von EUR 4.800,00 auf folgendes Konto:\nIBAN: AT48 3200 0000 1234 5678\nBIC: RLNWATWW\n\nBei R\u00fcckfragen erreichen Sie mich unter +43 1 234 5678 oder per E-Mail an m.steinbauer@innovatech.at.\n\nMit freundlichen Gr\u00fc\u00dfen,\nMaria Steinbauer\nInnovatech Solutions GmbH',
+      prompt: 'Bitte best\u00e4tige den Erhalt dieser E-Mail h\u00f6flich und professionell.'
     },
     {
       label: 'Arzt-Befund',
-      text: `Befundbericht
-
-Patient: Elisabeth Moser
-SVNr: 1234 120585
-Geburtsdatum: 12.05.1985
-Adresse: Hauptstraße 42, 1010 Wien
-
-Befund vom 10.03.2026:
-Die Patientin stellte sich mit persistierenden Kopfschmerzen und Schwindel vor. Die neurologische Untersuchung ergab keine Auffälligkeiten. MRT des Schädels unauffällig. Blutbild im Normbereich.
-
-Diagnose: Spannungskopfschmerz (G44.2)
-Therapie: Ibuprofen 400mg bei Bedarf, Physiotherapie empfohlen.
-
-Nächster Termin: 10.04.2026
-
-Dr. Friedrich Haslinger
-Facharzt für Neurologie
-Ordination: Ringstraße 15, 1010 Wien
-Tel: +43 1 987 6543`,
-      prompt: 'Fasse diesen Befund in einfacher Sprache für den Patienten zusammen.'
+      text: 'Befundbericht\n\nPatient: Elisabeth Moser\nSVNr: 1234 120585\nGeburtsdatum: 12.05.1985\nAdresse: Hauptstra\u00dfe 42, 1010 Wien\n\nBefund vom 10.03.2026:\nDie Patientin stellte sich mit persistierenden Kopfschmerzen und Schwindel vor. Die neurologische Untersuchung ergab keine Auff\u00e4lligkeiten. MRT des Sch\u00e4dels unauff\u00e4llig. Blutbild im Normbereich.\n\nDiagnose: Spannungskopfschmerz (G44.2)\nTherapie: Ibuprofen 400mg bei Bedarf, Physiotherapie empfohlen.\n\nN\u00e4chster Termin: 10.04.2026\n\nDr. Friedrich Haslinger\nFacharzt f\u00fcr Neurologie\nOrdination: Ringstra\u00dfe 15, 1010 Wien\nTel: +43 1 987 6543',
+      prompt: 'Fasse diesen Befund in einfacher Sprache f\u00fcr den Patienten zusammen.'
     },
     {
       label: 'Vertragsklausel',
-      text: `Zwischen der Alpentechnik Consulting GmbH (FN 543210a, Handelsgericht Wien) und der Bergland Industrie AG (FN 987654b, Handelsgericht Graz) wird folgende Vereinbarung getroffen:
-
-§3 Vergütung:
-Alpentechnik Consulting GmbH stellt der Bergland Industrie AG für die Erbringung der vereinbarten Leistungen einen Pauschalbetrag von EUR 125.000,00 (exkl. USt) in Rechnung. Die Zahlung erfolgt auf das Konto der Alpentechnik Consulting GmbH:
-IBAN: AT61 1200 0000 9876 5432
-BIC: BKAUATWW
-
-Die UID-Nummer der Alpentechnik Consulting GmbH lautet ATU98765432.
-
-Ansprechpartner: Dr. Katharina Wieser, Tel: +43 316 123 456, E-Mail: k.wieser@alpentechnik.at
-
-Gerichtsstand: Wien
-Datum: 15. März 2026`,
-      prompt: 'Prüfe diese Vertragsklausel auf mögliche rechtliche Schwachstellen.'
+      text: 'Zwischen der Alpentechnik Consulting GmbH (FN 543210a, Handelsgericht Wien) und der Bergland Industrie AG (FN 987654b, Handelsgericht Graz) wird folgende Vereinbarung getroffen:\n\n\u00a73 Verg\u00fctung:\nAlpentechnik Consulting GmbH stellt der Bergland Industrie AG f\u00fcr die Erbringung der vereinbarten Leistungen einen Pauschalbetrag von EUR 125.000,00 (exkl. USt) in Rechnung. Die Zahlung erfolgt auf das Konto der Alpentechnik Consulting GmbH:\nIBAN: AT61 1200 0000 9876 5432\nBIC: BKAUATWW\n\nDie UID-Nummer der Alpentechnik Consulting GmbH lautet ATU98765432.\n\nAnsprechpartner: Dr. Katharina Wieser, Tel: +43 316 123 456, E-Mail: k.wieser@alpentechnik.at\n\nGerichtsstand: Wien\nDatum: 15. M\u00e4rz 2026',
+      prompt: 'Pr\u00fcfe diese Vertragsklausel auf m\u00f6gliche rechtliche Schwachstellen.'
     }
   ];
 
   // ==========================================
-  // Entity type metadata
+  // Entity type colors
   // ==========================================
-  const ENTITY_COLORS = {
+  var ENTITY_COLORS = {
     'PERSON':           { bg: 'rgba(6, 182, 212, 0.2)',   color: '#22d3ee', border: '#06b6d4', dot: '#06b6d4', label: 'Person' },
     'IBAN':             { bg: 'rgba(16, 185, 129, 0.2)',   color: '#34d399', border: '#10b981', dot: '#10b981', label: 'IBAN' },
     'PHONE_NUMBER':     { bg: 'rgba(251, 146, 60, 0.2)',   color: '#fb923c', border: '#f97316', dot: '#f97316', label: 'Telefon' },
@@ -1002,12 +954,14 @@ Datum: 15. März 2026`,
     'ORG':              { bg: 'rgba(59, 130, 246, 0.2)',    color: '#60a5fa', border: '#3b82f6', dot: '#3b82f6', label: 'Organisation' },
     'EMAIL_ADDRESS':    { bg: 'rgba(168, 85, 247, 0.2)',    color: '#c084fc', border: '#a855f7', dot: '#a855f7', label: 'E-Mail' },
     'DATE_TIME':        { bg: 'rgba(20, 184, 166, 0.2)',    color: '#2dd4bf', border: '#14b8a6', dot: '#14b8a6', label: 'Datum' },
+    'DOC_METADATA':     { bg: 'rgba(148, 163, 184, 0.2)',   color: '#cbd5e1', border: '#94a3b8', dot: '#94a3b8', label: 'Metadaten' },
+    'CUSTOM':           { bg: 'rgba(234, 179, 8, 0.2)',     color: '#fbbf24', border: '#eab308', dot: '#eab308', label: 'Benutzerdefiniert' }
   };
 
   // ==========================================
   // File type icon SVGs
   // ==========================================
-  const FILE_TYPE_ICONS = {
+  var FILE_TYPE_ICONS = {
     pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="12" y="17" text-anchor="middle" fill="#ef4444" stroke="none" font-size="6" font-weight="700">PDF</text></svg>',
     docx: '<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="16" x2="14" y2="16"/></svg>',
     xlsx: '<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><rect x="7" y="12" width="10" height="6" rx="1"/><line x1="10" y1="12" x2="10" y2="18"/><line x1="14" y1="12" x2="14" y2="18"/><line x1="7" y1="15" x2="17" y2="15"/></svg>',
@@ -1018,51 +972,52 @@ Datum: 15. März 2026`,
   // ==========================================
   // DOM references
   // ==========================================
-  const inputEl = document.getElementById('demo-input');
-  const charCountEl = document.getElementById('demo-char-count');
-  const optionsToggle = document.getElementById('demo-options-toggle');
-  const optionsArrow = document.getElementById('options-arrow');
-  const optionsPanel = document.getElementById('demo-options-panel');
-  const promptEl = document.getElementById('demo-prompt');
-  const denylistEl = document.getElementById('demo-denylist');
-  const startBtn = document.getElementById('demo-start-btn');
-  const resetBtn = document.getElementById('demo-reset-btn');
-  const stepIndicator = document.getElementById('step-indicator');
-  const stepPanels = document.getElementById('step-panels');
-  const stepHint = document.getElementById('step-hint');
-  const inputArea = document.getElementById('demo-input-area');
-  const sensitivityContainer = document.getElementById('sensitivity-container');
-
-  // File upload DOM references
-  const tabBtns = document.querySelectorAll('.demo-tab');
-  const tabText = document.getElementById('tab-text');
-  const tabFile = document.getElementById('tab-file');
-  const dropzone = document.getElementById('demo-dropzone');
-  const fileInput = document.getElementById('demo-file-input');
-  const fileInfo = document.getElementById('demo-file-info');
-  const fileIcon = document.getElementById('demo-file-icon');
-  const fileName = document.getElementById('demo-file-name');
-  const fileSize = document.getElementById('demo-file-size');
-  const fileRemove = document.getElementById('demo-file-remove');
+  var inputEl = document.getElementById('demo-input');
+  var charCountEl = document.getElementById('demo-char-count');
+  var optionsToggle = document.getElementById('demo-options-toggle');
+  var optionsArrow = document.getElementById('options-arrow');
+  var optionsPanel = document.getElementById('demo-options-panel');
+  var promptEl = document.getElementById('demo-prompt');
+  var denylistEl = document.getElementById('demo-denylist');
+  var startBtn = document.getElementById('demo-start-btn');
+  var resetBtn = document.getElementById('demo-reset-btn');
+  var stepIndicator = document.getElementById('step-indicator');
+  var stepPanels = document.getElementById('step-panels');
+  var stepHint = document.getElementById('step-hint');
+  var inputArea = document.getElementById('demo-input-area');
+  var sensitivityContainer = document.getElementById('sensitivity-container');
+  var tabBtns = document.querySelectorAll('.demo-tab');
+  var tabText = document.getElementById('tab-text');
+  var tabFile = document.getElementById('tab-file');
+  var dropzone = document.getElementById('demo-dropzone');
+  var fileInput = document.getElementById('demo-file-input');
+  var fileInfo = document.getElementById('demo-file-info');
+  var fileIcon = document.getElementById('demo-file-icon');
+  var fileName = document.getElementById('demo-file-name');
+  var fileSize = document.getElementById('demo-file-size');
+  var fileRemove = document.getElementById('demo-file-remove');
 
   // ==========================================
   // State
   // ==========================================
-  let state = 'idle'; // idle | analyzing | analyzed | processing | complete | error
-  let currentStep = -1;
-  let sessionId = null;
-  let analyzeResult = null;
-  let processResult = null;
-  let activeTab = 'text'; // 'text' | 'file'
-  let selectedFile = null;
+  var state = 'idle';
+  var currentStep = -1;
+  var maxCompletedStep = -1;
+  var sessionId = null;
+  var activeTab = 'text';
+  var selectedFile = null;
 
   // ==========================================
   // Helpers
   // ==========================================
   function escapeHtml(str) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function wait(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
   }
 
   function formatFileSize(bytes) {
@@ -1072,22 +1027,22 @@ Datum: 15. März 2026`,
   }
 
   function getFileExtension(name) {
-    const dot = name.lastIndexOf('.');
+    var dot = name.lastIndexOf('.');
     return dot >= 0 ? name.slice(dot).toLowerCase() : '';
   }
 
   function getFileTypeIcon(name) {
-    const ext = getFileExtension(name);
+    var ext = getFileExtension(name);
     if (ext === '.pdf') return FILE_TYPE_ICONS.pdf;
     if (ext === '.docx') return FILE_TYPE_ICONS.docx;
     if (ext === '.xlsx') return FILE_TYPE_ICONS.xlsx;
-    if (['.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'].includes(ext)) return FILE_TYPE_ICONS.image;
+    if (['.png','.jpg','.jpeg','.tiff','.tif','.bmp','.webp'].indexOf(ext) !== -1) return FILE_TYPE_ICONS.image;
     return FILE_TYPE_ICONS.text;
   }
 
   function getFileFormatLabel(name) {
-    const ext = getFileExtension(name);
-    const labels = {
+    var ext = getFileExtension(name);
+    var labels = {
       '.pdf': 'PDF-Dokument', '.docx': 'Word-Dokument', '.xlsx': 'Excel-Tabelle',
       '.txt': 'Textdatei', '.csv': 'CSV-Datei',
       '.png': 'PNG-Bild', '.jpg': 'JPEG-Bild', '.jpeg': 'JPEG-Bild',
@@ -1096,20 +1051,23 @@ Datum: 15. März 2026`,
     return labels[ext] || 'Datei';
   }
 
+  // ==========================================
+  // UI State
+  // ==========================================
   function updateStartButton() {
     if (state !== 'idle') {
       startBtn.disabled = true;
       return;
     }
     if (activeTab === 'text') {
-      startBtn.disabled = inputEl.value.length === 0;
+      startBtn.disabled = inputEl.value.trim().length === 0;
     } else {
       startBtn.disabled = selectedFile === null;
     }
   }
 
   function updateCharCount() {
-    const len = inputEl.value.length;
+    var len = inputEl.value.length;
     charCountEl.textContent = len + ' / ' + MAX_CHARS;
     charCountEl.className = 'demo-char-count';
     if (len > MAX_CHARS * 0.9) charCountEl.classList.add('warn');
@@ -1119,138 +1077,144 @@ Datum: 15. März 2026`,
 
   function setStep(idx) {
     currentStep = idx;
-    // Update step indicator
-    const items = stepIndicator.querySelectorAll('.step-item');
-    const connectors = stepIndicator.querySelectorAll('.step-connector');
+    if (idx > maxCompletedStep) maxCompletedStep = idx;
 
-    items.forEach((item, i) => {
-      item.classList.remove('active', 'completed', 'disabled');
+    var items = stepIndicator.querySelectorAll('.step-item');
+    var connectors = stepIndicator.querySelectorAll('.step-connector');
+
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.remove('active', 'completed', 'disabled');
       if (i < idx) {
-        item.classList.add('completed');
+        items[i].classList.add('completed');
       } else if (i === idx) {
-        item.classList.add('active');
+        items[i].classList.add('active');
       } else {
-        item.classList.add('disabled');
+        items[i].classList.add('disabled');
       }
-    });
+    }
 
-    connectors.forEach((conn, i) => {
-      conn.classList.toggle('completed', i < idx);
-    });
-
-    // Show correct panel
-    const panels = stepPanels.querySelectorAll('.step-panel');
-    panels.forEach((panel, i) => {
-      panel.classList.toggle('active', i === idx);
-    });
-  }
-
-  function enableStepClick(upTo) {
-    const items = stepIndicator.querySelectorAll('.step-item');
-    items.forEach((item, i) => {
-      if (i <= upTo) {
-        item.style.pointerEvents = 'auto';
-        item.style.cursor = 'pointer';
+    for (var c = 0; c < connectors.length; c++) {
+      if (c < idx) {
+        connectors[c].classList.add('completed');
+      } else {
+        connectors[c].classList.remove('completed');
       }
-    });
-  }
+    }
 
-  function showError(panelId, message) {
-    const el = document.getElementById(panelId);
-    if (el) {
-      el.innerHTML = '<div class="error-message">' + escapeHtml(message) + '</div>';
+    var panels = stepPanels.querySelectorAll('.step-panel');
+    for (var p = 0; p < panels.length; p++) {
+      if (p === idx) {
+        panels[p].classList.add('active');
+      } else {
+        panels[p].classList.remove('active');
+      }
     }
   }
 
+  function enableStepClick(upTo) {
+    var items = stepIndicator.querySelectorAll('.step-item');
+    for (var i = 0; i <= upTo && i < items.length; i++) {
+      items[i].style.pointerEvents = 'auto';
+      items[i].style.cursor = 'pointer';
+    }
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    for (var i = 0; i < tabBtns.length; i++) {
+      if (tabBtns[i].dataset.tab === tab) {
+        tabBtns[i].classList.add('active');
+      } else {
+        tabBtns[i].classList.remove('active');
+      }
+    }
+    if (tab === 'text') {
+      tabText.classList.add('active');
+      tabFile.classList.remove('active');
+    } else {
+      tabText.classList.remove('active');
+      tabFile.classList.add('active');
+    }
+
+    var exampleRow = inputArea.querySelector('.example-buttons');
+    if (exampleRow) exampleRow.style.display = tab === 'text' ? '' : 'none';
+
+    updateStartButton();
+  }
+
+  // ==========================================
+  // Content builders
+  // ==========================================
   function buildAnnotatedHtml(text, entities) {
     if (!entities || entities.length === 0) return escapeHtml(text);
 
-    // Sort entities by start position (descending) to replace from end
-    const sorted = [...entities].sort((a, b) => b.start - a.start);
-    let result = text;
+    var sorted = entities.slice().sort(function(a, b) { return a.start - b.start; });
+    var html = '';
+    var pos = 0;
 
-    sorted.forEach(ent => {
-      const before = result.slice(0, ent.start);
-      const match = result.slice(ent.start, ent.end);
-      const after = result.slice(ent.end);
-      const cls = 'entity-mark entity-' + ent.entity_type;
-      result = before + '<mark class="' + cls + '" title="' + ent.entity_type + '">' + escapeHtml(match) + '</mark>' + after;
-    });
-
-    // Escape remaining text segments (already handled by escaping match above)
-    // Actually, we need to handle this differently — escape everything first, then insert marks
-    // Let's redo with a forward approach:
-
-    const sortedFwd = [...entities].sort((a, b) => a.start - b.start);
-    let html = '';
-    let pos = 0;
-
-    sortedFwd.forEach(ent => {
-      // Add text before this entity
+    for (var i = 0; i < sorted.length; i++) {
+      var ent = sorted[i];
+      if (ent.start < pos) continue;
       html += escapeHtml(text.slice(pos, ent.start));
-      // Add the annotated entity
-      const matchText = text.slice(ent.start, ent.end);
-      const cls = 'entity-mark entity-' + ent.entity_type;
-      html += '<mark class="' + cls + '" title="' + ent.entity_type + '">' + escapeHtml(matchText) + '</mark>';
+      var matchText = text.slice(ent.start, ent.end);
+      var cls = 'entity-mark entity-' + ent.entity_type;
+      html += '<mark class="' + cls + '" title="' + escapeHtml(ent.entity_type) + '">' + escapeHtml(matchText) + '</mark>';
       pos = ent.end;
-    });
+    }
 
-    // Remaining text
     html += escapeHtml(text.slice(pos));
     return html;
   }
 
   function buildEntityLegend(entities) {
-    const types = new Set();
-    entities.forEach(e => types.add(e.entity_type));
-    const legend = document.getElementById('entity-legend');
+    var types = [];
+    var seen = {};
+    for (var i = 0; i < entities.length; i++) {
+      var t = entities[i].entity_type;
+      if (!seen[t]) {
+        seen[t] = true;
+        types.push(t);
+      }
+    }
+    var legend = document.getElementById('entity-legend');
     legend.innerHTML = '';
 
-    types.forEach(type => {
-      const info = ENTITY_COLORS[type] || { dot: '#94a3b8', label: type };
-      const item = document.createElement('span');
+    for (var j = 0; j < types.length; j++) {
+      var info = ENTITY_COLORS[types[j]] || { dot: '#94a3b8', label: types[j] };
+      var item = document.createElement('span');
       item.className = 'entity-legend-item';
-      item.innerHTML = '<span class="entity-legend-dot" style="background:' + info.dot + '"></span>' + info.label;
+      item.innerHTML = '<span class="entity-legend-dot" style="background:' + info.dot + '"></span>' + escapeHtml(info.label);
       legend.appendChild(item);
-    });
+    }
   }
 
   function buildAnonymizedHtml(anonymizedText) {
-    // Replace placeholders like [PERSON_1] with styled spans
     return escapeHtml(anonymizedText).replace(/\[(\w+?)\]/g, function(match, name) {
-      return '<span class="anon-placeholder">[' + name + ']</span>';
+      return '<span class="anon-placeholder">[' + escapeHtml(name) + ']</span>';
     });
   }
 
   function buildRehydratedHtml(rehydratedText, entities) {
     if (!entities || entities.length === 0) return escapeHtml(rehydratedText);
 
-    // Find original values in the rehydrated text and highlight them
-    let html = escapeHtml(rehydratedText);
-    const uniqueValues = new Set();
-    entities.forEach(ent => {
-      if (ent.original_value) uniqueValues.add(ent.original_value);
-    });
-
-    uniqueValues.forEach(val => {
-      const escaped = escapeHtml(val);
-      if (escaped && escaped.length > 1) {
-        const regex = new RegExp(escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-        html = html.replace(regex, '<span class="rehydrated-mark">' + escaped + '</span>');
+    var html = escapeHtml(rehydratedText);
+    var seen = {};
+    for (var i = 0; i < entities.length; i++) {
+      var val = entities[i].original_value;
+      if (val && val.length > 1 && !seen[val]) {
+        seen[val] = true;
+        var escaped = escapeHtml(val);
+        var pattern = escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        html = html.replace(new RegExp(pattern, 'g'), '<span class="rehydrated-mark">' + escaped + '</span>');
       }
-    });
-
+    }
     return html;
   }
 
-  // ==========================================
-  // Sensitivity warning
-  // ==========================================
   function buildSensitivityWarning(sensitivity) {
     return new Promise(function(resolve, reject) {
       var level = sensitivity.risk_level || 'medium';
 
-      // Icon SVGs
       var iconSvg = level === 'high'
         ? '<svg class="sensitivity-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
         : '<svg class="sensitivity-warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
@@ -1259,26 +1223,17 @@ Datum: 15. März 2026`,
         ? 'Hohe Sensibilit\u00e4t erkannt'
         : 'Erh\u00f6hte Sensibilit\u00e4t erkannt';
 
-      // Build flags HTML
       var flagsHtml = '';
       if (sensitivity.flags && sensitivity.flags.length > 0) {
         flagsHtml = '<div class="sensitivity-flags">';
-        sensitivity.flags.forEach(function(flag) {
+        for (var f = 0; f < sensitivity.flags.length; f++) {
+          var flag = sensitivity.flags[f];
           var scorePercent = Math.round((flag.score || 0) * 100);
-          var excerpt = flag.excerpt || '';
-          if (excerpt.length > 150) {
-            excerpt = excerpt.slice(0, 147) + '...';
-          }
-          flagsHtml += '<div class="sensitivity-flag">';
-          flagsHtml += '<div class="sensitivity-flag-top">';
+          flagsHtml += '<span class="sensitivity-flag">';
           flagsHtml += '<span class="sensitivity-flag-label">' + escapeHtml(flag.label || flag.category) + '</span>';
           flagsHtml += '<span class="sensitivity-flag-score">' + scorePercent + '%</span>';
-          flagsHtml += '</div>';
-          if (excerpt) {
-            flagsHtml += '<div class="sensitivity-excerpt" title="' + escapeHtml(excerpt) + '">' + escapeHtml(excerpt) + '</div>';
-          }
-          flagsHtml += '</div>';
-        });
+          flagsHtml += '</span>';
+        }
         flagsHtml += '</div>';
       }
 
@@ -1311,40 +1266,36 @@ Datum: 15. März 2026`,
     });
   }
 
-  function hasSensitivityWarning(data) {
-    return data.sensitivity
-      && data.sensitivity.is_sensitive
-      && data.sensitivity.risk_level !== 'low';
-  }
+  function buildFileStep0(data) {
+    var html = '';
 
-  // ==========================================
-  // Tab switching
-  // ==========================================
-  function switchTab(tab) {
-    activeTab = tab;
-    tabBtns.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    tabText.classList.toggle('active', tab === 'text');
-    tabFile.classList.toggle('active', tab === 'file');
+    if (data.metadata_warnings && data.metadata_warnings.length > 0) {
+      html += '<div class="demo-metadata-warnings">';
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      html += '<div>' + escapeHtml(data.metadata_warnings.join('; ')) + '</div>';
+      html += '</div>';
+    }
 
-    // Show/hide example buttons in text mode only
-    const exampleRow = inputArea.querySelector('.example-buttons');
-    if (exampleRow) exampleRow.style.display = tab === 'text' ? '' : 'none';
-
-    updateStartButton();
+    var formatLabel = selectedFile ? getFileFormatLabel(selectedFile.name) : 'Datei';
+    var noteText = formatLabel + ' verarbeitet';
+    if (data.page_count) {
+      noteText += ' (' + data.page_count + (data.page_count === 1 ? ' Seite' : ' Seiten') + ')';
+    }
+    html += '<div class="demo-extracted-note">' + escapeHtml(noteText) + '</div>';
+    html += escapeHtml(data.extracted_text || '');
+    return html;
   }
 
   // ==========================================
   // File validation & selection
   // ==========================================
   function validateFile(file) {
-    const ext = getFileExtension(file.name);
-    if (!ACCEPTED_EXTENSIONS.includes(ext)) {
-      return 'Nicht unterstütztes Dateiformat: ' + ext + '. Erlaubt sind: ' + ACCEPTED_EXTENSIONS.join(', ');
+    var ext = getFileExtension(file.name);
+    if (ACCEPTED_EXTENSIONS.indexOf(ext) === -1) {
+      return 'Nicht unterst\u00fctztes Dateiformat: ' + ext + '. Erlaubt sind: ' + ACCEPTED_EXTENSIONS.join(', ');
     }
     if (file.size > MAX_FILE_SIZE) {
-      return 'Datei ist zu groß (' + formatFileSize(file.size) + '). Maximum: 10 MB.';
+      return 'Datei ist zu gro\u00df (' + formatFileSize(file.size) + '). Maximum: 10 MB.';
     }
     if (file.size === 0) {
       return 'Die Datei ist leer.';
@@ -1353,7 +1304,7 @@ Datum: 15. März 2026`,
   }
 
   function selectFile(file) {
-    const error = validateFile(file);
+    var error = validateFile(file);
     if (error) {
       alert(error);
       return;
@@ -1376,93 +1327,132 @@ Datum: 15. März 2026`,
   }
 
   // ==========================================
-  // API calls — single call to /api/process
+  // API calls
   // ==========================================
   function getDenyList() {
     if (!denylistEl) return null;
-    const val = denylistEl.value.trim();
+    var val = denylistEl.value.trim();
     if (!val) return null;
-    const items = val.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    var items = val.split('\n').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
     return items.length > 0 ? items : null;
   }
 
-  async function callProcess(text, prompt) {
-    const body = { text: text };
+  function callProcess(text, prompt) {
+    var body = { text: text };
     if (prompt && prompt.trim()) body.prompt = prompt.trim();
-    const denyList = getDenyList();
+    var denyList = getDenyList();
     if (denyList) body.deny_list = denyList;
 
-    const resp = await fetch(API_BASE + '/api/process', {
+    return fetch(API_BASE + '/api/process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
+    }).then(function(resp) {
+      if (!resp.ok) {
+        return resp.json().catch(function() { return {}; }).then(function(errData) {
+          throw new Error(errData.detail || 'Verarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
+        });
+      }
+      return resp.json();
     });
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Verarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
-    }
-    return resp.json();
   }
 
-  async function callUpload(file, prompt) {
-    const formData = new FormData();
+  function callUpload(file, prompt) {
+    var formData = new FormData();
     formData.append('file', file);
     if (prompt && prompt.trim()) formData.append('prompt', prompt.trim());
-    const denyList = getDenyList();
+    var denyList = getDenyList();
     if (denyList) formData.append('deny_list', denyList.join('\n'));
 
-    const resp = await fetch(API_BASE + '/api/upload', {
+    return fetch(API_BASE + '/api/upload', {
       method: 'POST',
       body: formData
+    }).then(function(resp) {
+      if (!resp.ok) {
+        return resp.json().catch(function() { return {}; }).then(function(errData) {
+          throw new Error(errData.detail || 'Dateiverarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
+        });
+      }
+      return resp.json();
     });
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Dateiverarbeitung fehlgeschlagen (HTTP ' + resp.status + ')');
-    }
-    return resp.json();
-  }
-
-  // Helper: wait ms
-  function wait(ms) {
-    return new Promise(r => setTimeout(r, ms));
   }
 
   // ==========================================
-  // Build Step 0 content for file uploads
+  // Shared step progression
   // ==========================================
-  function buildFileStep0(data) {
-    let html = '';
+  function runStepProgression(data, originalText) {
+    var entities = data.entities || [];
 
-    // Metadata warnings
-    if (data.metadata_warnings && data.metadata_warnings.length > 0) {
-      html += '<div class="demo-metadata-warnings">';
-      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-      html += '<div>' + escapeHtml(data.metadata_warnings.join('; ')) + '</div>';
-      html += '</div>';
+    function doSensitivityCheck() {
+      if (data.sensitivity && data.sensitivity.is_sensitive && data.sensitivity.risk_level === 'high') {
+        return buildSensitivityWarning(data.sensitivity);
+      }
+      return Promise.resolve();
     }
 
-    // Extracted text note
-    const formatLabel = selectedFile ? getFileFormatLabel(selectedFile.name) : 'Datei';
-    let noteText = formatLabel + ' verarbeitet';
-    if (data.page_count) {
-      noteText += ' (' + data.page_count + (data.page_count === 1 ? ' Seite' : ' Seiten') + ')';
-    }
-    html += '<div class="demo-extracted-note">' + escapeHtml(noteText) + '</div>';
+    return doSensitivityCheck().then(function() {
+      // Step 1: Erkennung
+      return wait(800);
+    }).then(function() {
+      document.getElementById('panel-1-content').innerHTML =
+        data.annotated_html || buildAnnotatedHtml(originalText, entities);
+      buildEntityLegend(entities);
+      setStep(1);
+      enableStepClick(1);
 
-    // The extracted text
-    html += escapeHtml(data.extracted_text || '');
-    return html;
+      // Step 2: Anonymisierung
+      return wait(1500);
+    }).then(function() {
+      if (data.anonymized_text) {
+        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(data.anonymized_text);
+      }
+      setStep(2);
+      enableStepClick(2);
+
+      // Step 3: LLM-Antwort
+      return wait(1500);
+    }).then(function() {
+      if (data.llm_response_anonymized) {
+        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(data.llm_response_anonymized);
+      }
+      setStep(3);
+      enableStepClick(3);
+
+      // Step 4: Re-hydrierte Antwort
+      return wait(2000);
+    }).then(function() {
+      var rehydrated = data.llm_response_rehydrated || '';
+      if (rehydrated) {
+        var ents = entities.map(function(e) {
+          return {
+            entity_type: e.entity_type,
+            start: e.start,
+            end: e.end,
+            original_value: e.text || e.original_value
+          };
+        });
+        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(rehydrated, ents);
+      } else {
+        document.getElementById('panel-4-content').innerHTML = escapeHtml(data.llm_response_anonymized || 'Keine Antwort erhalten.');
+      }
+
+      setStep(4);
+      enableStepClick(4);
+      state = 'complete';
+      startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
+    });
   }
 
   // ==========================================
-  // Main flow — single API call, progressive display
+  // Main flow: Text mode
   // ==========================================
-  async function startDemo() {
+  function startDemo() {
     if (activeTab === 'file') {
-      return startFileDemo();
+      startFileDemo();
+      return;
     }
 
-    const text = inputEl.value.trim();
+    var text = inputEl.value.trim();
     if (!text) return;
 
     state = 'processing';
@@ -1473,95 +1463,39 @@ Datum: 15. März 2026`,
     stepPanels.style.display = 'block';
     stepHint.style.display = 'flex';
 
-    // Step 0: Show original text immediately
+    // Clear all panels first
+    for (var i = 0; i < 5; i++) {
+      var panel = document.getElementById('panel-' + i);
+      if (panel) panel.classList.remove('active');
+    }
+
+    // Step 0: Show original text
     document.getElementById('panel-0-content').innerHTML = escapeHtml(text);
+    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
     setStep(0);
 
-    // Show loading hint for upcoming steps
-    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
-
-    try {
-      // Single API call — gets all intermediate results
-      const data = await callProcess(text, promptEl ? promptEl.value : '');
-      processResult = data;
-      analyzeResult = data;
+    callProcess(text, promptEl ? promptEl.value : '').then(function(data) {
       sessionId = data.session_id || null;
-
-      const entities = data.entities || [];
-
-      // === Sensitivity check — pause if sensitive ===
-      if (hasSensitivityWarning(data)) {
-        try {
-          await buildSensitivityWarning(data.sensitivity);
-        } catch (e) {
-          // User clicked "Abbrechen"
-          resetDemo();
-          return;
-        }
+      return runStepProgression(data, data.original_text || text);
+    }).catch(function(err) {
+      if (err.message === 'cancelled') {
+        resetDemo();
+        return;
       }
-
-      // === Step 1: Erkennung — pause so user can read ===
-      await wait(800);
-      document.getElementById('panel-1-content').innerHTML =
-        data.annotated_html || buildAnnotatedHtml(text, entities);
-      buildEntityLegend(entities);
-      setStep(1);
-      enableStepClick(1);
-
-      // === Step 2: Anonymisierung — pause again ===
-      await wait(1500);
-      if (data.anonymized_text) {
-        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(data.anonymized_text);
-      }
-      setStep(2);
-      enableStepClick(2);
-
-      // === Step 3: LLM-Antwort ===
-      await wait(1500);
-      if (data.llm_response_anonymized) {
-        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(data.llm_response_anonymized);
-      }
-      setStep(3);
-      enableStepClick(3);
-
-      // === Step 4: Re-hydrierte Antwort ===
-      await wait(2000);
-      const rehydrated = data.llm_response_rehydrated || data.rehydrated_response;
-      if (rehydrated) {
-        const ents = entities.map(e => ({
-          ...e,
-          original_value: e.text || e.original_value
-        }));
-        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(rehydrated, ents);
-      } else {
-        document.getElementById('panel-4-content').innerHTML = escapeHtml(data.llm_response_anonymized || 'Keine Antwort erhalten.');
-      }
-
-      setStep(4);
-      enableStepClick(4);
-      state = 'complete';
-      startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
-
-    } catch (err) {
-      if (err.message === 'cancelled') return;
       state = 'error';
-      const panelContent = document.getElementById('panel-' + currentStep + '-content');
+      var panelContent = document.getElementById('panel-' + Math.max(currentStep, 0) + '-content');
       if (panelContent) {
         panelContent.innerHTML = '<div class="error-message">Fehler: ' + escapeHtml(err.message) + '</div>';
       }
-      startBtn.innerHTML = 'Fehler — nochmal versuchen';
+      startBtn.innerHTML = 'Fehler \u2014 nochmal versuchen';
       startBtn.disabled = false;
-      startBtn.onclick = function() {
-        resetDemo();
-        setTimeout(startDemo, 100);
-      };
-    }
+    });
   }
 
   // ==========================================
-  // File upload flow
+  // Main flow: File mode
   // ==========================================
-  async function startFileDemo() {
+  function startFileDemo() {
     if (!selectedFile) return;
 
     state = 'processing';
@@ -1572,107 +1506,55 @@ Datum: 15. März 2026`,
     stepPanels.style.display = 'block';
     stepHint.style.display = 'flex';
 
-    // Step 0: Show loading while file is uploaded/extracted
+    // Clear all panels first
+    for (var i = 0; i < 5; i++) {
+      var panel = document.getElementById('panel-' + i);
+      if (panel) panel.classList.remove('active');
+    }
+
+    // Step 0: Show loading
     document.getElementById('panel-0-content').innerHTML = '<div class="spinner"></div><div class="loading-text">Datei wird hochgeladen und Text extrahiert...</div>';
+    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
     setStep(0);
 
-    document.getElementById('panel-3-content').innerHTML = '<div class="spinner"></div><div class="loading-text">KI verarbeitet anonymisierten Text...</div>';
-
-    try {
-      const data = await callUpload(selectedFile, promptEl ? promptEl.value : '');
-      processResult = data;
-      analyzeResult = data;
+    callUpload(selectedFile, promptEl ? promptEl.value : '').then(function(data) {
       sessionId = data.session_id || null;
+      var extractedText = data.extracted_text || '';
 
-      const entities = data.entities || [];
-      const extractedText = data.extracted_text || '';
-
-      // === Step 0: Show extracted text with metadata warnings ===
+      // Update Step 0 with extracted content
       document.getElementById('panel-0-content').innerHTML = buildFileStep0(data);
       enableStepClick(0);
 
-      // === Sensitivity check — pause if sensitive ===
-      if (hasSensitivityWarning(data)) {
-        try {
-          await buildSensitivityWarning(data.sensitivity);
-        } catch (e) {
-          // User clicked "Abbrechen"
-          resetDemo();
-          return;
-        }
+      return runStepProgression(data, extractedText);
+    }).catch(function(err) {
+      if (err.message === 'cancelled') {
+        resetDemo();
+        return;
       }
-
-      // === Step 1: Erkennung ===
-      await wait(800);
-      document.getElementById('panel-1-content').innerHTML =
-        data.annotated_html || buildAnnotatedHtml(extractedText, entities);
-      buildEntityLegend(entities);
-      setStep(1);
-      enableStepClick(1);
-
-      // === Step 2: Anonymisierung ===
-      await wait(1500);
-      if (data.anonymized_text) {
-        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(data.anonymized_text);
-      }
-      setStep(2);
-      enableStepClick(2);
-
-      // === Step 3: LLM-Antwort ===
-      await wait(1500);
-      if (data.llm_response_anonymized) {
-        document.getElementById('panel-3-content').innerHTML = buildAnonymizedHtml(data.llm_response_anonymized);
-      }
-      setStep(3);
-      enableStepClick(3);
-
-      // === Step 4: Re-hydrierte Antwort ===
-      await wait(2000);
-      const rehydrated = data.llm_response_rehydrated || data.rehydrated_response;
-      if (rehydrated) {
-        const ents = entities.map(e => ({
-          ...e,
-          original_value: e.text || e.original_value
-        }));
-        document.getElementById('panel-4-content').innerHTML = buildRehydratedHtml(rehydrated, ents);
-      } else {
-        document.getElementById('panel-4-content').innerHTML = escapeHtml(data.llm_response_anonymized || 'Keine Antwort erhalten.');
-      }
-
-      setStep(4);
-      enableStepClick(4);
-      state = 'complete';
-      startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="3"/></svg> Fertig';
-
-    } catch (err) {
-      if (err.message === 'cancelled') return;
       state = 'error';
-      const panelContent = document.getElementById('panel-' + currentStep + '-content');
+      var panelContent = document.getElementById('panel-' + Math.max(currentStep, 0) + '-content');
       if (panelContent) {
         panelContent.innerHTML = '<div class="error-message">Fehler: ' + escapeHtml(err.message) + '</div>';
       }
-      startBtn.innerHTML = 'Fehler — nochmal versuchen';
+      startBtn.innerHTML = 'Fehler \u2014 nochmal versuchen';
       startBtn.disabled = false;
-      startBtn.onclick = function() {
-        resetDemo();
-        setTimeout(startFileDemo, 100);
-      };
-    }
+    });
   }
 
+  // ==========================================
+  // Reset
+  // ==========================================
   function resetDemo() {
     state = 'idle';
     currentStep = -1;
+    maxCompletedStep = -1;
     sessionId = null;
-    analyzeResult = null;
-    processResult = null;
 
     inputEl.value = '';
     if (promptEl) promptEl.value = '';
     if (denylistEl) denylistEl.value = '';
     updateCharCount();
 
-    // Clear file selection and switch to text tab
     clearFile();
     switchTab('text');
 
@@ -1684,23 +1566,31 @@ Datum: 15. März 2026`,
 
     startBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21"/></svg> Analyse starten';
     startBtn.disabled = true;
-    startBtn.onclick = startDemo;
 
-    // Reset panels
-    for (let i = 0; i < 5; i++) {
-      const content = document.getElementById('panel-' + i + '-content');
+    // Clear all panel contents and remove active class
+    for (var i = 0; i < 5; i++) {
+      var content = document.getElementById('panel-' + i + '-content');
       if (content) content.innerHTML = '';
+      var panel = document.getElementById('panel-' + i);
+      if (panel) panel.classList.remove('active');
     }
 
-    // Reset step items
-    const items = stepIndicator.querySelectorAll('.step-item');
-    items.forEach(item => {
-      item.classList.add('disabled');
-      item.classList.remove('active', 'completed');
-      item.style.pointerEvents = '';
-      item.style.cursor = '';
-    });
-    stepIndicator.querySelectorAll('.step-connector').forEach(c => c.classList.remove('completed'));
+    // Reset entity legend
+    var legend = document.getElementById('entity-legend');
+    if (legend) legend.innerHTML = '';
+
+    // Reset step indicator items
+    var items = stepIndicator.querySelectorAll('.step-item');
+    for (var s = 0; s < items.length; s++) {
+      items[s].classList.add('disabled');
+      items[s].classList.remove('active', 'completed');
+      items[s].style.pointerEvents = '';
+      items[s].style.cursor = '';
+    }
+    var connectors = stepIndicator.querySelectorAll('.step-connector');
+    for (var c = 0; c < connectors.length; c++) {
+      connectors[c].classList.remove('completed');
+    }
 
     inputEl.focus();
   }
@@ -1711,20 +1601,32 @@ Datum: 15. März 2026`,
   inputEl.addEventListener('input', updateCharCount);
 
   optionsToggle.addEventListener('click', function() {
-    const isOpen = optionsPanel.classList.toggle('open');
-    optionsArrow.classList.toggle('open', isOpen);
+    var isOpen = optionsPanel.classList.toggle('open');
+    if (isOpen) {
+      optionsArrow.classList.add('open');
+    } else {
+      optionsArrow.classList.remove('open');
+    }
   });
 
-  startBtn.addEventListener('click', startDemo);
+  startBtn.addEventListener('click', function() {
+    if (state === 'error') {
+      resetDemo();
+      setTimeout(startDemo, 100);
+      return;
+    }
+    startDemo();
+  });
+
   resetBtn.addEventListener('click', resetDemo);
 
   // Tab switching
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
+  for (var t = 0; t < tabBtns.length; t++) {
+    tabBtns[t].addEventListener('click', function() {
       if (state !== 'idle') return;
       switchTab(this.dataset.tab);
     });
-  });
+  }
 
   // Drag-and-drop handlers
   dropzone.addEventListener('click', function() {
@@ -1767,13 +1669,13 @@ Datum: 15. März 2026`,
   fileRemove.addEventListener('click', clearFile);
 
   // Example buttons
-  document.querySelectorAll('.example-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const idx = parseInt(this.dataset.example, 10);
-      const ex = EXAMPLES[idx];
+  var exampleBtns = document.querySelectorAll('.example-btn');
+  for (var eb = 0; eb < exampleBtns.length; eb++) {
+    exampleBtns[eb].addEventListener('click', function() {
+      var idx = parseInt(this.dataset.example, 10);
+      var ex = EXAMPLES[idx];
       if (ex) {
         if (state !== 'idle') resetDemo();
-        // Make sure we're on the text tab
         switchTab('text');
         inputEl.value = ex.text;
         if (promptEl && ex.prompt) {
@@ -1785,19 +1687,27 @@ Datum: 15. März 2026`,
         inputEl.focus();
       }
     });
-  });
+  }
 
-  // Step indicator clicks
-  stepIndicator.querySelectorAll('.step-item').forEach(item => {
-    item.addEventListener('click', function() {
-      const idx = parseInt(this.dataset.step, 10);
-      if (!this.classList.contains('disabled')) {
-        // Only switch panel view, don't change completed/active logic on the dots
-        const panels = stepPanels.querySelectorAll('.step-panel');
-        panels.forEach((p, i) => p.classList.toggle('active', i === idx));
+  // Step indicator clicks — navigate between completed steps
+  var stepItems = stepIndicator.querySelectorAll('.step-item');
+  for (var si = 0; si < stepItems.length; si++) {
+    stepItems[si].addEventListener('click', function() {
+      var idx = parseInt(this.dataset.step, 10);
+      if (this.classList.contains('disabled')) return;
+      if (idx > maxCompletedStep) return;
+
+      // Switch visible panel only
+      var panels = stepPanels.querySelectorAll('.step-panel');
+      for (var p = 0; p < panels.length; p++) {
+        if (p === idx) {
+          panels[p].classList.add('active');
+        } else {
+          panels[p].classList.remove('active');
+        }
       }
     });
-  });
+  }
 
   // Init
   updateCharCount();
