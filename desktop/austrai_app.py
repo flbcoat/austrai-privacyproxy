@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""AUSTR.AI Desktop App — Menubar + Webview UI with local anonymization.
-
-Runs as a macOS menubar app (next to the clock). Click the shield icon
-to open the main window. Everything runs locally.
-"""
+"""AUSTR.AI Desktop App — pywebview UI with local anonymization."""
 
 import json
 import os
@@ -13,7 +9,6 @@ import sys
 import threading
 from pathlib import Path
 
-import rumps
 import webview
 
 from austrai_proxy.core import get_engine
@@ -22,12 +17,8 @@ UI_FILE = Path(__file__).parent / "ui.html"
 PROXY_PID_FILE = Path.home() / ".austrai" / "proxy.pid"
 
 
-# ---------------------------------------------------------------------------
-# Webview API (exposed to JavaScript)
-# ---------------------------------------------------------------------------
-
-class WebviewAPI:
-    """Python API exposed to the JavaScript frontend via pywebview."""
+class AustraiAPI:
+    """Python API exposed to JavaScript via pywebview."""
 
     def __init__(self):
         self._session_id = None
@@ -87,103 +78,6 @@ class WebviewAPI:
             return ""
 
 
-# ---------------------------------------------------------------------------
-# Menubar App (macOS)
-# ---------------------------------------------------------------------------
-
-class AustraiMenubar(rumps.App):
-    """macOS menubar app with shield icon."""
-
-    def __init__(self):
-        super().__init__(
-            "AUSTR.AI",
-            title="🛡",
-            quit_button=None,
-        )
-        self.menu = [
-            rumps.MenuItem("Fenster öffnen", callback=self.open_window),
-            rumps.MenuItem("Proxy starten", callback=self.toggle_proxy),
-            None,  # separator
-            rumps.MenuItem("Status", callback=self.show_status),
-            None,
-            rumps.MenuItem("Beenden", callback=self.quit_app),
-        ]
-        self._webview_api = WebviewAPI()
-        self._window = None
-        self._update_proxy_menu()
-
-        # Periodic proxy status check
-        self._timer = rumps.Timer(self._check_proxy, 5)
-        self._timer.start()
-
-    def open_window(self, _=None):
-        """Open the main webview window."""
-        if self._window and self._window.uid:
-            # Window exists, bring to front
-            try:
-                self._window.show()
-                return
-            except Exception:
-                pass
-
-        # Create new window in a thread (webview blocks)
-        threading.Thread(target=self._create_window, daemon=True).start()
-
-    def _create_window(self):
-        self._window = webview.create_window(
-            "AUSTR.AI",
-            str(UI_FILE),
-            js_api=self._webview_api,
-            width=740,
-            height=820,
-            min_size=(520, 600),
-            background_color="#06090f",
-        )
-        webview.start(debug=False)
-
-    def toggle_proxy(self, sender=None):
-        result = self._webview_api.toggle_proxy()
-        self._update_proxy_menu()
-        if result["running"]:
-            rumps.notification("AUSTR.AI", "Proxy gestartet", "localhost:8282 — alle Apps geschützt")
-        else:
-            rumps.notification("AUSTR.AI", "Proxy gestoppt", "")
-
-    def show_status(self, _=None):
-        proxy = "aktiv" if _is_proxy_running() else "gestoppt"
-        rumps.notification(
-            "AUSTR.AI Status",
-            f"Proxy: {proxy}",
-            "Modus: Lokal — alles auf deinem Rechner",
-        )
-
-    def quit_app(self, _=None):
-        # Stop proxy if running
-        if _is_proxy_running():
-            try:
-                pid = int(PROXY_PID_FILE.read_text().strip())
-                os.kill(pid, signal.SIGTERM)
-                PROXY_PID_FILE.unlink(missing_ok=True)
-            except Exception:
-                pass
-        rumps.quit_application()
-
-    def _check_proxy(self, _=None):
-        self._update_proxy_menu()
-
-    def _update_proxy_menu(self):
-        running = _is_proxy_running()
-        try:
-            self.menu["Proxy starten"].title = "Proxy stoppen" if running else "Proxy starten"
-            self.title = "🛡" if running else "🛡️"  # subtle visual difference
-        except Exception:
-            pass
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _is_proxy_running():
     if not PROXY_PID_FILE.exists():
         return False
@@ -202,31 +96,21 @@ def _copy_to_clipboard(text):
         pass
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
 def main():
-    # Pre-init engine in background (so first anonymize is fast)
+    # Pre-init engine in background
     threading.Thread(target=lambda: get_engine(), daemon=True).start()
 
-    # Check if rumps is available (macOS only)
-    try:
-        app = AustraiMenubar()
-        app.run()
-    except Exception:
-        # Fallback: just open the webview window directly
-        api = WebviewAPI()
-        window = webview.create_window(
-            "AUSTR.AI",
-            str(UI_FILE),
-            js_api=api,
-            width=740,
-            height=820,
-            min_size=(520, 600),
-            background_color="#06090f",
-        )
-        webview.start()
+    api = AustraiAPI()
+    webview.create_window(
+        "AUSTR.AI — Privacy Firewall",
+        str(UI_FILE),
+        js_api=api,
+        width=740,
+        height=820,
+        min_size=(520, 600),
+        background_color="#06090f",
+    )
+    webview.start()
 
 
 if __name__ == "__main__":
