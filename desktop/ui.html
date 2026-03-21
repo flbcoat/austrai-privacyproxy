@@ -2,65 +2,62 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AUSTR.AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
-
+  /* === AUSTR.AI Design System — 1:1 mit der Website === */
   :root {
-    --bg-deep: #06090f;
-    --bg-base: #0c1220;
-    --bg-raised: #111a2e;
-    --bg-surface: #162036;
-    --border-subtle: rgba(148, 163, 184, 0.08);
-    --border-medium: rgba(148, 163, 184, 0.14);
-    --fg: #e2e8f0;
-    --fg-secondary: #94a3b8;
-    --fg-muted: #64748b;
-    --accent: #3b82f6;
-    --accent-glow: rgba(59, 130, 246, 0.15);
-    --accent-hover: #60a5fa;
-    --green: #22c55e;
-    --green-glow: rgba(34, 197, 94, 0.15);
-    --green-hover: #4ade80;
-    --amber: #f59e0b;
-    --red: #ef4444;
-    --radius: 12px;
+    --color-bg: #0f172a;
+    --color-bg-alt: #0b1120;
+    --color-bg-card: #1e293b;
+    --color-bg-card-hover: #263347;
+    --color-accent: #06b6d4;
+    --color-accent-light: #22d3ee;
+    --color-accent-dark: #0891b2;
+    --color-accent-purple: #8b5cf6;
+    --color-accent-purple-light: #a78bfa;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-text-dim: #64748b;
+    --color-border: #334155;
+    --color-border-light: #475569;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --font-sans: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
     --radius-sm: 8px;
-    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+    --shadow-glow: 0 0 24px rgba(6,182,212,0.12);
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'DM Sans', -apple-system, sans-serif;
-    background: var(--bg-deep);
-    color: var(--fg);
-    overflow-x: hidden;
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     user-select: none;
+    overflow-x: hidden;
   }
 
-  /* ── Ambient background ── */
+  /* === Grid Background (wie Website Hero) === */
   body::before {
     content: '';
     position: fixed;
-    top: -40%;
-    left: -20%;
-    width: 80%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: -30%;
-    right: -20%;
-    width: 70%;
-    height: 70%;
-    background: radial-gradient(ellipse, rgba(34, 197, 94, 0.03) 0%, transparent 70%);
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
   }
@@ -72,580 +69,404 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 0 28px 20px;
+    padding: 0 24px 16px;
   }
 
-  /* ── Header / Topbar ── */
-  .topbar {
+  /* === Nav/Header (wie Website Nav) === */
+  .nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 0 14px;
-    border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 20px;
     -webkit-app-region: drag;
   }
 
-  .brand {
+  .nav-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .brand-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
-    border-radius: 10px;
+  .nav-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-purple) 100%);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    font-size: 16px;
   }
 
-  .brand-text h1 {
-    font-size: 17px;
+  .nav-title {
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    background: linear-gradient(135deg, var(--fg) 0%, var(--fg-secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
 
-  .brand-text span {
+  .nav-subtitle {
     font-size: 11px;
-    color: var(--fg-muted);
-    letter-spacing: 0.3px;
+    color: var(--color-text-dim);
   }
 
   .proxy-badge {
     -webkit-app-region: no-drag;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 14px;
+    gap: 8px;
+    padding: 5px 12px;
     border-radius: 20px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border-subtle);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
     cursor: pointer;
-    transition: all var(--transition);
+    transition: all var(--transition-base);
+    font-size: 12px;
+    color: var(--color-text-muted);
   }
-  .proxy-badge:hover {
-    border-color: var(--border-medium);
-    background: var(--bg-surface);
-  }
+  .proxy-badge:hover { border-color: var(--color-border-light); }
 
   .proxy-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--red);
-    transition: background var(--transition);
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--color-error);
+    transition: all var(--transition-base);
   }
-  .proxy-dot.active {
-    background: var(--green);
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
-  }
+  .proxy-dot.active { background: var(--color-success); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
 
-  .proxy-label {
+  /* === Section Label (wie Website) === */
+  .section-label {
+    display: inline-block;
     font-size: 12px;
-    font-weight: 500;
-    color: var(--fg-secondary);
-  }
-
-  .proxy-toggle {
-    font-size: 11px;
     font-weight: 600;
-    color: var(--accent);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px 8px;
-    border-radius: 4px;
-    transition: all var(--transition);
-  }
-  .proxy-toggle:hover { background: var(--accent-glow); }
-
-  /* ── Section cards ── */
-  .sections {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--color-accent);
+    margin-bottom: 6px;
   }
 
+  /* === Cards (wie Website Demo) === */
   .card {
-    background: var(--bg-base);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    padding: 24px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    transition: border-color var(--transition-base);
     position: relative;
     overflow: hidden;
-    transition: border-color var(--transition);
   }
-  .card:hover { border-color: var(--border-medium); }
+  .card:hover { border-color: var(--color-border-light); }
 
   .card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
+    top: 0; left: 0; right: 0; height: 2px;
   }
-  .card.protect::before {
-    background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
-    opacity: 0.5;
-  }
-  .card.restore::before {
-    background: linear-gradient(90deg, transparent 0%, var(--green) 50%, transparent 100%);
-    opacity: 0.5;
-  }
+  .card.protect::before { background: linear-gradient(90deg, transparent, var(--color-accent), transparent); }
+  .card.restore::before { background: linear-gradient(90deg, transparent, var(--color-success), transparent); }
 
   .card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
-  .step-badge {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
+  .step-num {
+    font-size: 11px;
     font-weight: 700;
-    flex-shrink: 0;
+    color: var(--color-accent);
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
   }
-  .protect .step-badge {
-    background: var(--accent-glow);
-    color: var(--accent);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-  }
-  .restore .step-badge {
-    background: var(--green-glow);
-    color: var(--green);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-  }
-
-  .card-title {
-    font-size: 15px;
-    font-weight: 600;
+  .restore .step-num {
+    color: var(--color-success);
+    background: rgba(16,185,129,0.1);
+    border-color: rgba(16,185,129,0.2);
   }
 
-  .card-subtitle {
-    font-size: 12px;
-    color: var(--fg-muted);
-    margin-left: auto;
-  }
+  .card-title { font-size: 14px; font-weight: 600; }
 
-  /* ── Textarea ── */
-  .textarea-wrap {
-    position: relative;
-    margin-bottom: 16px;
-  }
-
+  /* === Textarea (wie Website Demo) === */
   textarea {
     width: 100%;
-    height: 130px;
-    background: var(--bg-deep);
-    border: 1px solid var(--border-subtle);
+    height: 120px;
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    color: var(--fg);
-    font-family: 'JetBrains Mono', monospace;
+    color: var(--color-text);
+    font-family: var(--font-mono);
     font-size: 13px;
     line-height: 1.6;
-    padding: 14px 16px;
+    padding: 12px 14px;
     resize: vertical;
-    transition: all var(--transition);
     outline: none;
+    transition: all var(--transition-base);
     user-select: text;
   }
-  textarea::placeholder { color: var(--fg-muted); font-family: 'DM Sans', sans-serif; font-style: italic; }
-  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-  .restore textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-glow); }
+  textarea::placeholder { color: var(--color-text-dim); font-family: var(--font-sans); }
+  textarea:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
+  .restore textarea:focus { border-color: var(--color-success); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
 
-  .paste-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    color: var(--fg-muted);
-    font-size: 11px;
-    font-family: 'DM Sans', sans-serif;
-    padding: 4px 10px;
-    cursor: pointer;
-    transition: all var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .paste-btn:hover { background: var(--bg-surface); color: var(--fg-secondary); border-color: var(--border-medium); }
-
-  /* ── Buttons ── */
-  .actions { display: flex; gap: 10px; align-items: center; }
-
-  .btn-primary {
-    flex: 1;
-    padding: 12px 24px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition);
-    display: flex;
+  /* === Buttons (wie Website) === */
+  .btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    position: relative;
-    overflow: hidden;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    width: 100%;
   }
 
-  .btn-protect {
-    background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-accent-dark) 0%, var(--color-accent) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
+    box-shadow: var(--shadow-glow);
   }
-  .btn-protect:hover {
-    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.35);
-    transform: translateY(-1px);
-  }
-  .btn-protect:active { transform: translateY(0); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(6,182,212,0.2); }
 
-  .btn-restore {
-    background: linear-gradient(135deg, var(--green) 0%, #059669 100%);
+  .btn-success {
+    background: linear-gradient(135deg, #059669 0%, var(--color-success) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.25);
   }
-  .btn-restore:hover {
-    box-shadow: 0 6px 25px rgba(34, 197, 94, 0.35);
-    transform: translateY(-1px);
-  }
-  .btn-restore:active { transform: translateY(0); }
-  .btn-restore:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
+  .btn-success:hover { transform: translateY(-1px); }
+  .btn-success:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-  .btn-primary .spinner {
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    width: auto;
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+  }
+  .btn-sm:hover { color: var(--color-text); border-color: var(--color-border-light); }
+
+  .btn .spinner {
     display: none;
-    width: 16px;
-    height: 16px;
+    width: 16px; height: 16px;
     border: 2px solid rgba(255,255,255,0.3);
     border-top-color: white;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
   }
-  .btn-primary.loading .btn-label { display: none; }
-  .btn-primary.loading .spinner { display: block; }
-
+  .btn.loading .label { display: none; }
+  .btn.loading .spinner { display: block; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Status toast ── */
-  .status-bar {
-    min-height: 36px;
+  .actions {
     display: flex;
-    align-items: center;
-    padding: 0;
+    gap: 8px;
+    margin-top: 12px;
   }
 
+  /* === Toast / Status (wie Website) === */
   .toast {
     display: none;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: var(--radius-sm);
     font-size: 12px;
     font-weight: 500;
-    animation: slideIn 0.3s ease-out;
-    width: 100%;
+    animation: fadeIn 0.2s ease;
+    margin: 12px 0;
   }
   .toast.visible { display: flex; }
-  .toast.success { background: rgba(34, 197, 94, 0.1); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.15); }
-  .toast.info { background: var(--accent-glow); color: var(--accent-hover); border: 1px solid rgba(59, 130, 246, 0.15); }
-  .toast.error { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.15); }
-  .toast.warning { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.15); }
+  .toast.success { background: rgba(16,185,129,0.1); color: var(--color-success); border: 1px solid rgba(16,185,129,0.15); }
+  .toast.info { background: rgba(6,182,212,0.08); color: var(--color-accent-light); border: 1px solid rgba(6,182,212,0.12); }
+  .toast.error { background: rgba(239,68,68,0.1); color: var(--color-error); border: 1px solid rgba(239,68,68,0.15); }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 
-  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ── Mapping preview ── */
+  /* === Mapping Table === */
   .mappings {
     display: none;
-    margin-top: 12px;
-    padding: 12px 14px;
-    background: var(--bg-deep);
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--color-bg-alt);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-subtle);
-    max-height: 120px;
+    border: 1px solid var(--color-border);
+    max-height: 100px;
     overflow-y: auto;
   }
-  .mappings.visible { display: block; animation: slideIn 0.3s ease-out; }
-
+  .mappings.visible { display: block; animation: fadeIn 0.2s ease; }
   .mapping-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 3px 0;
     font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
   }
-  .mapping-original { color: var(--red); text-decoration: line-through; opacity: 0.7; min-width: 0; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mapping-arrow { color: var(--fg-muted); flex-shrink: 0; }
-  .mapping-codename { color: var(--green); flex-shrink: 0; }
+  .mapping-original { color: var(--color-error); text-decoration: line-through; opacity: 0.7; }
+  .mapping-arrow { color: var(--color-text-dim); }
+  .mapping-codename { color: var(--color-success); }
 
-  /* ── Footer ── */
+  /* === Footer === */
   .footer {
-    padding: 16px 0 0;
-    border-top: 1px solid var(--border-subtle);
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .footer span {
+    padding: 12px 0 0;
+    border-top: 1px solid var(--color-border);
+    margin-top: auto;
+    text-align: center;
     font-size: 11px;
-    color: var(--fg-muted);
-    letter-spacing: 0.3px;
+    color: var(--color-text-dim);
   }
 
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 6px; }
+  .sections { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+  ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--fg-muted); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--fg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--color-text-dim); border-radius: 3px; }
 </style>
 </head>
 <body>
 
 <div class="app">
-
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🛡</div>
-      <div class="brand-text">
-        <h1>AUSTR.AI</h1>
-        <span>Privacy Firewall für KI-Dienste</span>
+  <!-- Nav -->
+  <div class="nav">
+    <div class="nav-brand">
+      <div class="nav-logo">🛡</div>
+      <div>
+        <div class="nav-title">AUSTR.AI</div>
+        <div class="nav-subtitle">Privacy Firewall</div>
       </div>
     </div>
     <div class="proxy-badge" onclick="toggleProxy()">
       <div class="proxy-dot" id="proxyDot"></div>
-      <span class="proxy-label" id="proxyLabel">Proxy prüfen…</span>
-      <button class="proxy-toggle" id="proxyToggle">Start</button>
+      <span id="proxyLabel">Proxy prüfen…</span>
     </div>
   </div>
 
   <div class="sections">
-
     <!-- Step 1: Protect -->
     <div class="card protect">
       <div class="card-header">
-        <div class="step-badge">1</div>
+        <div class="step-num">01</div>
         <span class="card-title">Text schützen</span>
-        <span class="card-subtitle">Sensible Daten werden durch Codenames ersetzt</span>
       </div>
-      <div class="textarea-wrap">
-        <textarea id="inputText" placeholder="Füge hier deinen Text ein, z.B. eine E-Mail, ein Dokument oder eine Nachricht mit vertraulichen Daten…"></textarea>
-        <button class="paste-btn" onclick="pasteInput()">⌘V Einfügen</button>
-      </div>
+      <textarea id="inputText" placeholder="Gib hier deinen Text mit sensiblen Daten ein..."></textarea>
       <div class="actions">
-        <button class="btn-primary btn-protect" id="protectBtn" onclick="protect()">
-          <span class="btn-label">🔒 Schützen & Kopieren</span>
+        <button class="btn btn-primary" id="protectBtn" onclick="protect()">
+          <span class="label">Schützen &amp; Kopieren</span>
           <div class="spinner"></div>
         </button>
+        <button class="btn btn-sm" onclick="pasteInput()">Einfügen</button>
       </div>
       <div class="mappings" id="mappings"></div>
     </div>
 
     <!-- Status -->
-    <div class="status-bar">
-      <div class="toast" id="toast">
-        <span id="toastIcon"></span>
-        <span id="toastText"></span>
-      </div>
+    <div class="toast" id="toast">
+      <span id="toastText"></span>
     </div>
 
     <!-- Step 2: Restore -->
     <div class="card restore">
       <div class="card-header">
-        <div class="step-badge">2</div>
+        <div class="step-num">02</div>
         <span class="card-title">KI-Antwort wiederherstellen</span>
-        <span class="card-subtitle">Codenames werden durch Originale ersetzt</span>
       </div>
-      <div class="textarea-wrap">
-        <textarea id="responseText" placeholder="Kopiere die Antwort von ChatGPT, Claude oder einem anderen KI-Dienst und füge sie hier ein…"></textarea>
-        <button class="paste-btn" onclick="pasteResponse()">⌘V Einfügen</button>
-      </div>
+      <textarea id="responseText" placeholder="Kopiere die KI-Antwort hierher..."></textarea>
       <div class="actions">
-        <button class="btn-primary btn-restore" id="restoreBtn" onclick="restore()" disabled>
-          <span class="btn-label">🔓 Wiederherstellen & Kopieren</span>
+        <button class="btn btn-success" id="restoreBtn" onclick="restore()" disabled>
+          <span class="label">Wiederherstellen &amp; Kopieren</span>
           <div class="spinner"></div>
         </button>
+        <button class="btn btn-sm" onclick="pasteResponse()">Einfügen</button>
       </div>
     </div>
-
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <span>AUSTR.AI v1.0 — Deine Daten verlassen nie deinen Rechner ungeschützt</span>
-    <span id="sessionInfo"></span>
-  </div>
-
+  <div class="footer">AUSTR.AI v1.0 — Alles läuft lokal auf deinem Rechner</div>
 </div>
 
 <script>
-  // Wait for pywebview API to be ready
   const api = () => window.pywebview ? window.pywebview.api : null;
 
-  // ── Proxy status ──
   async function checkProxy() {
     try {
-      const status = await api().get_status();
-      const dot = document.getElementById('proxyDot');
-      const label = document.getElementById('proxyLabel');
-      const toggle = document.getElementById('proxyToggle');
-      if (status.proxy_running) {
-        dot.classList.add('active');
-        label.textContent = 'Proxy aktiv';
-        toggle.textContent = 'Stop';
-      } else {
-        dot.classList.remove('active');
-        label.textContent = 'Proxy gestoppt';
-        toggle.textContent = 'Start';
-      }
-    } catch(e) {
-      document.getElementById('proxyLabel').textContent = 'Nicht verbunden';
-    }
+      const s = await api().get_status();
+      document.getElementById('proxyDot').classList.toggle('active', s.proxy_running);
+      document.getElementById('proxyLabel').textContent = s.proxy_running ? 'Proxy aktiv' : 'Proxy aus';
+    } catch(e) { document.getElementById('proxyLabel').textContent = '…'; }
   }
 
   async function toggleProxy() {
-    try {
-      document.getElementById('proxyLabel').textContent = '…';
-      const result = await api().toggle_proxy();
-      setTimeout(checkProxy, 1000);
-    } catch(e) { showToast('Proxy-Fehler: ' + e, 'error'); }
+    document.getElementById('proxyLabel').textContent = '…';
+    try { await api().toggle_proxy(); } catch(e) {}
+    setTimeout(checkProxy, 1500);
   }
 
-  // ── Protect ──
   async function protect() {
     const text = document.getElementById('inputText').value.trim();
-    if (!text) { showToast('Kein Text eingegeben.', 'warning'); return; }
-
+    if (!text) { showToast('Kein Text eingegeben.', 'error'); return; }
     const btn = document.getElementById('protectBtn');
     btn.classList.add('loading');
-    showToast('Analysiere Text…', 'info');
-
+    showToast('Analysiere lokal…', 'info');
     try {
-      const result = await api().protect(text);
-
-      document.getElementById('inputText').value = result.anonymized_text;
+      const r = await api().protect(text);
+      document.getElementById('inputText').value = r.anonymized_text;
       document.getElementById('restoreBtn').disabled = false;
-
-      if (result.entity_count > 0) {
-        showMappings(result.mappings);
-        showToast(`✓ ${result.entity_count} sensible Begriffe geschützt. In Zwischenablage kopiert — jetzt einfügen!`, 'success');
+      if (r.entity_count > 0) {
+        showMappings(r.mappings);
+        showToast('✓ ' + r.entity_count + ' Begriffe geschützt. In Zwischenablage kopiert!', 'success');
       } else {
-        showToast('Keine sensiblen Daten erkannt. Text kopiert.', 'info');
-        hideMappings();
+        showToast('Keine sensiblen Daten erkannt.', 'info');
+        document.getElementById('mappings').classList.remove('visible');
       }
-    } catch(e) {
-      showToast('Fehler: ' + e, 'error');
-    } finally {
-      btn.classList.remove('loading');
-    }
+    } catch(e) { showToast('Fehler: ' + e, 'error'); }
+    finally { btn.classList.remove('loading'); }
   }
 
-  // ── Restore ──
   async function restore() {
     const text = document.getElementById('responseText').value.trim();
-    if (!text) { showToast('Keine KI-Antwort eingegeben.', 'warning'); return; }
-
+    if (!text) { showToast('Keine Antwort eingegeben.', 'error'); return; }
     const btn = document.getElementById('restoreBtn');
     btn.classList.add('loading');
-
     try {
-      const result = await api().restore(text);
-      document.getElementById('responseText').value = result.restored_text;
-      showToast(`✓ ${result.replacements} Begriffe wiederhergestellt. In Zwischenablage kopiert!`, 'success');
-      hideMappings();
-    } catch(e) {
-      showToast('Fehler: ' + e, 'error');
-    } finally {
-      btn.classList.remove('loading');
-    }
+      const r = await api().restore(text);
+      document.getElementById('responseText').value = r.restored_text;
+      showToast('✓ ' + r.replacements + ' Begriffe wiederhergestellt. Kopiert!', 'success');
+      document.getElementById('mappings').classList.remove('visible');
+    } catch(e) { showToast('Fehler: ' + e, 'error'); }
+    finally { btn.classList.remove('loading'); }
   }
 
-  // ── Clipboard ──
   async function pasteInput() {
-    try {
-      const text = await api().paste_clipboard();
-      if (text) document.getElementById('inputText').value = text;
-    } catch(e) {}
+    try { const t = await api().paste_clipboard(); if(t) document.getElementById('inputText').value = t; } catch(e) {}
   }
-
   async function pasteResponse() {
-    try {
-      const text = await api().paste_clipboard();
-      if (text) document.getElementById('responseText').value = text;
-    } catch(e) {}
+    try { const t = await api().paste_clipboard(); if(t) document.getElementById('responseText').value = t; } catch(e) {}
   }
 
-  // ── Toast ──
-  function showToast(message, type) {
-    const toast = document.getElementById('toast');
-    const icons = { success: '✓', info: 'ℹ', error: '✗', warning: '⚠' };
-    document.getElementById('toastIcon').textContent = icons[type] || '';
-    document.getElementById('toastText').textContent = message;
-    toast.className = 'toast visible ' + type;
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = msg;
+    t.className = 'toast visible ' + type;
   }
 
-  // ── Mappings preview ──
-  function showMappings(mappings) {
+  function showMappings(m) {
     const el = document.getElementById('mappings');
-    el.innerHTML = Object.entries(mappings).map(([codename, original]) =>
-      `<div class="mapping-row">
-        <span class="mapping-original">${escHtml(original)}</span>
-        <span class="mapping-arrow">→</span>
-        <span class="mapping-codename">${escHtml(codename)}</span>
-      </div>`
+    el.innerHTML = Object.entries(m).map(([k,v]) =>
+      '<div class="mapping-row"><span class="mapping-original">' + esc(v) + '</span><span class="mapping-arrow">→</span><span class="mapping-codename">' + esc(k) + '</span></div>'
     ).join('');
     el.classList.add('visible');
   }
 
-  function hideMappings() {
-    document.getElementById('mappings').classList.remove('visible');
-  }
+  function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-  function escHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  // ── Init ──
-  window.addEventListener('pywebviewready', () => {
-    checkProxy();
-    setInterval(checkProxy, 8000);
-  });
-
-  // Fallback if pywebview not available (testing in browser)
-  setTimeout(() => {
-    if (!window.pywebview) {
-      document.getElementById('proxyLabel').textContent = 'Browser-Vorschau';
-    }
-  }, 2000);
+  window.addEventListener('pywebviewready', () => { checkProxy(); setInterval(checkProxy, 8000); });
+  setTimeout(() => { if(!window.pywebview) document.getElementById('proxyLabel').textContent = 'Vorschau'; }, 2000);
 </script>
-
 </body>
 </html>
