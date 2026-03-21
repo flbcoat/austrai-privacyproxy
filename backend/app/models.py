@@ -133,6 +133,20 @@ class UploadResponse(BaseModel):
     )
 
 
+class RehydrateRequest(BaseModel):
+    """Request for the /api/rehydrate endpoint."""
+
+    text: str = Field(..., description="Text mit Codenames/Platzhaltern der rehydriert werden soll")
+    session_id: str = Field(..., description="Session-ID aus einem vorherigen anonymize/process Aufruf")
+
+
+class RehydrateResponse(BaseModel):
+    """Response for the /api/rehydrate endpoint."""
+
+    rehydrated_text: str = Field(..., description="Text mit wiederhergestellten Originalwerten")
+    replacements_made: int = Field(..., description="Anzahl der durchgefuehrten Ersetzungen")
+
+
 class HealthResponse(BaseModel):
     """Response for the /api/health endpoint."""
 

@@ -1,6 +1,9 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        INSTALL_LOCAL_LLM: "1"
     container_name: austrai-backend
     restart: unless-stopped
     ports:

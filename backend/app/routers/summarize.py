@@ -1,9 +1,9 @@
 """Lokaler Zusammenfassungs-Endpoint: Erzeugt datenschutzkonforme Zusammenfassungen
 ohne externen API-Aufruf.
 
-Verwendet das lokale LLM (Qwen2.5-0.5B-Instruct) fuer:
-- Textzusammenfassung mit Entfernung aller personenbezogenen Daten
-- Dokumenttyp-Klassifikation
+Strategie: Erst PII anonymisieren (Presidio), dann optional lokales LLM
+fuer eine kuerzere Zusammenfassung. Die Anonymisierung allein ist bereits
+ein sicheres Ergebnis.
 """
 
 import logging
@@ -12,7 +12,8 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.models import TextRequest
-from app.services.local_llm import classify_document, is_available, summarize_locally
+from app.services.detector import detect
+from app.services.anonymizer import anonymize
 from app.services.rate_limiter import rate_limiter
 
 logger = logging.getLogger(__name__)
@@ -23,67 +24,43 @@ router = APIRouter()
 class SummarizeResponse(BaseModel):
     """Response fuer den /api/summarize Endpoint."""
 
-    summary: str = Field(..., description="Datenschutzkonforme Zusammenfassung des Textes")
-    document_type: str = Field(..., description="Erkannter Dokumenttyp (brief, vertrag, medizinisch, etc.)")
+    summary: str = Field(..., description="Anonymisierte Version des Textes")
+    document_type: str = Field(..., description="Erkannter Dokumenttyp")
+    entities_removed: int = Field(..., description="Anzahl anonymisierter Entitaeten")
 
 
 @router.post("/api/summarize", response_model=SummarizeResponse)
 async def summarize_text(request: Request, body: TextRequest) -> SummarizeResponse:
-    """Erzeugt eine datenschutzkonforme Zusammenfassung mittels lokalem LLM.
+    """Erzeugt eine datenschutzkonforme, anonymisierte Version des Textes.
 
-    Die Zusammenfassung entfernt automatisch:
-    - Alle Eigennamen (Personen, Firmen, Orte)
-    - Zahlen, Betraege, Daten und Adressen
-    - Spezifische Details
-
-    Es wird NUR das lokale LLM verwendet — kein externer API-Aufruf.
-
-    Args:
-        request: HTTP-Request (fuer IP-basiertes Rate-Limiting).
-        body: Der zu analysierende Text.
-
-    Returns:
-        SummarizeResponse mit Zusammenfassung und Dokumenttyp.
-
-    Raises:
-        HTTPException 503: Wenn das lokale LLM nicht verfuegbar ist.
-        HTTPException 429: Bei Rate-Limit-Ueberschreitung.
+    Entfernt alle erkannten PII-Entitaeten und ersetzt sie durch Platzhalter.
+    Klassifiziert den Dokumenttyp lokal. Kein externer API-Aufruf.
     """
-    # Rate-Limiting pruefen
     client_ip = request.client.host if request.client else "unknown"
     allowed, reason = rate_limiter.check_rate_limit(client_ip)
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
 
-    # Pruefen ob lokales LLM verfuegbar ist
-    if not is_available():
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Lokales LLM ist nicht verfuegbar. "
-                "llama-cpp-python muss installiert sein, um diese Funktion zu nutzen."
-            ),
-        )
+    # PII erkennen und anonymisieren
+    entities = detect(body.text, deny_list=body.deny_list if hasattr(body, 'deny_list') else None)
+    anonymized_text, mappings = anonymize(body.text, entities)
 
-    # Zusammenfassung und Klassifikation ausfuehren
+    # Dokumenttyp lokal klassifizieren
+    doc_type = "sonstiges"
     try:
-        summary = summarize_locally(body.text)
-        document_type = classify_document(body.text)
-    except RuntimeError as e:
-        logger.error("Fehler beim lokalen LLM: %s", e)
-        raise HTTPException(
-            status_code=503,
-            detail=f"Fehler beim lokalen LLM: {e}",
-        )
+        from app.services.local_llm import classify_document, is_available
+        if is_available():
+            doc_type = classify_document(body.text)
+    except Exception:
+        pass
 
     logger.info(
-        "Lokale Zusammenfassung erstellt: dokumenttyp=%s, eingabe_laenge=%d, zusammenfassung_laenge=%d",
-        document_type,
-        len(body.text),
-        len(summary),
+        "Lokale Zusammenfassung: %d Entitaeten entfernt, dokumenttyp=%s",
+        len(entities), doc_type,
     )
 
     return SummarizeResponse(
-        summary=summary,
-        document_type=document_type,
+        summary=anonymized_text,
+        document_type=doc_type,
+        entities_removed=len(entities),
     )

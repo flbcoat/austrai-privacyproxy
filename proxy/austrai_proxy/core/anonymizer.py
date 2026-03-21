@@ -19,8 +19,8 @@ useless without the mapping. And unlike foreign-language fakes, codenames
 can't be translated back by an LLM.
 """
 
-from app.models import Entity
-from app.services.codename_engine import CodeNameEngine
+from .models import Entity
+from .codename_engine import CodeNameEngine
 
 
 def anonymize(text: str, entities: list[Entity]) -> tuple[str, dict[str, str]]:

@@ -12,7 +12,7 @@ from app.config import settings
 from app.custom_terms import get_custom_terms
 from app.data.examples import EXAMPLES
 from app.services.extractor import SUPPORTED_FORMATS
-from app.routers import analyze, anonymize, health, process, sensitivity, summarize, upload
+from app.routers import analyze, anonymize, health, process, rehydrate, sensitivity, summarize, upload
 from app.services.detector import init_analyzer
 from app.services.sensitivity_analyzer import init_sensitivity_model
 from app.services.session_store import session_store
@@ -84,6 +84,7 @@ app.include_router(analyze.router, tags=["Analyse"])
 app.include_router(anonymize.router, tags=["Anonymisierung"])
 app.include_router(process.router, tags=["Pipeline"])
 app.include_router(upload.router, tags=["Upload"])
+app.include_router(rehydrate.router, tags=["Rehydrierung"])
 app.include_router(sensitivity.router, tags=["Sensitivitaet"])
 app.include_router(summarize.router, tags=["Zusammenfassung"])
 

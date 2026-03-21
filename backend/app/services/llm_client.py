@@ -9,16 +9,13 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# System prompt instructing the LLM to preserve all placeholders exactly
+# System prompt — simpler now because codenames look like real names.
+# The LLM only needs special instruction for bracket references.
 SYSTEM_PROMPT = (
-    "Du bist ein hilfreicher Assistent. WICHTIG: Der Text, den du erhältst, enthält "
-    "anonymisierte Platzhalter in eckigen Klammern, z.B. [PERSON_1], [AT_IBAN_1], "
-    "[PHONE_NUMBER_1], [AT_UID_NR_1] usw. Du MUSST diese Platzhalter EXAKT so "
-    "übernehmen, wie sie im Text erscheinen — inklusive der eckigen Klammern, der "
-    "exakten Groß-/Kleinschreibung und der Nummerierung. Ändere die Platzhalter "
-    "NIEMALS ab, lasse keine Klammern weg und füge keine Leerzeichen innerhalb der "
-    "Klammern ein. Beantworte den Text inhaltlich normal, aber behalte alle "
-    "Platzhalter unverändert bei."
+    "Du bist ein hilfreicher Assistent. Der Text enthaelt Referenz-Codes "
+    "in eckigen Klammern (z.B. [AT_IBAN_1], [PHONE_NUMBER_1]). "
+    "Uebernimm diese EXAKT wie sie erscheinen — inklusive der eckigen "
+    "Klammern und der Nummerierung. Aendere sie NIEMALS ab."
 )
 
 

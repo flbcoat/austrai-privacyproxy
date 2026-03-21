@@ -26,13 +26,9 @@ EXPECTED_MIN_SIZE_BYTES = 300_000_000  # ~350MB, sanity check
 # System prompts (German)
 # ---------------------------------------------------------------------------
 SUMMARIZE_SYSTEM_PROMPT = (
-    "Du bist ein Datenschutz-Assistent. Fasse den folgenden Text zusammen, aber:\n"
-    "1. Ersetze ALLE Eigennamen (Personen, Firmen, Orte) durch generische "
-    "Beschreibungen wie \"eine Person\", \"ein Unternehmen\", \"eine Stadt\"\n"
-    "2. Ersetze alle Zahlen, Betraege, Daten und Adressen durch \"[REDACTED]\"\n"
-    "3. Fasse in 3-5 Saetzen zusammen\n"
-    "4. Beschreibe nur die ART des Inhalts, keine spezifischen Details\n"
-    "5. Antworte in der gleichen Sprache wie der Eingabetext"
+    "Fasse den Text in 3 Saetzen zusammen. "
+    "Nenne keine Namen, Firmen oder Zahlen. "
+    "Beschreibe nur worum es geht."
 )
 
 CLASSIFY_SYSTEM_PROMPT = (
@@ -223,10 +219,18 @@ def summarize_locally(text: str, max_tokens: int = 512) -> str:
 
     llm = _get_llm()
 
-    # Truncate input to fit within context window (reserve space for system prompt + output)
-    # Rough estimate: 1 token ~ 4 chars for German text
-    max_input_chars = (2048 - max_tokens - 200) * 4  # ~5400 chars
-    truncated_text = text[:max_input_chars] if len(text) > max_input_chars else text
+    # Pre-anonymize with Presidio before sending to local LLM
+    try:
+        from app.services.detector import detect
+        from app.services.anonymizer import anonymize
+        entities = detect(text)
+        anon_text, _ = anonymize(text, entities)
+    except Exception:
+        anon_text = text
+
+    # Truncate to fit context window (1 token ~ 4 chars for German)
+    max_input_chars = (2048 - max_tokens - 100) * 4
+    truncated_text = anon_text[:max_input_chars] if len(anon_text) > max_input_chars else anon_text
 
     try:
         response = llm.create_chat_completion(
@@ -235,8 +239,9 @@ def summarize_locally(text: str, max_tokens: int = 512) -> str:
                 {"role": "user", "content": truncated_text},
             ],
             max_tokens=max_tokens,
-            temperature=0.3,
+            temperature=0.5,
             top_p=0.9,
+            repeat_penalty=1.2,
         )
 
         content = response["choices"][0]["message"]["content"]

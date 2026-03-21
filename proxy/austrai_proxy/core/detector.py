@@ -1,3 +1,5 @@
+CONFIDENCE_THRESHOLD = 0.6
+
 """PII detection service using Presidio Analyzer with SpaCy NLP backend."""
 
 import html
@@ -7,9 +9,9 @@ import re
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 
-from app.config import settings
-from app.models import Entity
-from app.services.austrian_recognizers import get_all_austrian_recognizers
+
+from .models import Entity
+from .austrian_recognizers import get_all_austrian_recognizers
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +134,7 @@ def detect(
     # Phase 2: Context learning — find additional identifying terms
     if entities:
         try:
-            from app.services.context_learner import learn_document
+            from .context_learner import learn_document
             nlp = get_spacy_nlp()
             additional_terms = learn_document(text, entities, nlp)
 
@@ -161,14 +163,7 @@ def _detect_once(
 
     # Merge persistent custom terms with per-request deny_list
     merged_deny_list: list[str] = []
-    try:
-        from app.custom_terms import get_custom_terms
-        persistent = get_custom_terms()
-        if persistent:
-            merged_deny_list.extend(persistent)
-    except Exception:
-        # Graceful fallback if config file is unavailable
-        pass
+    # Custom terms are passed in via deny_list parameter
     if deny_list:
         merged_deny_list.extend(deny_list)
     # Deduplicate while preserving order
@@ -200,7 +195,7 @@ def _detect_once(
 
     entities: list[Entity] = []
     for result in results:
-        if result.score >= settings.CONFIDENCE_THRESHOLD:
+        if result.score >= CONFIDENCE_THRESHOLD:
             entity_text = text[result.start : result.end]
 
             # Only keep entity types we actually want to anonymize
