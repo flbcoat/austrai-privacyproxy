@@ -42,6 +42,13 @@ ALLOWED_ENTITY_TYPES = {
     "EU_PII", "SENSITIVE_DATA",
 }
 
+# Known product/brand names that SpaCy tags as PERSON
+PERSON_FALSE_POSITIVES = {
+    "claude", "claude code", "chatgpt", "copilot", "gemini", "siri", "alexa",
+    "cortana", "watson", "deepmind", "midjourney", "dall-e", "whisper",
+    "presidio", "tesseract", "ollama", "langchain", "fastapi",
+}
+
 # Known false-positive LOCATIONs to filter out
 LOCATION_FALSE_POSITIVES = {
     "tel", "tel.", "dr", "dr.", "nr", "nr.", "str", "str.",
@@ -128,6 +135,9 @@ def detect(
     """
     # Phase 1: Standard Presidio detection
     entities = _detect_once(text, language, entity_types, deny_list)
+
+    # Phase 1b: Filter PERSON false positives using POS-tag cross-check
+    entities = _filter_person_false_positives(text, entities)
 
     # Phase 2: Context learning — find additional identifying terms
     if entities:
@@ -231,6 +241,30 @@ def _detect_once(
     entities = _remove_contained(entities)
 
     return entities
+
+
+def _filter_person_false_positives(text: str, entities: list[Entity]) -> list[Entity]:
+    """Filter PERSON entities where SpaCy POS says NOUN, not PROPN."""
+    person_entities = [e for e in entities if e.entity_type == "PERSON"]
+    if not person_entities:
+        return entities
+    try:
+        nlp = get_spacy_nlp()
+        doc = nlp(text)
+        filtered = []
+        for entity in entities:
+            if entity.entity_type != "PERSON":
+                filtered.append(entity)
+                continue
+            # Skip known product/brand names
+            if entity.text.lower().strip() in PERSON_FALSE_POSITIVES:
+                continue
+            tokens = [t for t in doc if t.idx >= entity.start and t.idx < entity.end]
+            if any(t.pos_ == "PROPN" for t in tokens):
+                filtered.append(entity)
+        return filtered
+    except Exception:
+        return entities
 
 
 def generate_annotated_html(text: str, entities: list[Entity]) -> str:
