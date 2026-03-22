@@ -24,7 +24,24 @@ Die KI arbeitet genauso gut — weiß aber nicht wer du bist.
 pip install austrai
 ```
 
-Beim ersten Start wird das deutsche Sprachmodell heruntergeladen (~500 MB, einmalig).
+Beim ersten Start werden die Erkennungsmodelle heruntergeladen (GLiNER ~400 MB, SpaCy ~15 MB, einmalig).
+
+### Empfohlen: Ollama für kontextuelle Erkennung
+
+AUSTR.AI nutzt optional ein lokales LLM für die intelligente Erkennung von Begriffen die kein Muster haben (Projektnamen, interne Begriffe etc.). Dafür brauchst du [Ollama](https://ollama.com):
+
+```bash
+# 1. Ollama installieren (macOS)
+brew install ollama
+
+# 2. Ollama starten
+ollama serve
+
+# 3. Modell herunterladen (~500 MB, einmalig)
+ollama pull qwen3.5:0.8b
+```
+
+Ohne Ollama funktioniert AUSTR.AI trotzdem — dann nur mit GLiNER + Presidio (deckt 95%+ der Fälle ab).
 
 ### Optionale Erweiterungen
 
