@@ -34,18 +34,25 @@ class MappingStore:
 
     def _load_or_create_key(self) -> bytes:
         """Load encryption key from file, or create a new one."""
+        import os as _os
         DB_DIR.mkdir(parents=True, exist_ok=True)
+        DB_DIR.chmod(0o700)
         if KEY_FILE.exists():
             return KEY_FILE.read_bytes()
         key = Fernet.generate_key()
-        KEY_FILE.write_bytes(key)
-        KEY_FILE.chmod(0o600)
-        logger.info("Neuer Verschluesselungsschluessel erstellt: %s", KEY_FILE)
+        # Write key file with secure permissions from the start (owner-only)
+        fd = _os.open(str(KEY_FILE), _os.O_WRONLY | _os.O_CREAT | _os.O_EXCL, 0o600)
+        try:
+            _os.write(fd, key)
+        finally:
+            _os.close(fd)
+        logger.info("Neuer Verschluesselungsschluessel erstellt: ~/.austrai/mappings.key")
         return key
 
     def _init_db(self):
         """Create the database table if it doesn't exist."""
         DB_DIR.mkdir(parents=True, exist_ok=True)
+        DB_DIR.chmod(0o700)
         with self._connect() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS sessions (

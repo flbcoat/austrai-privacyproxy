@@ -232,9 +232,9 @@ def anonymize(text, deny, output):
 
     click.echo(f"\n✅ {len(result.mappings)} sensible Begriffe geschuetzt:\n")
     for codename, original in result.mappings.items():
-        click.echo(f"  {original:30s} → {codename}")
+        # Only show codename and entity type, not original PII values
+        click.echo(f"  {codename}")
     click.echo(f"\nAnonymisiert:\n{result.anonymized_text}\n")
-    click.echo(f"Session: {result.session_id}")
 
     # Persist mappings to disk for deanon
     if result.mappings:

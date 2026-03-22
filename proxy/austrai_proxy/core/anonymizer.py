@@ -19,7 +19,7 @@ useless without the mapping. And unlike foreign-language fakes, codenames
 can't be translated back by an LLM.
 """
 
-from .models import Entity
+from .models import Entity, resolve_overlaps
 from .codename_engine import CodeNameEngine
 
 
@@ -37,7 +37,7 @@ def anonymize(text: str, entities: list[Entity]) -> tuple[str, dict[str, str]]:
     if not entities:
         return text, {}
 
-    resolved = _resolve_overlaps(entities)
+    resolved = resolve_overlaps(entities)
     engine = CodeNameEngine()
 
     entity_replacements: list[tuple[Entity, str]] = []
@@ -58,27 +58,3 @@ def anonymize(text: str, entities: list[Entity]) -> tuple[str, dict[str, str]]:
         anonymized = anonymized[: entity.start] + codename + anonymized[entity.end :]
 
     return anonymized, mappings
-
-
-def _resolve_overlaps(entities: list[Entity]) -> list[Entity]:
-    """Remove overlapping entities, keeping the one with the highest score."""
-    if not entities:
-        return []
-
-    sorted_entities = sorted(entities, key=lambda e: (-e.score, -(e.end - e.start)))
-
-    selected: list[Entity] = []
-    occupied: list[tuple[int, int]] = []
-
-    for entity in sorted_entities:
-        overlaps = False
-        for start, end in occupied:
-            if entity.start < end and entity.end > start:
-                overlaps = True
-                break
-        if not overlaps:
-            selected.append(entity)
-            occupied.append((entity.start, entity.end))
-
-    selected.sort(key=lambda e: e.start)
-    return selected

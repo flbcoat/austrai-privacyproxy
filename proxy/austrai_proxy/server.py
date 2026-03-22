@@ -297,8 +297,11 @@ async def _proxy_request(request: Request, api_format: str) -> Response:
                 ", ".join(list(mappings.values())[:3]),
             )
     except Exception as e:
-        logger.warning("Anonymisierung fehlgeschlagen: %s — forwarding unmodified", e)
-        mappings = {}
+        logger.error("Anonymisierung fehlgeschlagen: %s — Request abgelehnt (fail-closed)", e)
+        return JSONResponse(
+            {"error": "Anonymization failed. Request blocked to protect privacy."},
+            status_code=503,
+        )
 
     # Build upstream headers: pass through original auth, add our own as fallback
     upstream_url = f"{upstream_base}{request.url.path}"

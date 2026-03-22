@@ -1,0 +1,355 @@
+---
+---
+<section class="section audiences-section" id="fuer-wen">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Für wen?</span>
+      <h2>Ob Einzelperson oder Konzern — <span class="text-gradient">deine Daten zuerst.</span></h2>
+    </div>
+
+    <!-- Audience Tabs -->
+    <div class="audience-tabs">
+      <button class="audience-tab active" data-audience="privat" onclick="showAudience('privat')">Für Privatanwender</button>
+      <button class="audience-tab" data-audience="unternehmen" onclick="showAudience('unternehmen')">Für Unternehmen</button>
+    </div>
+
+    <!-- PRIVATANWENDER -->
+    <div class="audience-panel active" id="audience-privat">
+      <div class="audience-hero">
+        <h3>Du nutzt ChatGPT, Claude oder Gemini?</h3>
+        <p>Dann landen deine Eingaben auf Servern in den USA. Kundennamen, Kontonummern, Diagnosen, Passwörter — alles wird gespeichert, teilweise bis zu 30 Tage.</p>
+        <p>AUSTR.AI sitzt dazwischen. Bevor dein Text das Internet erreicht, werden sensible Daten durch erfundene Codenames ersetzt. Die KI arbeitet damit genauso gut — weiß aber nicht, wer du bist.</p>
+      </div>
+
+      <div class="audience-how">
+        <h4>So funktioniert es</h4>
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="how-num">1</div>
+            <div>
+              <strong>Desktop-App öffnen</strong>
+              <p>Kein Terminal, keine Konfiguration. App starten, fertig.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">2</div>
+            <div>
+              <strong>Text eingeben oder Datei hochladen</strong>
+              <p>Einfügen, Beispiel wählen, oder PDF/DOCX/Bild hochladen.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">3</div>
+            <div>
+              <strong>"Anonymisieren" klicken</strong>
+              <p>Sensible Daten werden lokal erkannt und durch Codenames ersetzt. Der geschützte Text wird automatisch in die Zwischenablage kopiert.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">4</div>
+            <div>
+              <strong>In ChatGPT / Claude einfügen</strong>
+              <p>Die KI sieht nur "Arion bei Nexon Corp" statt deiner echten Daten.</p>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">5</div>
+            <div>
+              <strong>KI-Antwort deanonymisieren</strong>
+              <p>Antwort kopieren, in die App einfügen, Klick — deine echten Daten sind wieder drin.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="audience-expect">
+        <h4>Was du erwarten kannst — und was nicht</h4>
+        <div class="expect-grid">
+          <div class="expect-card expect-yes">
+            <h5>✓ Das funktioniert</h5>
+            <ul>
+              <li>IBANs, Kontonummern, Kreditkarten — 95%+ Erkennung</li>
+              <li>E-Mail-Adressen, Telefonnummern — 95%+ Erkennung</li>
+              <li>Vor- und Nachnamen mit Kontext — 85-92%</li>
+              <li>Passwörter und API Keys — 90%+ wenn als solche erkennbar</li>
+              <li>Diagnosen und Medikamente — 80-85%</li>
+              <li>Alles läuft lokal — kein Server, kein Cloud-Dienst</li>
+            </ul>
+          </div>
+          <div class="expect-card expect-no">
+            <h5>✗ Das funktioniert nicht</h5>
+            <ul>
+              <li>100% Garantie — es können Daten durchrutschen</li>
+              <li>Geschäftsgeheimnisse ohne Personenbezug ("wir planen eine Übernahme")</li>
+              <li>Unbekannte Firmennamen die wie normale Wörter klingen</li>
+              <li>Automatisches Abfangen — du musst den Text bewusst durch die App schicken</li>
+              <li>Ersatz für einen Datenschutzbeauftragten</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNTERNEHMEN -->
+    <div class="audience-panel" id="audience-unternehmen">
+      <div class="audience-hero">
+        <h3>Ihre Mitarbeiter nutzen KI — schützen Sie die Daten.</h3>
+        <p>Ob erlaubt oder nicht: KI-Tools werden im Arbeitsalltag eingesetzt. Jeder Prompt mit Kundendaten, Vertragsinhalten oder internen Zahlen ist ein potenzielles DSGVO-Risiko.</p>
+        <p>AUSTR.AI lässt sich als transparente Schicht einsetzen — ohne den Arbeitsablauf zu verändern.</p>
+      </div>
+
+      <div class="deploy-options">
+        <h4>Drei Deployment-Optionen</h4>
+        <div class="deploy-grid">
+          <div class="deploy-card">
+            <div class="deploy-header">
+              <span class="deploy-badge">Einfach</span>
+              <h5>Desktop-App</h5>
+            </div>
+            <p>Jeder Mitarbeiter installiert die App. Kein Server, keine IT-Abteilung.</p>
+            <ul>
+              <li>5 Minuten pro Arbeitsplatz</li>
+              <li>10 Minuten Schulung</li>
+              <li>Funktioniert mit jedem KI-Tool (Clipboard-basiert)</li>
+              <li>Keine API Keys nötig</li>
+            </ul>
+          </div>
+          <div class="deploy-card deploy-card-accent">
+            <div class="deploy-header">
+              <span class="deploy-badge badge-accent">Empfohlen</span>
+              <h5>API Proxy</h5>
+            </div>
+            <p>AUSTR.AI als lokaler Proxy. KI-Tools werden auf den Proxy umkonfiguriert — der Rest passiert automatisch.</p>
+            <ul>
+              <li>1-2 Stunden Setup durch IT</li>
+              <li>Keine Schulung nötig (transparent)</li>
+              <li>Unterstützt: Anthropic (Claude), OpenAI (GPT), Mistral, und jedes LLM mit OpenAI-kompatibler API (inkl. Ollama, vLLM)</li>
+              <li>Benötigt API Key des jeweiligen LLM-Anbieters</li>
+            </ul>
+          </div>
+          <div class="deploy-card">
+            <div class="deploy-header">
+              <span class="deploy-badge">Enterprise</span>
+              <h5>Zentraler Server</h5>
+            </div>
+            <p>Docker-Container auf Ihrem internen Server. Zentrale Verwaltung von Deny-Lists und Einstellungen.</p>
+            <ul>
+              <li>Halber Tag Setup</li>
+              <li>Zentrale Deny-List-Verwaltung</li>
+              <li>8+ GB RAM empfohlen</li>
+              <li>~8-15 €/Monat bei Cloud-Hosting</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="audience-important">
+        <h4>Wichtig zu wissen</h4>
+        <div class="important-grid">
+          <div class="important-item">
+            <strong>API Proxy braucht API Keys</strong>
+            <p>Der Proxy leitet anonymisierte Anfragen an LLM-Dienste weiter. Dafür braucht Ihr Unternehmen einen API-Zugang beim jeweiligen Anbieter (OpenAI, Anthropic, Mistral, etc.). Wenn Sie ein eigenes LLM hosten (z.B. über Ollama oder vLLM), funktioniert der Proxy ebenfalls — sofern das LLM eine OpenAI-kompatible API bereitstellt.</p>
+          </div>
+          <div class="important-item">
+            <strong>Desktop-App braucht keine API Keys</strong>
+            <p>Die Desktop-App arbeitet Clipboard-basiert: Text anonymisieren, in beliebiges KI-Tool einfügen, Antwort deanonymisieren. Das funktioniert mit jedem Tool, jeder Website, jeder App — ohne Konfiguration.</p>
+          </div>
+          <div class="important-item">
+            <strong>Keine Garantie für vollständige Anonymisierung</strong>
+            <p>Die Erkennungsrate liegt je nach Datentyp bei 80-99%. Für hochsensible Bereiche (HR, Recht, M&A) empfehlen wir die Kombination aus AUSTR.AI und gepflegten Deny-Lists, plus organisatorische Maßnahmen.</p>
+          </div>
+          <div class="important-item">
+            <strong>Open Source, keine Kosten</strong>
+            <p>MIT-Lizenz. Keine Lizenzgebühren, keine Nutzerlimits, kein Vendor-Lock-in. Die einzigen Kosten: Hardware und Arbeitszeit für Setup.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section" id="faq">
+      <h3>Häufige Fragen</h3>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Läuft AUSTR.AI wirklich komplett lokal?</summary>
+          <p>Ja. Die Erkennung und Anonymisierung passiert zu 100% auf deinem Rechner. Es wird keine Verbindung zu unseren oder anderen Servern aufgebaut. Die einzige Netzwerkkommunikation entsteht, wenn du den anonymisierten Text an ein KI-Tool sendest — und dann sind die sensiblen Daten bereits durch Codenames ersetzt.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Was sind Codenames?</summary>
+          <p>"Thomas Gruber" wird zu "Arion", "Innovatech GmbH" wird zu "Nexon Corp". Das sind erfundene Begriffe die in keiner Sprache existieren und nicht zurückübersetzt werden können — anders als z.B. chinesische oder arabische Fake-Namen, die ein LLM sofort zurückübersetzen könnte. Strukturierte Daten wie IBANs werden zu Referenz-Codes wie [AT_IBAN_1].</p>
+        </details>
+        <details class="faq-item">
+          <summary>Welche KI-Tools werden unterstützt?</summary>
+          <p><strong>Desktop-App:</strong> Jedes KI-Tool — ChatGPT, Claude, Gemini, Copilot, jede Website, jede App. Funktioniert über Copy-Paste.<br>
+          <strong>API Proxy:</strong> Jedes LLM mit Anthropic- oder OpenAI-kompatibler API. Das umfasst: Claude, GPT, Mistral, und selbst gehostete Modelle über Ollama, vLLM, LocalAI oder ähnliche Frameworks. Voraussetzung: ein API Key oder Zugang zum LLM-Endpoint.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Kann ich mein eigenes LLM (z.B. Qwen, Llama) nutzen?</summary>
+          <p>Ja — wenn es über eine OpenAI-kompatible API erreichbar ist. Ollama und vLLM stellen das automatisch bereit. Wenn Sie ein Modell über ein einfaches Python-Script ohne API laufen lassen, greift der Proxy nicht. Die Desktop-App funktioniert aber immer (Clipboard-basiert).</p>
+        </details>
+        <details class="faq-item">
+          <summary>Wie hoch ist die Erkennungsrate?</summary>
+          <p>Strukturierte Daten (IBANs, E-Mails, Telefonnummern): 95-99%. Personennamen: 80-92%. Firmennamen: 80-90%. Passwörter/API Keys: 90-95%. Diagnosen: 80-85%. Die Erkennungsrate steigt deutlich, wenn Sie firmenspezifische Begriffe in die Deny-List eintragen — dort gelistete Begriffe werden zu 100% erkannt.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Was ist die Deny-List?</summary>
+          <p>Eine Liste von Begriffen die immer anonymisiert werden — egal ob das System sie automatisch erkennen würde oder nicht. Tragen Sie dort Ihre Firmennamen, Projektnamen, Kundenkürzel und interne Bezeichnungen ein. Das ist Ihr wichtigstes Werkzeug für die Lücken in der automatischen Erkennung.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Ist AUSTR.AI DSGVO-konform?</summary>
+          <p>AUSTR.AI unterstützt die DSGVO-Grundsätze Datenminimierung (Art. 5), Privacy by Design (Art. 25) und Sicherheit der Verarbeitung (Art. 32). Es reduziert das Risiko bei Drittlandtransfers (Art. 44-49) erheblich. Aber: AUSTR.AI ist ein technisches Werkzeug, keine rechtliche Garantie. Eine vollständige DSGVO-Konformitätsbewertung erfordert die Einbindung Ihres Datenschutzbeauftragten.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Warum ist die App 1.5 GB groß?</summary>
+          <p>AUSTR.AI bringt ein komplettes deutsches Sprachmodell (SpaCy de_core_news_lg, ~500 MB) und alle Erkennungs-Libraries mit. Das ist der Preis für vollständig lokale Verarbeitung — es muss nichts aus dem Internet nachgeladen werden. Die Terminal-Version (<code>pip install austrai</code>) lädt das Sprachmodell beim ersten Start herunter und ist dadurch initial kleiner.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Was kostet AUSTR.AI?</summary>
+          <p>Nichts. Open Source unter MIT-Lizenz. Keine Lizenzgebühren, keine Nutzerlimits, keine Telemetrie. Die einzigen Kosten: API Keys für die LLM-Dienste die Sie ohnehin nutzen, und optional Hardware für einen zentralen Server.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Schützt AUSTR.AI auch Geschäftsgeheimnisse?</summary>
+          <p>Nein — nicht automatisch. AUSTR.AI erkennt personenbezogene Daten (Namen, Nummern, Adressen). Ein Satz wie "wir planen die Übernahme im Q3" enthält keine erkennbaren PII-Muster und geht unverändert durch. Für solche Fälle können Sie die Deny-List nutzen oder organisatorische Richtlinien erstellen, welche Inhalte überhaupt in KI-Tools eingegeben werden dürfen.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .audiences-section { position: relative; }
+
+  .audience-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 3rem;
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    padding: 4px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--color-border);
+  }
+  .audience-tab {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
+    transition: all var(--transition-base);
+    text-align: center;
+  }
+  .audience-tab:hover { color: var(--color-text-muted); }
+  .audience-tab.active { background: var(--color-accent); color: white; }
+
+  .audience-panel { display: none; animation: slideUp 0.3s ease; }
+  .audience-panel.active { display: block; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .audience-hero { max-width: 720px; margin: 0 auto 2.5rem; text-align: center; }
+  .audience-hero h3 { font-size: 1.5rem; margin-bottom: 1rem; }
+  .audience-hero p { font-size: 1.0625rem; line-height: 1.7; margin: 0 auto; max-width: 640px; }
+  .audience-hero p + p { margin-top: 0.75rem; }
+
+  .audience-how, .deploy-options, .audience-expect, .audience-important { margin-bottom: 3rem; }
+  .audience-how h4, .deploy-options h4, .audience-expect h4, .audience-important h4 {
+    font-size: 1.25rem; margin-bottom: 1.5rem; text-align: center;
+  }
+
+  /* How steps */
+  .how-steps { max-width: 600px; margin: 0 auto; }
+  .how-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem 0; border-bottom: 1px solid var(--color-border);
+  }
+  .how-step:last-child { border-bottom: none; }
+  .how-num {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.875rem; font-weight: 700;
+    background: rgba(6, 182, 212, 0.1); color: var(--color-accent);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+  }
+  .how-step strong { display: block; margin-bottom: 0.25rem; }
+  .how-step p { font-size: 0.875rem; color: var(--color-text-muted); margin: 0; }
+
+  /* Expect grid */
+  .expect-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+  .expect-card {
+    background: var(--color-bg-card); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: 1.5rem;
+  }
+  .expect-card h5 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .expect-yes h5 { color: var(--color-success); }
+  .expect-no h5 { color: var(--color-error); }
+  .expect-card ul { list-style: none; }
+  .expect-card li { font-size: 0.875rem; color: var(--color-text-muted); padding: 0.3rem 0; line-height: 1.5; }
+
+  /* Deploy grid */
+  .deploy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .deploy-card {
+    background: var(--color-bg-card); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: 1.5rem;
+    transition: all var(--transition-base);
+  }
+  .deploy-card:hover { border-color: var(--color-border-light); transform: translateY(-2px); }
+  .deploy-card-accent { border-color: rgba(6, 182, 212, 0.3); }
+  .deploy-header { margin-bottom: 0.75rem; }
+  .deploy-badge {
+    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--color-text-dim);
+    background: rgba(100, 116, 139, 0.15); padding: 2px 8px;
+    border-radius: 4px; display: inline-block; margin-bottom: 0.5rem;
+  }
+  .badge-accent { color: var(--color-accent); background: rgba(6, 182, 212, 0.1); }
+  .deploy-card h5 { font-size: 1.125rem; }
+  .deploy-card > p { font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; line-height: 1.5; }
+  .deploy-card ul { list-style: none; }
+  .deploy-card li { font-size: 0.8125rem; color: var(--color-text-dim); padding: 0.25rem 0; }
+  .deploy-card li::before { content: "→ "; color: var(--color-accent); }
+
+  /* Important grid */
+  .important-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+  .important-item {
+    background: var(--color-bg-card); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: 1.25rem;
+  }
+  .important-item strong { display: block; margin-bottom: 0.5rem; font-size: 0.9375rem; }
+  .important-item p { font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.6; margin: 0; }
+
+  /* FAQ */
+  .faq-section { margin-top: 4rem; }
+  .faq-section h3 { font-size: 1.5rem; text-align: center; margin-bottom: 2rem; }
+  .faq-list { max-width: 720px; margin: 0 auto; }
+  .faq-item {
+    border-bottom: 1px solid var(--color-border); padding: 1rem 0;
+  }
+  .faq-item summary {
+    font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+    color: var(--color-text); padding: 0.25rem 0;
+    list-style: none; display: flex; align-items: center; gap: 0.75rem;
+  }
+  .faq-item summary::before { content: "+"; color: var(--color-accent); font-size: 1.25rem; font-weight: 400; flex-shrink: 0; }
+  .faq-item[open] summary::before { content: "−"; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p {
+    font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.7;
+    margin: 0.75rem 0 0 1.75rem; max-width: none;
+  }
+
+  @media (max-width: 900px) {
+    .deploy-grid, .expect-grid, .important-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  function showAudience(which) {
+    document.querySelectorAll('.audience-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.audience-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('audience-' + which).classList.add('active');
+    document.querySelector('[data-audience="' + which + '"]').classList.add('active');
+  }
+</script>

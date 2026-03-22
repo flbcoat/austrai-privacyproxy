@@ -93,10 +93,10 @@ def _build_fuzzy_pattern(placeholder: str) -> str:
     # Build pattern where separators can be _, -, space, or nothing
     inner_pattern = r"[\s_\-]?".join(re.escape(part) for part in parts)
 
-    # Allow optional brackets (square or round) and optional spaces inside
+    # Require brackets (square or round) with optional spaces inside
     pattern = (
         r"(?:"
-        r"[\[\(]?\s?" + inner_pattern + r"\s?[\]\)]?"
+        r"[\[\(]\s*" + inner_pattern + r"\s*[\]\)]"
         r")"
     )
 

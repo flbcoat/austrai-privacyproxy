@@ -95,8 +95,8 @@ class PrivacyEngine:
                 from .memory import MemoryLayer
                 self._memory = MemoryLayer()
                 logger.info("Memory Layer verfuegbar.")
-            except ImportError:
-                logger.info("Memory Layer nicht verfuegbar (chromadb/sentence-transformers fehlen).")
+            except Exception:
+                logger.info("Memory Layer nicht verfuegbar (chromadb/sentence-transformers fehlen oder Initialisierungsfehler).")
                 self._memory = None
 
         # Check LLM detector availability
