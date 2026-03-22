@@ -51,65 +51,81 @@ class PrivacyEngine:
 
     def __init__(
         self,
-        confidence_threshold: float = 0.6,
-        spacy_model: str = "de_core_news_lg",
+        confidence_threshold: float = 0.5,
+        spacy_model: str = "de_core_news_sm",
+        use_gliner: bool = True,
         use_llm_detector: bool = False,
         llm_method: str = "ollama",
-        llm_model: str = "qwen2.5:0.5b",
+        llm_model: str = "qwen3.5:0.8b",
         memory_enabled: bool = True,
     ):
         self._initialized = False
         self._confidence_threshold = confidence_threshold
         self._spacy_model = spacy_model
+        self._use_gliner = use_gliner
         self._use_llm_detector = use_llm_detector
         self._llm_method = llm_method
         self._llm_model = llm_model
         self._memory_enabled = memory_enabled
         self._mapping_store = None
         self._memory = None
+        self._gliner_available = False
 
     def _ensure_initialized(self):
         if self._initialized:
             return
 
-        logger.info("Initialisiere AUSTR.AI Privacy Engine...")
+        logger.info("Initialisiere AUSTR.AI Privacy Engine v3.2...")
 
-        # Auto-download SpaCy model if needed
+        # Layer 1: GLiNER (primary PII detection, F1 0.98)
+        if self._use_gliner:
+            try:
+                from .gliner_detector import is_available, _get_model
+                if is_available():
+                    _get_model()  # Pre-load
+                    self._gliner_available = True
+                    logger.info("Schicht 1: GLiNER PII-Modell geladen (F1 0.98).")
+                else:
+                    logger.info("GLiNER nicht verfuegbar — Fallback auf Presidio.")
+            except Exception as e:
+                logger.info("GLiNER Fehler: %s — Fallback auf Presidio.", e)
+
+        # Layer 2: SpaCy + Presidio (regex patterns + NER fallback)
         from .setup import ensure_spacy_model
         if not ensure_spacy_model(self._spacy_model):
             raise RuntimeError(f"SpaCy-Modell '{self._spacy_model}' nicht verfuegbar.")
 
-        # Initialize Presidio analyzer
         from . import detector
         detector.CONFIDENCE_THRESHOLD = self._confidence_threshold
         detector.init_analyzer()
+        logger.info("Schicht 2: Presidio + SpaCy (%s) + Regex-Patterns geladen.", self._spacy_model)
 
-        # Initialize persistent mapping store (encrypted SQLite)
+        # Layer 3: LLM detector (optional, for contextual detection)
+        if self._use_llm_detector:
+            from .llm_detector import is_ollama_available
+            if is_ollama_available(self._llm_model):
+                logger.info("Schicht 3: LLM Detector aktiv (Ollama: %s).", self._llm_model)
+            else:
+                logger.info("Schicht 3: LLM Detector nicht verfuegbar.")
+                self._use_llm_detector = False
+
+        # Persistent mapping store (encrypted SQLite)
         from .mapping_store import MappingStore
         self._mapping_store = MappingStore()
         logger.info("Mapping Store initialisiert (verschluesselt, persistent).")
 
-        # Initialize memory layer (optional, lazy)
+        # Memory layer (optional)
         if self._memory_enabled:
             try:
                 from .memory import MemoryLayer
                 self._memory = MemoryLayer()
                 logger.info("Memory Layer verfuegbar.")
             except Exception:
-                logger.info("Memory Layer nicht verfuegbar (chromadb/sentence-transformers fehlen oder Initialisierungsfehler).")
+                logger.info("Memory Layer nicht verfuegbar.")
                 self._memory = None
 
-        # Check LLM detector availability
-        if self._use_llm_detector:
-            from .llm_detector import is_ollama_available
-            if is_ollama_available(self._llm_model):
-                logger.info("LLM Detector aktiv (Ollama: %s).", self._llm_model)
-            else:
-                logger.info("LLM Detector nicht verfuegbar — nur Presidio + Context Learner aktiv.")
-                self._use_llm_detector = False
-
         self._initialized = True
-        logger.info("Privacy Engine bereit.")
+        logger.info("Privacy Engine bereit (3-Schichten-Erkennung).")
 
     def anonymize(
         self,
@@ -119,18 +135,43 @@ class PrivacyEngine:
     ) -> AnonymizeResult:
         """Detect and anonymize PII in text.
 
-        Uses multi-layer detection:
-        1. Presidio (rule-based NER + regex)
-        2. Context Learner (adaptive, document-specific)
+        Three-layer detection:
+        1. GLiNER (F1 0.98, primary PII detection)
+        2. Presidio + SpaCy + Regex (structured data, custom patterns)
         3. Optional: Local LLM (contextual understanding)
+
+        Results from all layers are merged, deduplicated by position.
         """
         self._ensure_initialized()
 
-        from .detector import detect
         from .anonymizer import anonymize
+        from .models import Entity
 
-        # Optional: LLM-based detection as additional deny_list
+        all_entities: list[Entity] = []
+
+        # Layer 1: GLiNER (high-precision PII detection)
+        if self._gliner_available:
+            try:
+                from .gliner_detector import detect_with_gliner
+                gliner_results = detect_with_gliner(text, threshold=0.4)
+                for r in gliner_results:
+                    all_entities.append(Entity(
+                        entity_type=r["entity_type"],
+                        start=r["start"],
+                        end=r["end"],
+                        score=r["score"],
+                        text=r["text"],
+                    ))
+                if gliner_results:
+                    logger.info("GLiNER: %d Entities erkannt.", len(gliner_results))
+            except Exception as e:
+                logger.warning("GLiNER Fehler: %s", e)
+
+        # Layer 2: Presidio + SpaCy + Custom Recognizers
+        from .detector import detect
         combined_deny = list(deny_list or [])
+
+        # Layer 3: LLM-based detection (optional)
         if self._use_llm_detector:
             try:
                 from .llm_detector import detect_with_llm
@@ -141,8 +182,14 @@ class PrivacyEngine:
             except Exception as e:
                 logger.debug("LLM Detector Fehler: %s", e)
 
-        entities = detect(text, entity_types=entity_types, deny_list=combined_deny or None)
-        anonymized_text, mappings = anonymize(text, entities)
+        presidio_entities = detect(text, entity_types=entity_types, deny_list=combined_deny or None)
+        all_entities.extend(presidio_entities)
+
+        # Merge & deduplicate: resolve overlapping entities from different layers
+        from .models import resolve_overlaps
+        merged = resolve_overlaps(all_entities)
+
+        anonymized_text, mappings = anonymize(text, merged)
 
         # Store in persistent mapping store
         session_id = None
@@ -152,7 +199,7 @@ class PrivacyEngine:
         return AnonymizeResult(
             anonymized_text=anonymized_text,
             mappings=mappings,
-            entities=entities,
+            entities=merged,
             session_id=session_id,
         )
 

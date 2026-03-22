@@ -20,7 +20,7 @@ class ProxyConfig:
     port: int = DEFAULT_PORT
     deny_list: list[str] = field(default_factory=list)
     confidence_threshold: float = 0.6
-    spacy_model: str = "de_core_news_lg"
+    spacy_model: str = "de_core_news_sm"
 
     @classmethod
     def load(cls) -> "ProxyConfig":

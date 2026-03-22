@@ -6,7 +6,7 @@ import sys
 
 logger = logging.getLogger("austrai.setup")
 
-DEFAULT_MODEL = "de_core_news_lg"
+DEFAULT_MODEL = "de_core_news_sm"
 
 
 def ensure_spacy_model(model_name: str = DEFAULT_MODEL) -> bool:
@@ -18,9 +18,10 @@ def ensure_spacy_model(model_name: str = DEFAULT_MODEL) -> bool:
     except OSError:
         pass
 
-    logger.info("SpaCy-Modell '%s' wird heruntergeladen (einmalig, ~500 MB)...", model_name)
-    print(f"\n  AUSTR.AI: Lade Sprachmodell '{model_name}' herunter (einmalig, ~500 MB)...")
-    print("  Das kann ein paar Minuten dauern.\n")
+    size_hint = "~15 MB" if "sm" in model_name else "~45 MB" if "md" in model_name else "~500 MB"
+    logger.info("SpaCy-Modell '%s' wird heruntergeladen (einmalig, %s)...", model_name, size_hint)
+    print(f"\n  AUSTR.AI: Lade Sprachmodell '{model_name}' herunter (einmalig, {size_hint})...")
+    print("  Das kann einen Moment dauern.\n")
 
     try:
         subprocess.check_call(
