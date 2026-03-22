@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """AUSTR.AI Desktop App — vollwertige Privacy-App mit Website-Design."""
 
+import multiprocessing
 import subprocess
 import sys
 import threading
 from pathlib import Path
 
+# CRITICAL: Required for PyInstaller to prevent infinite process spawning
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
+
 import webview
 from webview.menu import Menu, MenuAction, MenuSeparator
 from austrai_proxy.core import get_engine
 
-# Pre-init engine (blocks ~12s, then instant)
+# Pre-init engine (blocks ~15s for GLiNER + SpaCy, then instant)
 print("AUSTR.AI Engine wird geladen...", flush=True)
 _engine = get_engine(memory_enabled=False)
 _engine.anonymize("warmup")

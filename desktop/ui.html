@@ -213,6 +213,54 @@
     text-align: center; font-size: 11px; color: var(--text-dim);
   }
 
+  /* Input mode tabs */
+  .input-tabs {
+    display: flex; gap: 0; margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .input-tab {
+    padding: 8px 16px; border: none; background: none;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    color: var(--text-dim); cursor: pointer; transition: 0.2s;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .input-tab:hover { color: var(--text-muted); }
+  .input-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .input-mode { display: none; }
+  .input-mode.active { display: block; animation: fadeIn 0.2s ease; }
+
+  /* Dropzone */
+  .dropzone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 40px 20px; text-align: center; cursor: pointer;
+    transition: 0.2s; background: var(--bg-alt);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent); background: rgba(6,182,212,0.05);
+  }
+  .dropzone-icon { font-size: 36px; margin-bottom: 8px; }
+  .dropzone-text { font-size: 15px; font-weight: 600; color: var(--text); }
+  .dropzone-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .dropzone-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  .dropzone-formats { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+
+  /* File info card */
+  .file-info {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    animation: fadeIn 0.2s ease;
+  }
+  .file-icon { font-size: 24px; }
+  .file-details { flex: 1; }
+  .file-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .file-meta { font-size: 11px; color: var(--text-dim); }
+  .file-remove {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 16px; cursor: pointer; padding: 4px 8px;
+  }
+  .file-remove:hover { color: var(--error); }
+
   .examples {
     display: flex; align-items: center; gap: 6px;
     margin-bottom: 10px; flex-wrap: wrap;
@@ -254,18 +302,51 @@
     <button class="step-tab" id="tab4" onclick="goStep(4)">4 Fertig</button>
   </div>
 
-  <!-- STEP 1: Input -->
+  <!-- STEP 1: Input (Text + Datei) -->
   <div class="step active" id="step1">
     <div class="step-label">Schritt 1</div>
-    <div class="step-title">Text eingeben</div>
-    <div class="step-desc">Füge deinen Text mit sensiblen Daten ein. AUSTR.AI erkennt Namen, IBANs, Passwörter, Diagnosen und mehr — alles lokal auf deinem Rechner.</div>
-    <div class="examples">
-      <span class="examples-label">Beispiele:</span>
-      <button class="example-btn" onclick="loadExample(0)">Geschäfts-E-Mail</button>
-      <button class="example-btn" onclick="loadExample(1)">Arzt-Befund</button>
-      <button class="example-btn" onclick="loadExample(2)">Passwort &amp; API Key</button>
+    <div class="step-title">Daten eingeben</div>
+    <div class="step-desc">Text eingeben oder Datei hochladen. AUSTR.AI erkennt sensible Daten automatisch — alles lokal.</div>
+
+    <!-- Input Mode Tabs -->
+    <div class="input-tabs">
+      <button class="input-tab active" onclick="setInputMode('text')">Text</button>
+      <button class="input-tab" onclick="setInputMode('file')">Datei</button>
     </div>
-    <textarea id="inputText" placeholder="Gib hier deinen Text ein oder wähle ein Beispiel..."></textarea>
+
+    <!-- Text Input -->
+    <div class="input-mode active" id="mode-text">
+      <div class="examples">
+        <span class="examples-label">Beispiele:</span>
+        <button class="example-btn" onclick="loadExample(0)">Geschäfts-E-Mail</button>
+        <button class="example-btn" onclick="loadExample(1)">Arzt-Befund</button>
+        <button class="example-btn" onclick="loadExample(2)">Passwort &amp; API Key</button>
+      </div>
+      <textarea id="inputText" placeholder="Gib hier deinen Text ein oder wähle ein Beispiel..."></textarea>
+    </div>
+
+    <!-- File Input -->
+    <div class="input-mode" id="mode-file">
+      <div class="dropzone" id="dropzone"
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-text">Datei hierher ziehen</div>
+        <div class="dropzone-sub">oder <span class="dropzone-link" onclick="openFileDialog()">Datei wählen</span></div>
+        <div class="dropzone-formats">PDF, DOCX, XLSX, TXT, CSV, PNG, JPG</div>
+      </div>
+      <div class="file-info" id="fileInfo" style="display:none">
+        <div class="file-icon">📄</div>
+        <div class="file-details">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-meta" id="fileMeta"></div>
+        </div>
+        <button class="file-remove" onclick="clearFile()">✕</button>
+      </div>
+    </div>
+
+    <!-- Options -->
     <div class="options-toggle" onclick="toggleOptions()">
       <span class="arrow">▶</span> Optionale Einstellungen
     </div>
@@ -273,6 +354,7 @@
       <div class="opt-label">Zusätzliche Begriffe <span class="opt-hint">(einer pro Zeile)</span></div>
       <textarea class="opt-input" id="denyList" rows="2" placeholder="z.B.&#10;Firmenname GmbH&#10;Projektname"></textarea>
     </div>
+
     <button class="btn btn-accent" id="anonBtn" onclick="doAnonymize()">
       <span class="lbl">🔒 Anonymisieren</span>
       <div class="spinner"></div>
@@ -328,7 +410,7 @@
 </div>
 
 <script>
-const api = () => window.pywebview ? window.pywebview.api : null;
+// API accessed directly via window.pywebview.api
 let lastMappings = {};
 
 const EXAMPLES = [
@@ -337,8 +419,60 @@ const EXAMPLES = [
   "Mein Passwort ist SuperSecret123! und der API Key ist sk-ant-api03-abcdefghijklmnopqrstuvwxyz. Server-IP: 192.168.1.100. Datenbank: postgres://admin:geheim@db.intern:5432/prod"
 ];
 
+let currentInputMode = 'text';
+let selectedFilePath = null;
+
 function loadExample(n) {
   document.getElementById('inputText').value = EXAMPLES[n];
+  setInputMode('text');
+}
+
+function setInputMode(mode) {
+  currentInputMode = mode;
+  document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.input-mode').forEach(m => m.classList.remove('active'));
+  document.querySelector(`.input-tab:nth-child(${mode === 'text' ? 1 : 2})`).classList.add('active');
+  document.getElementById('mode-' + mode).classList.add('active');
+}
+
+async function openFileDialog() {
+  const path = await window.pywebview.api.open_file_dialog();
+  if (path) showSelectedFile(path);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('dragover');
+  // pywebview doesn't support drag&drop file paths directly in all cases
+  // Fall back to file dialog
+  openFileDialog();
+}
+
+function showSelectedFile(path) {
+  selectedFilePath = path;
+  const name = path.split('/').pop();
+  document.getElementById('fileName').textContent = name;
+  document.getElementById('fileMeta').textContent = 'Bereit zur Analyse';
+  document.getElementById('fileInfo').style.display = 'flex';
+  document.getElementById('dropzone').style.display = 'none';
+}
+
+function clearFile() {
+  selectedFilePath = null;
+  document.getElementById('fileInfo').style.display = 'none';
+  document.getElementById('dropzone').style.display = 'block';
+}
+
+// Called from native menu "Datei öffnen"
+function handleFileFromMenu(path) {
+  setInputMode('file');
+  showSelectedFile(path);
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  t.className = 'toast visible ' + (type || 'info');
 }
 
 function goStep(n) {
@@ -356,34 +490,41 @@ function toggleOptions() {
 }
 
 async function doAnonymize() {
-  const text = document.getElementById('inputText').value.trim();
-  if (!text) return;
   const btn = document.getElementById('anonBtn');
   btn.classList.add('loading');
+  showToast('Analysiere lokal...', 'info');
+
   try {
-    const deny = document.getElementById('denyList').value.trim();
-    const denyArr = deny ? deny.split('\n').map(s=>s.trim()).filter(s=>s) : null;
-    // Call API with deny_list if provided
     let r;
-    if (denyArr && denyArr.length > 0) {
-      // For now, protect doesn't support deny_list via pywebview
-      // We'll pass it as part of text processing
-      r = await api().protect(text);
+    if (currentInputMode === 'file' && selectedFilePath) {
+      r = await window.pywebview.api.protect_file(selectedFilePath);
+      if (r && r.error) {
+        showToast(r.error, 'error');
+        btn.classList.remove('loading');
+        return;
+      }
     } else {
-      r = await api().protect(text);
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) { btn.classList.remove('loading'); return; }
+      r = await window.pywebview.api.protect(text);
     }
+    if (!r || !r.anonymized_text) {
+      showToast('Keine Antwort von der Engine.', 'error');
+      btn.classList.remove('loading');
+      return;
+    }
+    const count = r.entity_count || Object.keys(r.mappings || {}).length;
     lastMappings = r.mappings || {};
-    document.getElementById('resultCount').textContent = r.entity_count + ' sensible Begriffe geschützt';
+    document.getElementById('resultCount').textContent = count + ' sensible Begriffe geschützt';
     document.getElementById('resultText').textContent = r.anonymized_text;
-    // Mappings
     const ml = document.getElementById('mappingList');
-    if (r.entity_count > 0) {
+    if (count > 0) {
       ml.innerHTML = Object.entries(r.mappings).map(([k,v]) =>
         '<div class="mapping-row"><span class="m-orig">'+esc(v)+'</span><span class="m-arrow">→</span><span class="m-code">'+esc(k)+'</span></div>'
       ).join('');
     } else { ml.innerHTML = ''; }
     goStep(2);
-  } catch(e) { alert('Fehler: ' + e); }
+  } catch(e) { showToast('Fehler: ' + e, 'error'); console.error(e); }
   finally { btn.classList.remove('loading'); }
 }
 
@@ -393,7 +534,7 @@ async function doDeanonymize() {
   const btn = document.getElementById('deanonBtn');
   btn.classList.add('loading');
   try {
-    const r = await api().restore(text);
+    const r = await window.pywebview.api.restore(text);
     document.getElementById('deanonCount').textContent = r.replacements + ' Begriffe wiederhergestellt';
     document.getElementById('deanonText').textContent = r.restored_text;
     goStep(4);
@@ -403,7 +544,7 @@ async function doDeanonymize() {
 
 function copyResult() {
   const text = document.getElementById('resultText').textContent;
-  if (api()) api().paste_clipboard(); // trigger copy via python
+  if (window.pywebview) window.pywebview.api.paste_clipboard(); // trigger copy via python
   navigator.clipboard.writeText(text).catch(()=>{});
   // Visual feedback
   event.target.closest('.btn').innerHTML = '<span class="lbl">✓ Kopiert!</span>';
@@ -427,13 +568,13 @@ function startOver() {
 
 async function toggleProxy() {
   document.getElementById('proxyLabel').textContent = '…';
-  try { await api().toggle_proxy(); } catch(e) {}
+  try { await window.pywebview.api.toggle_proxy(); } catch(e) {}
   setTimeout(checkProxy, 1500);
 }
 
 async function checkProxy() {
   try {
-    const s = await api().get_status();
+    const s = await window.pywebview.api.get_status();
     document.getElementById('dot').classList.toggle('on', s.proxy_running);
     document.getElementById('proxyLabel').textContent = s.proxy_running ? 'Proxy aktiv' : 'Proxy aus';
   } catch(e) {}
