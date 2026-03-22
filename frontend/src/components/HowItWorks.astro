@@ -71,9 +71,9 @@
             </svg>
           </div>
           <h3>Anonymisierung</h3>
-          <p>Erkannte Entitäten werden durch typisierte Platzhalter ersetzt. Ein Mapping wird temporär gespeichert.</p>
+          <p>Erkannte Entitäten werden durch nicht-rückverfolgbare Codenames ersetzt (z.B. "Arion", "Nexon Corp"). Strukturierte Daten werden zu Referenz-Codes ([AT_IBAN_1]). Ein verschlüsseltes Mapping wird lokal gespeichert.</p>
           <div class="hiw-example">
-            <code>"...an <span class="hl-placeholder">&lt;PERSON_1&gt;</span>, UID <span class="hl-placeholder">&lt;AT_UID_NR_1&gt;</span>..."</code>
+            <code>"...an <span class="hl-placeholder">Arion</span>, UID <span class="hl-placeholder">[AT_UID_NR_1]</span>..."</code>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@
             </svg>
           </div>
           <h3>Re-Hydrierung</h3>
-          <p>Die LLM-Antwort kommt mit Platzhaltern zurück. PrivacyProxy ersetzt sie mit den echten Daten.</p>
+          <p>Die LLM-Antwort kommt mit Codenames zurück. PrivacyProxy ersetzt sie lokal mit den echten Daten.</p>
           <div class="hiw-example hiw-example-success">
             <code>"...Sehr geehrter <span class="hl-person">Herr Thomas Gruber</span>, Ihre UID <span class="hl-uid">ATU12345678</span> wurde erfolgreich..."</code>
           </div>
