@@ -58,8 +58,11 @@ def _get_model():
         return _model
 
     try:
-        # Suppress TF warnings
+        # Suppress warnings
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+        os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+        import warnings
+        warnings.filterwarnings("ignore", message=".*resume_download.*")
         from gliner import GLiNER
     except ImportError:
         raise ImportError("GLiNER braucht: pip install gliner")
