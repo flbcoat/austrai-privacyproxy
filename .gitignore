@@ -59,3 +59,15 @@ docker-compose.override.yml
 *.DS_Store
 .Spotlight-V100
 .Trashes
+
+# Internal / not for public repo
+privacyproxy_konzept_v2.docx
+~$*
+claude logs/
+deploy/
+frontend/
+docker-compose.yml
+desktop/dist/
+desktop/build/
+desktop/*.iconset/
+*.spec
