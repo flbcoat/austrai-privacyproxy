@@ -263,14 +263,17 @@ def rehydrate(text):
         click.echo("Kein Text angegeben.")
         raise SystemExit(1)
 
-    # Load last session from disk
-    mappings = _load_last_session()
+    # Try persistent mapping store first, then JSON fallback
+    from .core import get_engine
+    engine = get_engine()
+
+    mappings = engine.get_latest_mappings()
+    if not mappings:
+        mappings = _load_last_session()
     if not mappings:
         click.echo("Keine gespeicherte Session. Zuerst aai anon ausfuehren.")
         raise SystemExit(1)
 
-    from .core import get_engine
-    engine = get_engine()
     restored = engine.rehydrate(full_text, mappings)
 
     count = sum(1 for k in mappings if k in full_text)
