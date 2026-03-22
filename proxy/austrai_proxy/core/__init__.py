@@ -75,6 +75,11 @@ class PrivacyEngine:
         if self._initialized:
             return
 
+        import os, warnings
+        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+        warnings.filterwarnings("ignore", message=".*resume_download.*")
+        warnings.filterwarnings("ignore", message=".*unauthenticated.*")
         logger.info("Initialisiere AUSTR.AI Privacy Engine v3.2...")
 
         # Layer 1: GLiNER (primary PII detection, F1 0.98)

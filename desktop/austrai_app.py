@@ -197,7 +197,8 @@ textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(6,182,212,.0
 .map-card{margin-top:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs)}
 .map-head{font-size:12px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .map-head .ico{color:var(--green)}
-.m-row{display:flex;align-items:center;gap:8px;padding:2px 0;font-size:12px;font-family:var(--mono)}
+.m-row{display:flex;align-items:center;gap:8px;padding:4px 6px;font-size:12px;font-family:var(--mono);border-radius:4px;transition:.15s}
+.m-row:hover{background:rgba(239,68,68,.08)}
 .m-old{color:var(--red);text-decoration:line-through;opacity:.7}
 .m-arr{color:var(--dim)}
 .m-new{color:var(--green)}
@@ -326,7 +327,7 @@ const EX=[
   "Patient: Sabine Müller, geb. 15.03.1985\nDiagnose: Diabetes mellitus Typ 2\nMedikament: Metformin 500mg\nBefund: HbA1c erhöht auf 8,2%.\nTherapieanpassung empfohlen.",
   "Mein Passwort ist SuperSecret123! und der API Key ist sk-ant-api03-abcdefghijklmnopqrstuvwxyz.\nServer-IP: 192.168.1.100\nDatenbank: postgres://admin:geheim@db.intern:5432/prod"
 ];
-let mode='text', filePath=null;
+let mode='text', filePath=null, lastResult=null;
 
 function loadEx(n){document.getElementById('input').value=EX[n];setMode('text')}
 function go(p){
@@ -358,9 +359,10 @@ async function anonymize(){
     let r;
     if(mode==='file'&&filePath){r=await window.pywebview.api.protect_file(filePath);if(r.error){toast(r.error,'err');btn.textContent='🔒 Anonymisieren';btn.disabled=false;return}}
     else{const t=document.getElementById('input').value.trim();if(!t){btn.textContent='🔒 Anonymisieren';btn.disabled=false;return}r=await window.pywebview.api.protect(t)}
+    lastResult=r;
     document.getElementById('anonText').textContent=r.text;
-    document.getElementById('mapCount').textContent=r.count+' sensible Begriffe geschützt';
-    document.getElementById('mapList').innerHTML=Object.entries(r.mappings).map(([k,v])=>'<div class="m-row"><span class="m-old">'+esc(v)+'</span><span class="m-arr">→</span><span class="m-new">'+esc(k)+'</span></div>').join('');
+    document.getElementById('mapCount').textContent=r.count+' sensible Begriffe geschützt — klicke × um falsche Erkennungen zu entfernen';
+    renderMappings(r);
     toast(r.count+' Begriffe geschützt. In Zwischenablage kopiert!','ok');
     go('result');
   }catch(e){toast('Fehler: '+e,'err')}
@@ -371,6 +373,35 @@ async function deanonymize(){
   const t=document.getElementById('aiResp').value.trim();if(!t)return;
   try{const r=await window.pywebview.api.restore(t);document.getElementById('resText').textContent=r.text;toast(r.count+' Begriffe wiederhergestellt. Kopiert!','ok');go('done')}
   catch(e){toast('Fehler: '+e,'err')}
+}
+
+function renderMappings(r){
+  const ml=document.getElementById('mapList');
+  ml.innerHTML=Object.entries(r.mappings).map(([k,v])=>
+    '<div class="m-row" style="cursor:pointer" title="Klicken um diese Erkennung zu entfernen" onclick="removeMapping(\''+esc(k).replace(/'/g,"\\'")+'\',\''+esc(v).replace(/'/g,"\\'")+'\')"><span class="m-old">'+esc(v)+'</span><span class="m-arr">→</span><span class="m-new">'+esc(k)+'</span><span style="color:var(--error);opacity:0.5;margin-left:auto;font-size:14px"> ×</span></div>'
+  ).join('');
+}
+
+function removeMapping(codename,original){
+  if(!lastResult)return;
+  // Remove from mappings
+  const newMappings={};
+  for(const[k,v] of Object.entries(lastResult.mappings)){
+    if(k!==codename)newMappings[k]=v;
+  }
+  // Rebuild anonymized text: replace codename back with original
+  let newText=lastResult.text;
+  newText=newText.split(codename).join(original);
+  lastResult.mappings=newMappings;
+  lastResult.text=newText;
+  lastResult.count=Object.keys(newMappings).length;
+  // Update display
+  document.getElementById('anonText').textContent=newText;
+  document.getElementById('mapCount').textContent=lastResult.count+' sensible Begriffe geschützt';
+  renderMappings(lastResult);
+  // Copy updated text
+  navigator.clipboard.writeText(newText).catch(()=>{});
+  toast('"'+original+'" wiederhergestellt','ok');
 }
 
 function copyAnon(){navigator.clipboard.writeText(document.getElementById('anonText').textContent);toast('Kopiert!','ok')}
