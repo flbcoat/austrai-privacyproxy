@@ -46,9 +46,14 @@ ALLOWED_ENTITY_TYPES = {
 
 # Known product/brand names that SpaCy tags as PERSON (they're PROPN but not PII)
 PERSON_FALSE_POSITIVES = {
+    # Tech products
     "claude", "claude code", "chatgpt", "copilot", "gemini", "siri", "alexa",
     "cortana", "watson", "deepmind", "midjourney", "dall-e", "whisper",
     "presidio", "tesseract", "ollama", "langchain", "fastapi",
+    # Legal/business abbreviations often mistagged
+    "bzgl", "bzgl.", "betr", "betr.", "ggf", "ggf.", "inkl", "inkl.",
+    "bzw", "bzw.", "evtl", "evtl.", "usw", "usw.", "etc", "etc.",
+    "abs", "abs.", "gem", "gem.", "isd", "i.s.d.", "lit", "lit.",
 }
 
 # Known false-positive LOCATIONs to filter out

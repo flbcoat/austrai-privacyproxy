@@ -175,7 +175,7 @@
         <div class="step-panel" id="panel-1">
           <div class="step-panel-header">
             <div class="step-panel-title">02 — Erkannte Entitäten</div>
-            <div class="step-panel-info">GLiNER + Presidio analysieren den Text und erkennen sensible Daten: Namen, IBANs, Passwörter, Diagnosen, IP-Adressen und mehr. Farbig markiert nach Typ.</div>
+            <div class="step-panel-info">GLiNER + Presidio analysieren den Text und erkennen sensible Daten. <strong>Klicke auf eine Markierung um sie zu entfernen</strong> (falls sie falsch erkannt wurde).</div>
           </div>
           <div class="step-panel-content" id="panel-1-content"></div>
           <div class="entity-legend" id="entity-legend"></div>
@@ -1188,6 +1188,55 @@
     }
   }
 
+  function makeEntitiesClickable(entities, data) {
+    var marks = document.querySelectorAll('#panel-1-content mark');
+    marks.forEach(function(mark) {
+      mark.style.cursor = 'pointer';
+      mark.title = 'Klicken um diese Erkennung zu entfernen';
+      // Add × indicator
+      var closeBtn = document.createElement('span');
+      closeBtn.textContent = ' ×';
+      closeBtn.style.cssText = 'opacity:0.5;font-weight:bold;font-size:0.8em;';
+      mark.appendChild(closeBtn);
+
+      mark.addEventListener('click', function() {
+        var entityText = mark.textContent.replace(' ×', '').trim();
+        // Remove from entities array
+        for (var i = entities.length - 1; i >= 0; i--) {
+          if (entities[i].text === entityText) {
+            entities.splice(i, 1);
+            break;
+          }
+        }
+        // Visual feedback: strike through and dim
+        mark.style.textDecoration = 'line-through';
+        mark.style.opacity = '0.4';
+        mark.style.cursor = 'default';
+        mark.title = 'Entfernt — wird nicht anonymisiert';
+        // Remove ×
+        if (closeBtn.parentNode) closeBtn.parentNode.removeChild(closeBtn);
+
+        // Rebuild anonymized text without the removed entity
+        var text = data.original_text || document.getElementById('demo-input').value;
+        var newAnon = text;
+        var counter = {};
+        // Simple rebuild: replace remaining entities
+        var sorted = entities.slice().sort(function(a, b) { return b.start - a.start; });
+        for (var j = 0; j < sorted.length; j++) {
+          var e = sorted[j];
+          var t = e.entity_type;
+          if (!counter[t]) counter[t] = 0;
+          counter[t]++;
+          var placeholder = '[' + t + '_' + counter[t] + ']';
+          newAnon = newAnon.substring(0, e.start) + placeholder + newAnon.substring(e.end);
+        }
+        data.anonymized_text = newAnon;
+        document.getElementById('panel-2-content').innerHTML = buildAnonymizedHtml(newAnon);
+        buildEntityLegend(entities);
+      });
+    });
+  }
+
   function buildAnonymizedHtml(anonymizedText) {
     return escapeHtml(anonymizedText).replace(/\[(\w+?)\]/g, function(match, name) {
       return '<span class="anon-placeholder">[' + escapeHtml(name) + ']</span>';
@@ -1407,6 +1456,8 @@
       document.getElementById('panel-1-content').innerHTML =
         data.annotated_html || buildAnnotatedHtml(originalText, entities);
       buildEntityLegend(entities);
+      // Make entities clickable to deselect
+      makeEntitiesClickable(entities, data);
       setStep(1);
       enableStepClick(1);
 

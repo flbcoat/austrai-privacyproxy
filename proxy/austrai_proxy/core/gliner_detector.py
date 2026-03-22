@@ -48,6 +48,24 @@ LABEL_MAP = {
     "license plate": "EU_PII",
 }
 
+# Common German terms that GLiNER falsely detects as persons/orgs
+GLINER_FALSE_POSITIVES = {
+    # Legal/contract terms
+    "auftragnehmer", "auftraggeber", "vertragspartner", "vertragspartei",
+    "arbeitnehmer", "arbeitgeber", "mieter", "vermieter", "käufer", "verkäufer",
+    "kläger", "beklagter", "schuldner", "gläubiger", "bürge",
+    "mitarbeiter", "mitarbeiterin", "geschäftsführer", "geschäftsführerin",
+    "vorstand", "aufsichtsrat", "gesellschafter", "prokurist",
+    # Document structure
+    "bzgl", "bzgl.", "betr", "betr.", "abs", "abs.", "gem", "gem.",
+    "nr", "nr.", "lit", "lit.", "isd", "i.s.d.",
+    # Common German words misdetected
+    "leistungserbringung", "eigenverantwortlich", "stillschweigen",
+    "schweigepflicht", "pauschalvergütung", "kündigungsfrist",
+    "auftragsverarbeitung", "dokumentation", "berichterstattung",
+    "vollständigkeit", "richtigkeit", "rechtzeitig",
+}
+
 _model = None
 
 
@@ -98,6 +116,16 @@ def detect_with_gliner(
 
     results = []
     for e in entities:
+        # Filter false positives (check each word in the detected text)
+        text_lower = e["text"].lower().strip()
+        words = text_lower.split()
+        # Skip if ANY word matches a false positive (catches "Der Auftragnehmer" via "auftragnehmer")
+        if any(w in GLINER_FALSE_POSITIVES for w in words) or text_lower in GLINER_FALSE_POSITIVES:
+            continue
+        # Skip very short detections (1-2 chars) for person/org
+        if e["label"] in ("person", "organization") and len(e["text"].strip()) < 3:
+            continue
+
         entity_type = LABEL_MAP.get(e["label"], "CUSTOM")
         results.append({
             "entity_type": entity_type,

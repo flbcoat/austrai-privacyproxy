@@ -153,7 +153,7 @@ class PrivacyEngine:
         if self._gliner_available:
             try:
                 from .gliner_detector import detect_with_gliner
-                gliner_results = detect_with_gliner(text, threshold=0.4)
+                gliner_results = detect_with_gliner(text, threshold=0.6)
                 for r in gliner_results:
                     all_entities.append(Entity(
                         entity_type=r["entity_type"],
