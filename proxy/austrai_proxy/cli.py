@@ -288,6 +288,90 @@ def rehydrate(text):
         pass
 
 
+@main.command(name="redact")
+@click.argument("file_path", required=True)
+@click.option("--output", "-o", default=None, help="Ausgabepfad fuer geschwaerztes Bild/PDF")
+@click.option("--deny", "-d", multiple=True, help="Zusaetzliche Begriffe schwaerzen")
+def redact(file_path, output, deny):
+    """Bild oder PDF schwaerzen (sensible Daten ueberdecken)."""
+    import os
+    if not os.path.isfile(file_path):
+        click.echo(f"Datei nicht gefunden: {file_path}")
+        raise SystemExit(1)
+
+    deny_list = list(deny) if deny else None
+    ext = os.path.splitext(file_path)[1].lower()
+
+    click.echo(f"⏳ Schwaerze sensible Daten in {os.path.basename(file_path)}...")
+
+    try:
+        if ext == ".pdf":
+            from .core.image_redactor import redact_pdf_pages
+            result = redact_pdf_pages(file_path, output_path=output, deny_list=deny_list)
+        elif ext in (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".webp"):
+            from .core.image_redactor import redact_image
+            result = redact_image(file_path, output_path=output, deny_list=deny_list)
+        else:
+            click.echo(f"Format '{ext}' nicht unterstuetzt fuer Schwaerzung. Nutze Bilder oder PDFs.")
+            raise SystemExit(1)
+
+        click.echo(f"\n✅ {result['entities_redacted']} Bereiche geschwaerzt")
+        click.echo(f"Gespeichert: {result['output_path']}")
+    except ImportError as e:
+        click.echo(f"✗ {e}")
+        raise SystemExit(1)
+    except Exception as e:
+        click.echo(f"✗ Fehler: {e}")
+        raise SystemExit(1)
+
+
+@main.command(name="audio")
+@click.argument("file_path", required=True)
+@click.option("--model", "-m", default="base", help="Whisper-Modell (tiny/base/small/medium/large)")
+@click.option("--lang", "-l", default="de", help="Sprache (de/en/...)")
+@click.option("--deny", "-d", multiple=True, help="Zusaetzliche Begriffe anonymisieren")
+def audio(file_path, model, lang, deny):
+    """Audiodatei transkribieren und anonymisieren (Whisper, lokal)."""
+    import os
+    if not os.path.isfile(file_path):
+        click.echo(f"Datei nicht gefunden: {file_path}")
+        raise SystemExit(1)
+
+    deny_list = list(deny) if deny else None
+    click.echo(f"⏳ Transkribiere {os.path.basename(file_path)} mit Whisper ({model})...")
+
+    try:
+        from .core.audio_pipeline import transcribe_and_anonymize
+        result = transcribe_and_anonymize(file_path, model_size=model, language=lang, deny_list=deny_list)
+
+        click.echo(f"\n📝 Transkript ({result['duration_seconds']:.1f}s):")
+        click.echo(result["transcript"][:500])
+        if len(result["transcript"]) > 500:
+            click.echo(f"  ... (+{len(result['transcript'])-500} Zeichen)")
+
+        if result["entity_count"] > 0:
+            click.echo(f"\n✅ {result['entity_count']} sensible Begriffe anonymisiert:")
+            click.echo(result["anonymized_text"][:500])
+        else:
+            click.echo("\nℹ️  Keine sensiblen Daten im Transkript erkannt.")
+
+        # Copy anonymized text to clipboard
+        import subprocess
+        try:
+            text = result["anonymized_text"] or result["transcript"]
+            subprocess.run(["pbcopy"], input=text.encode(), check=True, timeout=5)
+            click.echo("\n📋 In Zwischenablage kopiert!")
+        except Exception:
+            pass
+
+    except ImportError as e:
+        click.echo(f"✗ {e}")
+        raise SystemExit(1)
+    except Exception as e:
+        click.echo(f"✗ Fehler: {e}")
+        raise SystemExit(1)
+
+
 @main.command(name="shell")
 def shell():
     """Interaktive Shell mit Slash-Commands (/help, /settings, /denylist, ...)."""
