@@ -1,7 +1,7 @@
 """Text extraction from files — PDF, DOCX, XLSX, TXT, images.
 
-Heavy dependencies (PyMuPDF, python-docx, etc.) are optional.
-Install with: pip install austrai[docs]
+Dependencies (PyMuPDF, python-docx, openpyxl, Pillow, pytesseract)
+are included in the standard austrai install.
 """
 
 import io
@@ -50,7 +50,7 @@ def _extract_pdf(data: bytes) -> ExtractionResult:
     try:
         import fitz
     except ImportError:
-        raise ImportError("PDF-Support braucht PyMuPDF: pip install austrai[docs]")
+        raise ImportError("PDF-Support braucht PyMuPDF: pip install austrai")
     doc = fitz.open(stream=data, filetype="pdf")
     pages = [page.get_text() for page in doc]
     return ExtractionResult(text="\n\n".join(pages), format="PDF", pages=len(pages))
@@ -60,7 +60,7 @@ def _extract_docx(data: bytes) -> ExtractionResult:
     try:
         from docx import Document
     except ImportError:
-        raise ImportError("DOCX-Support braucht python-docx: pip install austrai[docs]")
+        raise ImportError("DOCX-Support braucht python-docx: pip install austrai")
     doc = Document(io.BytesIO(data))
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     return ExtractionResult(text="\n".join(paragraphs), format="DOCX", pages=1)
@@ -70,7 +70,7 @@ def _extract_xlsx(data: bytes) -> ExtractionResult:
     try:
         from openpyxl import load_workbook
     except ImportError:
-        raise ImportError("XLSX-Support braucht openpyxl: pip install austrai[docs]")
+        raise ImportError("XLSX-Support braucht openpyxl: pip install austrai")
     wb = load_workbook(io.BytesIO(data), read_only=True)
     parts = []
     for sheet in wb.worksheets:
@@ -97,7 +97,7 @@ def _extract_image(data: bytes) -> ExtractionResult:
         import pytesseract
         from PIL import Image
     except ImportError:
-        raise ImportError("Bild-OCR braucht Tesseract + Pillow: pip install austrai[docs]")
+        raise ImportError("Bild-OCR braucht Tesseract + Pillow: pip install austrai")
     img = Image.open(io.BytesIO(data))
     text = pytesseract.image_to_string(img, lang="deu+eng")
     return ExtractionResult(text=text, format="IMAGE", pages=1)

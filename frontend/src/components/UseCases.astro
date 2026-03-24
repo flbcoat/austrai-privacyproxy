@@ -1,54 +1,40 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section use-cases" id="use-cases">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Einsatzgebiete</span>
-      <h2>Anwendungsfälle</h2>
+      <span class="section-label">{isEn ? 'Use cases' : 'Einsatzgebiete'}</span>
+      <h2>{isEn ? 'Wherever sensitive data meets AI' : 'Überall dort, wo sensible Daten auf KI treffen'}</h2>
       <p>
-        PrivacyProxy schützt überall dort, wo sensible Daten auf KI treffen.
+        {isEn ? 'HR, legal, healthcare, or private use — AUSTR.AI protects your data.' : 'HR, Recht, Medizin oder privat — AUSTR.AI schützt deine Daten.'}
       </p>
     </div>
 
     <div class="grid grid-2 uc-grid">
-      <!-- Unternehmen -->
+      <!-- HR -->
       <div class="card card-glow animate-slide-up animate-delay-1">
         <div class="card-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
-        <h3>Unternehmen</h3>
+        <h3>{isEn ? 'HR department' : 'HR-Abteilung'}</h3>
         <p class="uc-desc">
-          Nutze KI für E-Mails, Zusammenfassungen und Analysen — ohne Kundendaten, IBANs oder Vertragsinformationen preiszugeben.
+          {isEn ? 'Analyze applications, compare candidates, draft rejection letters — without personal details reaching the AI.' : 'Bewerbungen analysieren, Kandidaten vergleichen, Absagen formulieren — ohne dass persönliche Daten beim KI-Anbieter landen.'}
         </p>
         <div class="uc-example">
-          <span class="uc-example-label">Beispiel:</span>
-          Ein Vertriebsmitarbeiter lässt eine Angebotsmail von der KI formulieren. PrivacyProxy anonymisiert Kundennamen, Firmendaten und Beträge automatisch.
+          <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
+          {isEn ? 'The AI compares three applications. Names and dates of birth become codenames — the AI evaluates qualifications, not people.' : 'Die KI vergleicht drei Bewerbungen. Namen und Geburtsdaten werden zu Codenames — die KI bewertet Qualifikationen, nicht Personen.'}
         </div>
       </div>
 
-      <!-- Gesundheitswesen -->
+      <!-- Rechtsabteilung -->
       <div class="card card-glow animate-slide-up animate-delay-2">
         <div class="card-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </div>
-        <h3>Gesundheitswesen</h3>
-        <p class="uc-desc">
-          Medizinische Befunde von KI zusammenfassen lassen — ohne Patientennamen, SVNr oder Adressen an den LLM-Anbieter weiterzugeben.
-        </p>
-        <div class="uc-example">
-          <span class="uc-example-label">Beispiel:</span>
-          Eine Ärztin lässt einen Befundbericht in Laiensprache übersetzen. Patientendaten werden vor dem Senden automatisch maskiert.
-        </div>
-      </div>
-
-      <!-- Rechtsberatung -->
-      <div class="card card-glow-purple animate-slide-up animate-delay-3">
-        <div class="card-icon card-icon-purple">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
@@ -56,32 +42,48 @@
             <line x1="15" y1="9" x2="15.01" y2="9"/>
           </svg>
         </div>
-        <h3>Rechtsberatung</h3>
+        <h3>{isEn ? 'Legal department' : 'Rechtsabteilung'}</h3>
         <p class="uc-desc">
-          Verträge und Schriftsätze von KI prüfen lassen — Mandantendaten, Firmenbuchnummern und Beträge bleiben geschützt.
+          {isEn ? 'Summarize contracts, check clauses, draft briefs — client names and financial details stay protected.' : 'Verträge zusammenfassen, Klauseln prüfen, Schriftsätze entwerfen — Mandantennamen und Finanzdaten bleiben geschützt.'}
         </p>
         <div class="uc-example">
-          <span class="uc-example-label">Beispiel:</span>
-          Ein Anwalt lässt eine Vertragsklausel auf Schwachstellen prüfen. Parteiennamen und Geschäftszahlen werden durch Codenames ersetzt.
+          <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
+          {isEn ? 'A lawyer checks a contract clause. Party names and figures become codenames before the AI sees them.' : 'Ein Anwalt prüft eine Vertragsklausel. Parteiennamen und Geschäftszahlen werden zu Codenames, bevor die KI sie sieht.'}
         </div>
       </div>
 
-      <!-- Entwickler -->
+      <!-- Arztpraxis -->
+      <div class="card card-glow-purple animate-slide-up animate-delay-3">
+        <div class="card-icon card-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Medical practice' : 'Arztpraxis'}</h3>
+        <p class="uc-desc">
+          {isEn ? 'Translate findings into plain language, draft reports — patient names, SSNs, and diagnoses are anonymized automatically.' : 'Befunde in Laiensprache übersetzen, Berichte entwerfen — Patientennamen, SVNr und Diagnosen werden automatisch anonymisiert.'}
+        </p>
+        <div class="uc-example">
+          <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
+          {isEn ? 'A doctor translates a report into patient-friendly language. The AI only sees "Arion, born [DATE_1]".' : 'Eine Ärztin übersetzt einen Befund in Patientensprache. Die KI sieht nur "Arion, geb. [DATUM_1]".'}
+        </div>
+      </div>
+
+      <!-- Privatperson -->
       <div class="card card-glow-purple animate-slide-up animate-delay-4">
         <div class="card-icon card-icon-purple">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="16 18 22 12 16 6"/>
-            <polyline points="8 6 2 12 8 18"/>
-            <line x1="14" y1="4" x2="10" y2="20"/>
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
         </div>
-        <h3>Entwickler</h3>
+        <h3>{isEn ? 'Private use' : 'Privatperson'}</h3>
         <p class="uc-desc">
-          Integriere PrivacyProxy als Middleware in deine App. REST-API, Docker-ready, MIT-lizenziert.
+          {isEn ? 'Tax returns, insurance claims, rental agreements — AI help without exposing your personal data.' : 'Steuererklärung, Versicherung, Mietvertrag — KI-Hilfe, ohne deine Daten preiszugeben.'}
         </p>
         <div class="uc-example">
-          <span class="uc-example-label">Beispiel:</span>
-          Ein SaaS-Startup baut einen KI-Assistenten und nutzt PrivacyProxy als Proxy-Layer, um DSGVO-Konformität sicherzustellen.
+          <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
+          {isEn ? 'You get AI help with your tax return. Name, tax ID, and income are anonymized. Useful advice, protected finances.' : 'Du lässt dir bei der Steuererklärung helfen. Name, Steuernummer und Einkommen werden anonymisiert. Nützliche Beratung, geschützte Finanzen.'}
         </div>
       </div>
     </div>

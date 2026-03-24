@@ -1,37 +1,40 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section about" id="about">
   <div class="container">
     <div class="about-wrapper">
       <div class="about-content">
-        <span class="section-label">Wer dahinter steht</span>
-        <h2>KI verantwortungsvoll einsetzen.</h2>
+        <span class="section-label">{isEn ? 'Who\'s behind it' : 'Wer dahinter steht'}</span>
+        <h2>{isEn ? 'Using AI responsibly.' : 'KI verantwortungsvoll einsetzen.'}</h2>
         <p class="about-desc">
-          AUSTR.AI ist ein Projekt von <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer">Florian Bieche</a> — Kommunikationsberater und KI-Enabler aus Wien. Ich helfe Unternehmen, künstliche Intelligenz sinnvoll und datenschutzkonform in ihre Prozesse zu integrieren.
+          {isEn ? <Fragment>AUSTR.AI is a project by <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer">Florian Bieche</a> — communications consultant and AI enabler in Vienna. I help companies use AI meaningfully and in compliance with data protection.</Fragment> : <Fragment>AUSTR.AI ist ein Projekt von <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer">Florian Bieche</a> — Kommunikationsberater und KI-Enabler aus Wien. Ich helfe Unternehmen, KI sinnvoll und datenschutzkonform einzusetzen.</Fragment>}
         </p>
         <p class="about-desc">
-          PrivacyProxy entstand aus der täglichen Arbeit mit Unternehmen, die KI nutzen wollen, aber Bedenken beim Datenschutz haben. Die Lösung: Sensible Daten verlassen nie die eigene Infrastruktur.
+          {isEn ? 'AUSTR.AI was born from daily work with companies that want to use AI but worry about data privacy. The result: a local AI assistant that protects your data automatically.' : 'AUSTR.AI entstand aus der Arbeit mit Unternehmen, die KI nutzen wollen, aber Bedenken beim Datenschutz haben. Das Ergebnis: ein lokaler KI-Assistent, der deine Daten automatisch schützt.'}
         </p>
         <div class="about-services">
-          <h4>Neben PrivacyProxy bietet AUSTR.AI:</h4>
+          <h4>{isEn ? 'Beyond AUSTR.AI:' : 'Neben AUSTR.AI:'}</h4>
           <ul>
             <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span>KI-Beratung für Unternehmen</span>
+              <span>{isEn ? 'AI consulting for businesses' : 'KI-Beratung für Unternehmen'}</span>
             </li>
             <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span>Entwicklung maßgeschneiderter KI-Lösungen</span>
+              <span>{isEn ? 'Custom AI solution development' : 'Entwicklung maßgeschneiderter KI-Lösungen'}</span>
             </li>
             <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span>Workshops & Trainings zu KI-Anwendungen</span>
+              <span>{isEn ? 'Workshops & training on AI applications' : 'Workshops & Trainings zu KI-Anwendungen'}</span>
             </li>
           </ul>
         </div>
         <div class="about-actions">
           <a href="https://www.flb.co.at" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-            Mehr erfahren auf FLB.CO.AT
+            {isEn ? 'Learn more at FLB.CO.AT' : 'Mehr erfahren auf FLB.CO.AT'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
           </a>
         </div>
@@ -41,17 +44,17 @@
           <div class="about-avatar">FB</div>
           <div class="about-meta">
             <strong>Florian Bieche</strong>
-            <span>Kommunikationsberater & KI-Enabler</span>
+            <span>{isEn ? 'Communications Consultant & AI Enabler' : 'Kommunikationsberater & KI-Enabler'}</span>
             <span class="about-location">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Wien, Österreich
+              {isEn ? 'Vienna, Austria' : 'Wien, Österreich'}
             </span>
           </div>
           <div class="about-card-divider"></div>
           <div class="about-brand">
             <a href="https://www.flb.co.at" target="_blank" rel="noopener noreferrer" class="about-brand-link">
               <strong>FLB.CO.AT</strong>
-              <span>Kommunikation & KI-Beratung</span>
+              <span>{isEn ? 'Communications & AI Consulting' : 'Kommunikation & KI-Beratung'}</span>
             </a>
           </div>
         </div>
@@ -92,7 +95,7 @@
     color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: 3px;
-    text-decoration-color: rgba(6, 182, 212, 0.4);
+    text-decoration-color: rgba(13, 148, 136, 0.4);
     transition: text-decoration-color var(--transition-fast);
   }
 
@@ -148,7 +151,7 @@
   }
 
   .about-card-inner:hover {
-    border-color: rgba(6, 182, 212, 0.3);
+    border-color: rgba(13, 148, 136, 0.3);
     box-shadow: var(--shadow-glow);
   }
 
@@ -208,7 +211,7 @@
   }
 
   .about-brand-link:hover {
-    background: rgba(6, 182, 212, 0.06);
+    background: rgba(13, 148, 136, 0.06);
   }
 
   .about-brand-link strong {

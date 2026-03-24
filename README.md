@@ -1,215 +1,113 @@
-# AUSTR.AI PrivacyProxy
+# AUSTR.AI — Local AI Assistant with Built-in Privacy
 
-**Privacy Firewall für KI-Dienste.** Erkennt sensible Daten in deinen Texten, Dokumenten und Audiodateien, anonymisiert sie lokal mit nicht-rückverfolgbaren Codenames, und setzt die echten Daten erst in der KI-Antwort wieder ein.
+**Chat with AI without giving up your data.** AUSTR.AI automatically anonymizes sensitive information before it reaches any AI provider, and restores your real data in the response. Everything runs locally on your machine.
 
-Alles läuft **komplett lokal** auf deinem Rechner. Keine Cloud, kein Drittanbieter, keine Kosten.
-
-🌐 [austr.ai](https://austr.ai) · 📦 [PyPI](https://pypi.org/project/austrai/) · 📄 [MIT Lizenz](LICENSE)
+[austr.ai](https://austr.ai) · [PyPI](https://pypi.org/project/austrai/) · [MIT License](LICENSE) · [Deutsche Version](README.de.md)
 
 ---
 
-## Was es macht
+## How it works
 
 ```
-Du tippst:    "Thomas Gruber, IBAN AT48 3200 0000 1234 5678"
-KI sieht:    "Arion, IBAN [AT_IBAN_1]"
-Du siehst:   Die KI-Antwort mit deinen echten Daten
+You type:     "Dr. Müller, IBAN AT48 2011 1820 8120 0100"
+You confirm:  ✓ 2 terms anonymized — [PERSON_1], [AT_IBAN_1]
+AI sees:      "Arion, IBAN [AT_IBAN_1]"
+You get:      The AI response with your real data restored
 ```
 
-Die KI arbeitet genauso gut — weiß aber nicht wer du bist.
+The AI works just as well — but never sees who you are.
 
-## Installation
+## Quick start
 
 ```bash
 pip install austrai
+aai setup     # Checks system dependencies
+aai chat      # Opens the chat in your browser
 ```
 
-Beim ersten Start werden die Erkennungsmodelle heruntergeladen (GLiNER ~400 MB, SpaCy ~15 MB, einmalig).
+Choose your AI provider (Ollama for fully local, or Claude/GPT/Mistral/Gemini with API key) and start chatting. A confirmation step shows you exactly what gets anonymized before anything is sent.
 
-### Empfohlen: Ollama für kontextuelle Erkennung
+## Features
 
-AUSTR.AI nutzt optional ein lokales LLM für die intelligente Erkennung von Begriffen die kein Muster haben (Projektnamen, interne Begriffe etc.). Dafür brauchst du [Ollama](https://ollama.com):
+- **Chat with privacy** — Like ChatGPT, but every message is anonymized before sending and restored in the response
+- **Confirmation step** — See what gets anonymized before you send. Add terms to your allow-list with one click.
+- **Anonymization tools** — 5-step pipeline: paste text, see detection, review anonymization, optionally send to LLM, get restored response
+- **Document analysis** — Upload PDF, DOCX, XLSX, TXT, CSV — extracted and anonymized
+- **Image redaction** — Upload images, PII is detected via OCR and blacked out
+- **Audio transcription** — Upload MP3, WAV — transcribed with Whisper and anonymized
+- **Multiple AI providers** — Ollama (100% local), Claude, GPT, Mistral, Gemini
+- **Allow-list / Deny-list** — Full control over what gets anonymized
+- **Encrypted storage** — Conversations stored locally with AES encryption
+- **Bilingual** — German and English, auto-detected
+- **Open source** — MIT license, transparent code
+
+## Server deployment
+
+Install on your company server — employees access via browser from any device, including mobile:
 
 ```bash
-# 1. Ollama installieren (macOS)
-brew install ollama
+# On your server
+pip install austrai
+aai chat --no-browser
 
-# 2. Ollama starten
-ollama serve
-
-# 3. Modell herunterladen (~500 MB, einmalig)
-ollama pull qwen3.5:0.8b
+# Or with Docker
+docker compose up -d
 ```
 
-Ohne Ollama funktioniert AUSTR.AI trotzdem — dann nur mit GLiNER + Presidio (deckt 95%+ der Fälle ab).
+Employees open `https://ai.your-company.com/chat` in their browser. Sensitive data stays within your infrastructure.
 
-### Optionale Erweiterungen
+## CLI tools
 
 ```bash
-pip install austrai[docs]     # PDF, DOCX, XLSX, Bilder (OCR)
-pip install austrai[audio]    # Audio-Transkription (Whisper)
-pip install austrai[memory]   # Semantisches Langzeitgedächtnis
-pip install austrai[all]      # Alles
+aai anon "Thomas Gruber at Innovatech GmbH"    # Anonymize text
+aai anon document.pdf                          # Anonymize file
+aai deanon "Arion at Nexon Corp confirmed"     # Restore original
+aai redact scan.png                            # Redact image
+aai audio voicenote.mp3                        # Transcribe + anonymize
 ```
 
-### Desktop-App (macOS)
+## What gets detected
 
-Download: [GitHub Releases](https://github.com/flbcoat/austrai-privacyproxy/releases)
-
-## Befehle
-
-```bash
-# Text anonymisieren
-aai anon Thomas Gruber bei Innovatech GmbH, IBAN AT48 3200 0000 1234 5678
-
-# Datei anonymisieren (PDF, DOCX, XLSX, TXT, Bilder)
-aai anon dokument.pdf
-
-# KI-Antwort deanonymisieren
-aai deanon Arion bei Nexon Corp hat die Zahlung bestaetigt
-
-# Bild oder PDF schwärzen (Pixel überdecken)
-aai redact scan.png
-aai redact rechnung.pdf
-
-# Audio transkribieren + anonymisieren
-aai audio sprachnachricht.mp3
-
-# Privacy Proxy starten (für Claude, ChatGPT, Cursor etc.)
-aai start
-
-# Einstellungen (API Keys, Deny-List, Schwelle)
-aai shell
-
-# Desktop-App öffnen
-aai app
-```
-
-## Was erkannt wird
-
-| Kategorie | Beispiele | Erkennungsrate |
+| Category | Examples | Detection rate |
 |---|---|---|
-| IBANs, Kontonummern | AT48 3200..., DE89 3704... | 95-99% |
-| E-Mail-Adressen | name@firma.at | 95-99% |
-| Telefonnummern | +43 1 234 5678 | 95%+ |
-| Kreditkarten | Visa, Mastercard, Amex | 95%+ |
-| Passwörter, API Keys | Passwort: ..., sk-ant-... | 90-95% |
-| IP-Adressen | 192.168.1.100 | 90-95% |
-| Personennamen | 2200+ Vornamen (DE, TR, RS/HR/BA, EN, AR, PL, HU, RO) | 80-92% |
-| Firmennamen | GmbH, AG, bekannte Firmen | 80-90% |
-| Diagnosen, Medikamente | Diagnose: Diabetes... | 80-85% |
-| Geburtsdaten | 15.03.1985, 1990-06-22 | 85-90% |
-| SVNr, UID-Nr, Firmenbuch | ATU12345678, 1234 567890 | 98%+ |
+| IBANs, account numbers | AT48 3200..., DE89 3704... | 95-99% |
+| Email addresses | name@company.at | 95-99% |
+| Phone numbers | +43 1 234 5678 | 95%+ |
+| Austrian SSN, Tax ID | ATU12345678, 1234 567890 | 98%+ |
+| Person names | 2,200+ first names (DE, TR, RS/HR/BA, EN, AR, PL, HU, RO) | 80-92% |
+| Company names | GmbH, AG, well-known firms | 80-90% |
+| Credit cards, API keys | Visa, sk-ant-... | 90-95% |
+| Medical data | Diagnoses, medications | 80-85% |
 
-### Besonders geschützte Daten (DSGVO Art. 9)
+Three detection layers: **GLiNER** (F1 0.98) + **Presidio/SpaCy** + optional **local LLM** (Ollama).
 
-- Gesundheitsdaten (Diagnosen, Medikamente, Befunde)
-- Connection Strings (postgres://, mongodb://...)
-- Bearer Tokens (JWT)
-- Private Keys (SSH, RSA)
+## Security
 
-## Wie es funktioniert
+- **Fully local** — No connection to our servers. All processing on your machine.
+- **AES encryption** — Conversations and mappings encrypted with Fernet
+- **Fail-closed** — Blocks the request if anonymization fails (never passes through unprotected)
+- **No PII logging** — Sensitive data is never written to log files
+- **Transparency log** — Verify exactly what was sent to the LLM (Settings → Transparency Log)
 
-### Codename-Anonymisierung
+## GDPR
 
-Sensible Daten werden durch **abstrakte Codenames** ersetzt — keine Übersetzungen, keine Fake-Namen, nichts das ein LLM zurückübersetzen könnte:
+AUSTR.AI supports GDPR compliance:
+- **Art. 5(1c)** Data minimization — only anonymized data leaves your infrastructure
+- **Art. 25** Privacy by Design — anonymization as default
+- **Art. 32** Security of processing — AES encryption, local processing
 
-- Personen → "Arion", "Brynn", "Cael" (fiktive Namen, keine echte Sprache)
-- Firmen → "Nexon Corp", "Velar AG" (fiktive Firmennamen)
-- Strukturierte Daten → [AT_IBAN_1], [CREDENTIAL_1] (Bracket-Format)
+> AUSTR.AI reduces GDPR risk but does not replace legal advice.
 
-### Zwei-Pass-Erkennung
+## Roadmap
 
-1. **Phase 1**: Presidio + SpaCy (regelbasiert + NER) erkennen offensichtliche PII
-2. **Phase 2**: Context Learner analysiert die Phase-1-Ergebnisse und findet zusätzliche identifizierende Begriffe (PROPN-Tags, NER-Re-Check, Vektor-Ähnlichkeit)
+- **API Proxy** — Middleware for integration into existing tools (experimental, available via `aai start`)
+- **Desktop App** — Standalone application, no browser needed
+- **Browser Extension** — Anonymize directly in ChatGPT, Claude, etc.
 
-### Persistenter verschlüsselter Mapping Store
+## License
 
-Zuordnungen (Arion → Thomas Gruber) werden lokal in SQLite gespeichert, mit Fernet-AES verschlüsselt. Überlebt Neustarts. Session-TTL konfigurierbar.
+MIT — free to use, including commercially.
 
-### API Proxy
+## Built by
 
-```bash
-aai start
-# Jetzt: http://localhost:8282
-# Unterstützt: Anthropic (Claude), OpenAI (GPT), Mistral,
-#              und jedes LLM mit OpenAI-kompatibler API (Ollama, vLLM)
-```
-
-Der Proxy anonymisiert jeden Request automatisch und rehydriert die Response — mit Streaming-Support (Sliding-Window-Buffer für SSE).
-
-### Memory Layer (optional)
-
-Anonymisierte Konversationen werden als Vektoren in ChromaDB gespeichert. Bei neuen Prompts wird automatisch relevanter Kontext aus vergangenen Gesprächen hinzugefügt.
-
-```bash
-pip install austrai[memory]
-```
-
-## Konfiguration
-
-```bash
-aai shell
-
-# In der Shell:
-/settings keys      # API Keys (Anthropic, OpenAI, Mistral, Google)
-/settings model     # SpaCy-Modell wählen (lg/md/sm)
-/settings threshold # Erkennungs-Schwelle (0.5-0.8)
-/denylist add Firmenname,Projektname
-/proxy start
-```
-
-Config-Datei: `~/.austrai/proxy.yaml`
-
-## Projektstruktur
-
-```
-proxy/austrai_proxy/        # Lokales Tool (pip install austrai)
-  core/                     # Privacy Engine
-    detector.py             # PII-Erkennung (Presidio + Context Learner)
-    anonymizer.py           # Codename-Anonymisierung
-    codename_engine.py      # Codename-Generierung
-    context_learner.py      # Dokumenten-adaptive Erkennung
-    rehydrator.py           # Wiederherstellung der Originaldaten
-    mapping_store.py        # Verschlüsselter SQLite Store
-    memory.py               # ChromaDB Langzeitgedächtnis
-    austrian_recognizers.py # DSGVO-Recognizers (2200+ Vornamen, IPs, etc.)
-    image_redactor.py       # Bildschwärzung (OCR + Pixel-Überdeckung)
-    audio_pipeline.py       # Whisper-Transkription + Anonymisierung
-    llm_detector.py         # Optionale LLM-basierte Erkennung
-    extractor.py            # Datei-Extraktion (PDF, DOCX, XLSX, OCR)
-  server.py                 # API Proxy (Anthropic + OpenAI Format)
-  stream_rehydrator.py      # Streaming-Rehydrierung (SSE)
-  cli.py                    # CLI (aai-Befehl)
-  interactive.py            # Interaktive Shell (/settings, /denylist)
-  config.py                 # Konfiguration
-
-backend/                    # Server-Demo (austr.ai)
-desktop/                    # macOS Desktop-App (pywebview)
-```
-
-## Sicherheit
-
-- **Komplett lokal**: Keine Verbindung zu unseren Servern
-- **AES-Verschlüsselung**: Mappings in SQLite mit Fernet verschlüsselt
-- **Fail-Closed**: Proxy blockiert bei Anonymisierungs-Fehler (statt durchzuleiten)
-- **Kein PII-Logging**: Sensible Daten werden nicht geloggt
-- **Secure Permissions**: Key-Files mit 0o600, Verzeichnisse mit 0o700
-
-## DSGVO
-
-AUSTR.AI unterstützt die DSGVO-Grundsätze:
-- **Art. 5(1c)** Datenminimierung — nur anonymisierte Daten verlassen den Rechner
-- **Art. 25** Privacy by Design — Anonymisierung als Infrastruktur
-- **Art. 32** Sicherheit — AES-Verschlüsselung, lokale Verarbeitung
-- **Art. 44-49** Drittlandtransfer — nur anonymisierte Daten an US-Server
-
-⚠️ AUSTR.AI reduziert das DSGVO-Risiko, ersetzt aber keine rechtliche Beratung.
-
-## Lizenz
-
-MIT — frei nutzbar, auch kommerziell.
-
-## Entwickelt von
-
-[FLB.CO.AT](https://flb.co.at) — Kommunikationsberatung und KI-Enablement aus Wien, Österreich.
+[FLB.CO.AT](https://flb.co.at) — Communications consulting and AI enablement from Vienna, Austria.

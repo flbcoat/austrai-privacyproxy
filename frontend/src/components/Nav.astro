@@ -1,42 +1,49 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <nav class="nav" id="nav">
   <div class="container nav-inner">
-    <a href="/" class="nav-logo" aria-label="AUSTR.AI PrivacyProxy Startseite">
+    <a href={isEn ? '/en' : '/'} class="nav-logo" aria-label={isEn ? 'AUSTR.AI Homepage' : 'AUSTR.AI Startseite'}>
       <span class="nav-logo-shield" aria-hidden="true">
         <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 2L4 8v8c0 7.18 5.12 13.9 12 15.4C22.88 29.9 28 23.18 28 16V8L16 2z" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5"/>
-          <rect x="13" y="13" width="6" height="7" rx="1" fill="#06b6d4"/>
-          <circle cx="16" cy="11" r="3" fill="none" stroke="#06b6d4" stroke-width="1.5"/>
+          <path d="M16 2L4 8v8c0 7.18 5.12 13.9 12 15.4C22.88 29.9 28 23.18 28 16V8L16 2z" fill="#FAFAF8" stroke="#0D9488" stroke-width="1.5"/>
+          <rect x="13" y="13" width="6" height="7" rx="1" fill="#0D9488"/>
+          <circle cx="16" cy="11" r="3" fill="none" stroke="#0D9488" stroke-width="1.5"/>
         </svg>
       </span>
       <span class="nav-logo-text">
         <strong>AUSTR.AI</strong>
-        <span class="nav-logo-sub">PrivacyProxy</span>
+        <span class="nav-logo-sub">{isEn ? 'AI with Privacy' : 'KI mit Datenschutz'}</span>
       </span>
     </a>
 
     <div class="nav-links" id="nav-links">
-      <a href="#how-it-works" class="nav-link">Wie es funktioniert</a>
-      <a href="#demo" class="nav-link">Demo</a>
-      <a href="#fuer-wen" class="nav-link">Für wen?</a>
-      <a href="#install" class="nav-link">Installieren</a>
-      <a href="#faq" class="nav-link">FAQ</a>
-      <a href="#open-source" class="nav-link">Open Source</a>
+      <a href={isEn ? '/en#how-it-works' : '#how-it-works'} class="nav-link">{isEn ? 'How it works' : 'Wie es funktioniert'}</a>
+      <a href={isEn ? '/en#demo' : '#demo'} class="nav-link">Demo</a>
+      <a href={isEn ? '/en#use-cases' : '#fuer-wen'} class="nav-link">{isEn ? 'Who is it for?' : 'Für wen?'}</a>
+      <a href={isEn ? '/en#install' : '#install'} class="nav-link">{isEn ? 'Install' : 'Installieren'}</a>
+      <a href={isEn ? '/en#faq' : '#faq'} class="nav-link">FAQ</a>
+      <a href={isEn ? '/en#open-source' : '#open-source'} class="nav-link">Open Source</a>
       <a href="https://github.com/flbcoat/austrai-privacyproxy" class="nav-link nav-link-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
         </svg>
       </a>
+      <a href={isEn ? '/' : '/en'} class="nav-link nav-lang" aria-label={isEn ? 'Auf Deutsch wechseln' : 'Switch to English'}>
+        {isEn ? 'DE' : 'EN'}
+      </a>
     </div>
 
-    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menue oeffnen" aria-expanded="false">
+    <button class="nav-hamburger" id="nav-hamburger" aria-label={isEn ? 'Open menu' : 'Menue oeffnen'} aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
     </button>
   </div>
 </nav>
+<div class="nav-overlay" id="nav-overlay"></div>
 
 <style>
   .nav {
@@ -46,7 +53,7 @@
     right: 0;
     z-index: 1000;
     padding: 0.75rem 0;
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(250, 250, 248, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid transparent;
@@ -55,7 +62,7 @@
 
   .nav.scrolled {
     border-bottom-color: var(--color-border);
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(250, 250, 248, 0.95);
   }
 
   .nav-inner {
@@ -125,12 +132,30 @@
     color: var(--color-text);
   }
 
+  .nav-lang {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+  }
+
+  .nav-lang:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
   .nav-hamburger {
     display: none;
     flex-direction: column;
     gap: 5px;
-    padding: 4px;
+    padding: 8px;
     cursor: pointer;
+    z-index: 1001;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .nav-hamburger span {
@@ -140,6 +165,7 @@
     background: var(--color-text);
     border-radius: 2px;
     transition: all var(--transition-fast);
+    transform-origin: center;
   }
 
   .nav-hamburger.open span:nth-child(1) {
@@ -152,6 +178,19 @@
 
   .nav-hamburger.open span:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  /* Mobile overlay backdrop */
+  .nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .nav-overlay.open {
+    display: block;
   }
 
   @media (max-width: 1024px) {
@@ -174,6 +213,7 @@
       transform: translateX(100%);
       transition: transform var(--transition-base);
       overflow-y: auto;
+      z-index: 1000;
     }
 
     .nav-links.open {
@@ -182,6 +222,8 @@
 
     .nav-link {
       font-size: 1rem;
+      width: 100%;
+      padding: 0.5rem 0;
     }
   }
 </style>
@@ -190,6 +232,7 @@
   const nav = document.getElementById('nav');
   const hamburger = document.getElementById('nav-hamburger');
   const links = document.getElementById('nav-links');
+  const overlay = document.getElementById('nav-overlay');
 
   // Scroll effect
   window.addEventListener('scroll', () => {
@@ -200,20 +243,42 @@
     }
   });
 
-  // Mobile menu
+  function closeMenu() {
+    hamburger?.classList.remove('open');
+    links?.classList.remove('open');
+    overlay?.classList.remove('open');
+    hamburger?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  function openMenu() {
+    hamburger?.classList.add('open');
+    links?.classList.add('open');
+    overlay?.classList.add('open');
+    hamburger?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Mobile menu toggle
   hamburger?.addEventListener('click', () => {
-    hamburger.classList.toggle('open');
-    links?.classList.toggle('open');
     const isOpen = hamburger.classList.contains('open');
-    hamburger.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
   });
+
+  // Close menu on overlay click
+  overlay?.addEventListener('click', closeMenu);
 
   // Close menu on link click
   links?.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      hamburger?.classList.remove('open');
-      links.classList.remove('open');
-      hamburger?.setAttribute('aria-expanded', 'false');
-    });
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Close menu on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
   });
 </script>

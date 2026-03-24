@@ -5,7 +5,7 @@ und gibt den anonymisierten Text zurück.
 
 Unterstützt: MP3, WAV, M4A, OGG, FLAC, WEBM
 
-Benötigt: pip install austrai[audio]  (openai-whisper oder faster-whisper)
+Benötigt: faster-whisper (im Standard-Install enthalten)
 """
 
 import logging
@@ -98,7 +98,7 @@ def _transcribe(audio_path: str, model_size: str, language: str) -> tuple[str, f
         "Audio-Pipeline braucht Whisper. Installiere eine der Optionen:\n"
         "  pip install faster-whisper    (empfohlen, schneller)\n"
         "  pip install openai-whisper    (Original von OpenAI)\n"
-        "  Oder: pip install austrai[audio]"
+        "  Oder: pip install austrai"
     )
 
 

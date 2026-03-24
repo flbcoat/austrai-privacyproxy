@@ -1,166 +1,124 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section audiences-section" id="fuer-wen">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Für wen?</span>
-      <h2>Ob Einzelperson oder Konzern — <span class="text-gradient">deine Daten zuerst.</span></h2>
+      <span class="section-label">{isEn ? 'For whom?' : 'Für wen?'}</span>
+      <h2>{isEn ? 'For teams and individuals — ' : 'Für Teams und Einzelpersonen — '}<span class="text-gradient">{isEn ? 'your data first.' : 'deine Daten zuerst.'}</span></h2>
     </div>
 
     <!-- Audience Tabs -->
     <div class="audience-tabs">
-      <button class="audience-tab active" data-audience="privat" onclick="showAudience('privat')">Für Privatanwender</button>
-      <button class="audience-tab" data-audience="unternehmen" onclick="showAudience('unternehmen')">Für Unternehmen</button>
+      <button class="audience-tab active" data-audience="unternehmen" onclick="showAudience('unternehmen')">{isEn ? 'Companies' : 'Unternehmen'}</button>
+      <button class="audience-tab" data-audience="privat" onclick="showAudience('privat')">{isEn ? 'Individuals' : 'Privatanwender'}</button>
     </div>
 
-    <!-- PRIVATANWENDER -->
-    <div class="audience-panel active" id="audience-privat">
+    <!-- UNTERNEHMEN (merged KMU + Enterprise) -->
+    <div class="audience-panel active" id="audience-unternehmen">
       <div class="audience-hero">
-        <h3>Du nutzt ChatGPT, Claude oder Gemini?</h3>
-        <p>Dann landen deine Eingaben auf Servern in den USA. Kundennamen, Kontonummern, Diagnosen, Passwörter — alles wird gespeichert, teilweise bis zu 30 Tage.</p>
-        <p>AUSTR.AI sitzt dazwischen. Bevor dein Text das Internet erreicht, werden sensible Daten durch erfundene Codenames ersetzt. Die KI arbeitet damit genauso gut — weiß aber nicht, wer du bist.</p>
+        <h3>{isEn ? 'Your team already uses AI — now protect your data.' : 'Dein Team nutzt bereits KI — jetzt schütze deine Daten.'}</h3>
+        <p>{isEn ? 'Every prompt with customer data or internal figures is a potential GDPR risk. AUSTR.AI gives your organization control — from small teams to enterprise, with a simple install or a full server deployment.' : 'Jeder Prompt mit Kundendaten oder internen Zahlen ist ein potenzielles DSGVO-Risiko. AUSTR.AI gibt deiner Organisation Kontrolle — vom kleinen Team bis zum Konzern, per einfacher Installation oder Server-Deployment.'}</p>
       </div>
 
-      <div class="audience-how">
-        <h4>So funktioniert es</h4>
-        <div class="how-steps">
-          <div class="how-step">
-            <div class="how-num">1</div>
-            <div>
-              <strong>Desktop-App öffnen</strong>
-              <p>Kein Terminal, keine Konfiguration. App starten, fertig.</p>
+      <div class="deploy-options">
+        <h4>{isEn ? 'Deployment options' : 'Deployment-Optionen'}</h4>
+        <div class="deploy-grid">
+          <div class="deploy-card">
+            <div class="deploy-header">
+              <span class="deploy-badge">{isEn ? 'Small teams' : 'Kleine Teams'}</span>
+              <h5>{isEn ? 'Local per workstation' : 'Lokal pro Arbeitsplatz'}</h5>
             </div>
+            <p>{isEn ? 'Each employee installs AUSTR.AI locally. 5 minutes, no server needed.' : 'Jeder Mitarbeiter installiert AUSTR.AI lokal. 5 Minuten, kein Server nötig.'}</p>
+            <ul>
+              <li>{isEn ? 'Onboarding guides through setup' : 'Onboarding führt durch die Einrichtung'}</li>
+              <li>{isEn ? 'Works with any AI provider' : 'Funktioniert mit jedem KI-Anbieter'}</li>
+              <li>{isEn ? 'Each user brings their own API key' : 'Jeder User bringt eigenen API Key mit'}</li>
+            </ul>
           </div>
-          <div class="how-step">
-            <div class="how-num">2</div>
-            <div>
-              <strong>Text eingeben oder Datei hochladen</strong>
-              <p>Einfügen, Beispiel wählen, oder PDF/DOCX/Bild hochladen.</p>
+          <div class="deploy-card deploy-card-accent">
+            <div class="deploy-header">
+              <span class="deploy-badge badge-accent">{isEn ? 'Recommended' : 'Empfohlen'}</span>
+              <h5>{isEn ? 'Company server' : 'Firmen-Server'}</h5>
             </div>
+            <p>{isEn ? 'Central deployment — team accesses the chat via browser from any device, including mobile.' : 'Zentrales Deployment — das Team greift per Browser zu, von jedem Gerät, auch mobil.'}</p>
+            <ul>
+              <li>{isEn ? 'Central deny-list management' : 'Zentrale Deny-List-Verwaltung'}</li>
+              <li>{isEn ? 'One API key for all employees' : 'Ein API Key für alle Mitarbeiter'}</li>
+              <li>{isEn ? 'DSGVO-compliant on your infrastructure' : 'DSGVO-konform auf eurer Infrastruktur'}</li>
+            </ul>
           </div>
-          <div class="how-step">
-            <div class="how-num">3</div>
-            <div>
-              <strong>"Anonymisieren" klicken</strong>
-              <p>Sensible Daten werden lokal erkannt und durch Codenames ersetzt. Der geschützte Text wird automatisch in die Zwischenablage kopiert.</p>
+          <div class="deploy-card">
+            <div class="deploy-header">
+              <span class="deploy-badge">Docker</span>
+              <h5>{isEn ? 'Container deployment' : 'Container-Deployment'}</h5>
             </div>
-          </div>
-          <div class="how-step">
-            <div class="how-num">4</div>
-            <div>
-              <strong>In ChatGPT / Claude einfügen</strong>
-              <p>Die KI sieht nur "Arion bei Nexon Corp" statt deiner echten Daten.</p>
-            </div>
-          </div>
-          <div class="how-step">
-            <div class="how-num">5</div>
-            <div>
-              <strong>KI-Antwort deanonymisieren</strong>
-              <p>Antwort kopieren, in die App einfügen, Klick — deine echten Daten sind wieder drin.</p>
-            </div>
+            <p>{isEn ? 'One command, ready to go.' : 'Ein Befehl, fertig.'}</p>
+            <ul>
+              <li><code>docker run -p 8282:8282 austrai/austrai</code></li>
+              <li>{isEn ? '8+ GB RAM recommended' : '8+ GB RAM empfohlen'}</li>
+              <li>{isEn ? '~8-15 EUR/month for cloud hosting' : '~8-15 EUR/Monat bei Cloud-Hosting'}</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <div class="audience-expect">
-        <h4>Was du erwarten kannst — und was nicht</h4>
+        <h4>{isEn ? 'What you can expect — and what not' : 'Was du erwarten kannst — und was nicht'}</h4>
         <div class="expect-grid">
           <div class="expect-card expect-yes">
-            <h5>✓ Das funktioniert</h5>
+            <h5>{isEn ? 'This works' : 'Das funktioniert'}</h5>
             <ul>
-              <li>IBANs, Kontonummern, Kreditkarten — 95%+ Erkennung</li>
-              <li>E-Mail-Adressen, Telefonnummern — 95%+ Erkennung</li>
-              <li>Vor- und Nachnamen mit Kontext — 85-92%</li>
-              <li>Passwörter und API Keys — 90%+ wenn als solche erkennbar</li>
-              <li>Diagnosen und Medikamente — 80-85%</li>
-              <li>Alles läuft lokal — kein Server, kein Cloud-Dienst</li>
+              <li>{isEn ? 'IBANs, emails, phone numbers — 95%+ detection' : 'IBANs, E-Mails, Telefonnummern — 95%+ Erkennung'}</li>
+              <li>{isEn ? 'Names with context — 85-92%' : 'Namen mit Kontext — 85-92%'}</li>
+              <li>{isEn ? 'Confirmation step before every send' : 'Bestätigungsschritt vor jedem Senden'}</li>
+              <li>{isEn ? 'Deny-list for company-specific terms (100% detection)' : 'Deny-List für firmenspezifische Begriffe (100% Erkennung)'}</li>
             </ul>
           </div>
           <div class="expect-card expect-no">
-            <h5>✗ Das funktioniert nicht</h5>
+            <h5>{isEn ? 'Limitations' : 'Einschränkungen'}</h5>
             <ul>
-              <li>100% Garantie — es können Daten durchrutschen</li>
-              <li>Geschäftsgeheimnisse ohne Personenbezug ("wir planen eine Übernahme")</li>
-              <li>Unbekannte Firmennamen die wie normale Wörter klingen</li>
-              <li>Automatisches Abfangen — du musst den Text bewusst durch die App schicken</li>
-              <li>Ersatz für einen Datenschutzbeauftragten</li>
+              <li>{isEn ? 'No 100% guarantee — some data may slip through' : 'Keine 100% Garantie — es können Daten durchrutschen'}</li>
+              <li>{isEn ? 'Trade secrets without personal reference' : 'Geschäftsgeheimnisse ohne Personenbezug'}</li>
+              <li>{isEn ? 'Not a replacement for a data protection officer' : 'Kein Ersatz für einen Datenschutzbeauftragten'}</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- UNTERNEHMEN -->
-    <div class="audience-panel" id="audience-unternehmen">
+    <!-- PRIVATANWENDER -->
+    <div class="audience-panel" id="audience-privat">
       <div class="audience-hero">
-        <h3>Ihre Mitarbeiter nutzen KI — schützen Sie die Daten.</h3>
-        <p>Ob erlaubt oder nicht: KI-Tools werden im Arbeitsalltag eingesetzt. Jeder Prompt mit Kundendaten, Vertragsinhalten oder internen Zahlen ist ein potenzielles DSGVO-Risiko.</p>
-        <p>AUSTR.AI lässt sich als transparente Schicht einsetzen — ohne den Arbeitsablauf zu verändern.</p>
+        <h3>{isEn ? 'Use AI without giving up your data.' : 'KI nutzen, ohne deine Daten herzugeben.'}</h3>
+        <p>{isEn ? 'AUSTR.AI works like ChatGPT — but anonymizes your data before it reaches the AI and restores it in the response. Free, open source, no account needed.' : 'AUSTR.AI funktioniert wie ChatGPT — anonymisiert aber deine Daten, bevor sie die KI erreichen, und stellt sie in der Antwort wieder her. Kostenlos, Open Source, kein Account nötig.'}</p>
       </div>
 
-      <div class="deploy-options">
-        <h4>Drei Deployment-Optionen</h4>
-        <div class="deploy-grid">
-          <div class="deploy-card">
-            <div class="deploy-header">
-              <span class="deploy-badge">Einfach</span>
-              <h5>Desktop-App</h5>
+      <div class="audience-how">
+        <h4>{isEn ? 'Get started in 3 steps' : 'In 3 Schritten loslegen'}</h4>
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="how-num">1</div>
+            <div>
+              <strong>{isEn ? 'Install' : 'Installieren'}</strong>
+              <p><code>pip install austrai && aai setup && aai chat</code></p>
             </div>
-            <p>Jeder Mitarbeiter installiert die App. Kein Server, keine IT-Abteilung.</p>
-            <ul>
-              <li>5 Minuten pro Arbeitsplatz</li>
-              <li>10 Minuten Schulung</li>
-              <li>Funktioniert mit jedem KI-Tool (Clipboard-basiert)</li>
-              <li>Keine API Keys nötig</li>
-            </ul>
           </div>
-          <div class="deploy-card deploy-card-accent">
-            <div class="deploy-header">
-              <span class="deploy-badge badge-accent">Empfohlen</span>
-              <h5>API Proxy</h5>
+          <div class="how-step">
+            <div class="how-num">2</div>
+            <div>
+              <strong>{isEn ? 'Choose your AI' : 'KI auswählen'}</strong>
+              <p>{isEn ? 'Ollama for 100% local, or Claude, GPT, Mistral with your API key.' : 'Ollama für 100% lokal, oder Claude, GPT, Mistral mit deinem API Key.'}</p>
             </div>
-            <p>AUSTR.AI als lokaler Proxy. KI-Tools werden auf den Proxy umkonfiguriert — der Rest passiert automatisch.</p>
-            <ul>
-              <li>1-2 Stunden Setup durch IT</li>
-              <li>Keine Schulung nötig (transparent)</li>
-              <li>Unterstützt: Anthropic (Claude), OpenAI (GPT), Mistral, und jedes LLM mit OpenAI-kompatibler API (inkl. Ollama, vLLM)</li>
-              <li>Benötigt API Key des jeweiligen LLM-Anbieters</li>
-            </ul>
           </div>
-          <div class="deploy-card">
-            <div class="deploy-header">
-              <span class="deploy-badge">Enterprise</span>
-              <h5>Zentraler Server</h5>
+          <div class="how-step">
+            <div class="how-num">3</div>
+            <div>
+              <strong>{isEn ? 'Chat — protected' : 'Chatten — geschützt'}</strong>
+              <p>{isEn ? 'Chat normally. AUSTR.AI shows you what gets anonymized before sending.' : 'Ganz normal chatten. AUSTR.AI zeigt dir vor dem Senden, was anonymisiert wird.'}</p>
             </div>
-            <p>Docker-Container auf Ihrem internen Server. Zentrale Verwaltung von Deny-Lists und Einstellungen.</p>
-            <ul>
-              <li>Halber Tag Setup</li>
-              <li>Zentrale Deny-List-Verwaltung</li>
-              <li>8+ GB RAM empfohlen</li>
-              <li>~8-15 €/Monat bei Cloud-Hosting</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="audience-important">
-        <h4>Wichtig zu wissen</h4>
-        <div class="important-grid">
-          <div class="important-item">
-            <strong>API Proxy braucht API Keys</strong>
-            <p>Der Proxy leitet anonymisierte Anfragen an LLM-Dienste weiter. Dafür braucht Ihr Unternehmen einen API-Zugang beim jeweiligen Anbieter (OpenAI, Anthropic, Mistral, etc.). Wenn Sie ein eigenes LLM hosten (z.B. über Ollama oder vLLM), funktioniert der Proxy ebenfalls — sofern das LLM eine OpenAI-kompatible API bereitstellt.</p>
-          </div>
-          <div class="important-item">
-            <strong>Desktop-App braucht keine API Keys</strong>
-            <p>Die Desktop-App arbeitet Clipboard-basiert: Text anonymisieren, in beliebiges KI-Tool einfügen, Antwort deanonymisieren. Das funktioniert mit jedem Tool, jeder Website, jeder App — ohne Konfiguration.</p>
-          </div>
-          <div class="important-item">
-            <strong>Keine Garantie für vollständige Anonymisierung</strong>
-            <p>Die Erkennungsrate liegt je nach Datentyp bei 80-99%. Für hochsensible Bereiche (HR, Recht, M&A) empfehlen wir die Kombination aus AUSTR.AI und gepflegten Deny-Lists, plus organisatorische Maßnahmen.</p>
-          </div>
-          <div class="important-item">
-            <strong>Open Source, keine Kosten</strong>
-            <p>MIT-Lizenz. Keine Lizenzgebühren, keine Nutzerlimits, kein Vendor-Lock-in. Die einzigen Kosten: Hardware und Arbeitszeit für Setup.</p>
           </div>
         </div>
       </div>
@@ -168,48 +126,47 @@
 
     <!-- FAQ -->
     <div class="faq-section" id="faq">
-      <h3>Häufige Fragen</h3>
+      <h3>{isEn ? 'Frequently asked questions' : 'Häufige Fragen'}</h3>
       <div class="faq-list">
         <details class="faq-item">
-          <summary>Läuft AUSTR.AI wirklich komplett lokal?</summary>
-          <p>Ja. Die Erkennung und Anonymisierung passiert zu 100% auf deinem Rechner. Es wird keine Verbindung zu unseren oder anderen Servern aufgebaut. Die einzige Netzwerkkommunikation entsteht, wenn du den anonymisierten Text an ein KI-Tool sendest — und dann sind die sensiblen Daten bereits durch Codenames ersetzt.</p>
+          <summary>{isEn ? 'Does AUSTR.AI really run completely locally?' : 'Läuft AUSTR.AI wirklich komplett lokal?'}</summary>
+          <p>{isEn ? 'Yes. Detection and anonymization happen 100% on your machine. The only network traffic occurs when you send the already-anonymized text to an AI provider.' : 'Ja. Erkennung und Anonymisierung passieren zu 100% auf deinem Rechner. Die einzige Netzwerkkommunikation entsteht, wenn du den bereits anonymisierten Text an einen KI-Anbieter sendest.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Was sind Codenames?</summary>
-          <p>"Thomas Gruber" wird zu "Arion", "Innovatech GmbH" wird zu "Nexon Corp". Das sind erfundene Begriffe die in keiner Sprache existieren und nicht zurückübersetzt werden können — anders als z.B. chinesische oder arabische Fake-Namen, die ein LLM sofort zurückübersetzen könnte. Strukturierte Daten wie IBANs werden zu Referenz-Codes wie [AT_IBAN_1].</p>
+          <summary>{isEn ? 'What are codenames?' : 'Was sind Codenames?'}</summary>
+          <p>{isEn ? '"Thomas Gruber" becomes "Arion", "Innovatech GmbH" becomes "Nexon Corp" — invented terms that can\'t be reverse-translated by an LLM. Structured data like IBANs become reference codes like [AT_IBAN_1].' : '"Thomas Gruber" wird zu "Arion", "Innovatech GmbH" wird zu "Nexon Corp" — erfundene Begriffe, die ein LLM nicht zurückübersetzen kann. Strukturierte Daten wie IBANs werden zu Referenz-Codes wie [AT_IBAN_1].'}</p>
         </details>
         <details class="faq-item">
-          <summary>Welche KI-Tools werden unterstützt?</summary>
-          <p><strong>Desktop-App:</strong> Jedes KI-Tool — ChatGPT, Claude, Gemini, Copilot, jede Website, jede App. Funktioniert über Copy-Paste.<br>
-          <strong>API Proxy:</strong> Jedes LLM mit Anthropic- oder OpenAI-kompatibler API. Das umfasst: Claude, GPT, Mistral, und selbst gehostete Modelle über Ollama, vLLM, LocalAI oder ähnliche Frameworks. Voraussetzung: ein API Key oder Zugang zum LLM-Endpoint.</p>
+          <summary>{isEn ? 'What is the confirmation step?' : 'Was ist der Bestätigungsschritt?'}</summary>
+          <p>{isEn ? 'Before sending, AUSTR.AI shows a color-coded preview of all replacements. You confirm, edit, or cancel — nothing leaves without your approval.' : 'Vor dem Senden zeigt AUSTR.AI eine farblich markierte Vorschau aller Ersetzungen. Du bestätigst, bearbeitest oder brichst ab — nichts geht raus ohne deine Freigabe.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Kann ich mein eigenes LLM (z.B. Qwen, Llama) nutzen?</summary>
-          <p>Ja — wenn es über eine OpenAI-kompatible API erreichbar ist. Ollama und vLLM stellen das automatisch bereit. Wenn Sie ein Modell über ein einfaches Python-Script ohne API laufen lassen, greift der Proxy nicht. Die Desktop-App funktioniert aber immer (Clipboard-basiert).</p>
+          <summary>{isEn ? 'Which AI providers are supported?' : 'Welche KI-Anbieter werden unterstützt?'}</summary>
+          <p>{isEn ? 'Ollama (100% local), Claude, GPT, Mistral, and Gemini. Switch between providers anytime in the settings.' : 'Ollama (100% lokal), Claude, GPT, Mistral und Gemini. Jederzeit in den Einstellungen wechselbar.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Wie hoch ist die Erkennungsrate?</summary>
-          <p>Strukturierte Daten (IBANs, E-Mails, Telefonnummern): 95-99%. Personennamen: 80-92%. Firmennamen: 80-90%. Passwörter/API Keys: 90-95%. Diagnosen: 80-85%. Die Erkennungsrate steigt deutlich, wenn Sie firmenspezifische Begriffe in die Deny-List eintragen — dort gelistete Begriffe werden zu 100% erkannt.</p>
+          <summary>{isEn ? 'What is the detection rate?' : 'Wie hoch ist die Erkennungsrate?'}</summary>
+          <p>{isEn ? 'Structured data (IBANs, emails, phone numbers): 95-99%. Names: 80-92%. Company names: 80-90%. Terms on the deny-list are detected 100%.' : 'Strukturierte Daten (IBANs, E-Mails, Telefonnummern): 95-99%. Namen: 80-92%. Firmennamen: 80-90%. Begriffe auf der Deny-List werden zu 100% erkannt.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Was ist die Deny-List?</summary>
-          <p>Eine Liste von Begriffen die immer anonymisiert werden — egal ob das System sie automatisch erkennen würde oder nicht. Tragen Sie dort Ihre Firmennamen, Projektnamen, Kundenkürzel und interne Bezeichnungen ein. Das ist Ihr wichtigstes Werkzeug für die Lücken in der automatischen Erkennung.</p>
+          <summary>{isEn ? 'What is the deny-list?' : 'Was ist die Deny-List?'}</summary>
+          <p>{isEn ? 'A list of terms that are always anonymized, regardless of automatic detection. Add company names, project names, customer abbreviations — anything the system should catch 100%.' : 'Eine Liste von Begriffen, die immer anonymisiert werden, unabhängig von der automatischen Erkennung. Firmennamen, Projektnamen, Kundenkürzel eintragen — alles, was das System zu 100% erkennen soll.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Ist AUSTR.AI DSGVO-konform?</summary>
-          <p>AUSTR.AI unterstützt die DSGVO-Grundsätze Datenminimierung (Art. 5), Privacy by Design (Art. 25) und Sicherheit der Verarbeitung (Art. 32). Es reduziert das Risiko bei Drittlandtransfers (Art. 44-49) erheblich. Aber: AUSTR.AI ist ein technisches Werkzeug, keine rechtliche Garantie. Eine vollständige DSGVO-Konformitätsbewertung erfordert die Einbindung Ihres Datenschutzbeauftragten.</p>
+          <summary>{isEn ? 'Is AUSTR.AI GDPR-compliant?' : 'Ist AUSTR.AI DSGVO-konform?'}</summary>
+          <p>{isEn ? 'AUSTR.AI supports data minimization (Art. 5), privacy by design (Art. 25), and security of processing (Art. 32). It is a technical tool, not a legal guarantee — a full assessment requires your data protection officer.' : 'AUSTR.AI unterstützt Datenminimierung (Art. 5), Privacy by Design (Art. 25) und Sicherheit der Verarbeitung (Art. 32). Es ist ein technisches Werkzeug, keine rechtliche Garantie — eine vollständige Bewertung erfordert deinen Datenschutzbeauftragten.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Wie groß ist AUSTR.AI?</summary>
-          <p>Die Terminal-Version (<code>pip install austrai</code>) ist leichtgewichtig und lädt die Erkennungsmodelle (GLiNER ~400 MB, SpaCy ~15 MB) beim ersten Start automatisch herunter. Die Desktop-App als eigenständiger Download (.dmg) ist in Vorbereitung — Zielgröße unter 1 GB.</p>
+          <summary>{isEn ? 'What does AUSTR.AI cost?' : 'Was kostet AUSTR.AI?'}</summary>
+          <p>{isEn ? 'Nothing. MIT license, no fees, no user limits. The only costs: API keys for the AI providers you already use (or none with Ollama).' : 'Nichts. MIT-Lizenz, keine Gebühren, keine Nutzerlimits. Die einzigen Kosten: API Keys für die KI-Dienste, die du ohnehin nutzt (oder keine mit Ollama).'}</p>
         </details>
         <details class="faq-item">
-          <summary>Was kostet AUSTR.AI?</summary>
-          <p>Nichts. Open Source unter MIT-Lizenz. Keine Lizenzgebühren, keine Nutzerlimits, keine Telemetrie. Die einzigen Kosten: API Keys für die LLM-Dienste die Sie ohnehin nutzen, und optional Hardware für einen zentralen Server.</p>
+          <summary>{isEn ? 'Does AUSTR.AI also protect trade secrets?' : 'Schützt AUSTR.AI auch Geschäftsgeheimnisse?'}</summary>
+          <p>{isEn ? 'Not automatically. AUSTR.AI detects personal data (names, numbers, addresses). A sentence like "we plan the acquisition in Q3" passes through unchanged. Use the deny-list for such terms.' : 'Nicht automatisch. AUSTR.AI erkennt personenbezogene Daten (Namen, Nummern, Adressen). Ein Satz wie "wir planen die Übernahme im Q3" geht unverändert durch. Nutze die Deny-List für solche Begriffe.'}</p>
         </details>
         <details class="faq-item">
-          <summary>Schützt AUSTR.AI auch Geschäftsgeheimnisse?</summary>
-          <p>Nein — nicht automatisch. AUSTR.AI erkennt personenbezogene Daten (Namen, Nummern, Adressen). Ein Satz wie "wir planen die Übernahme im Q3" enthält keine erkennbaren PII-Muster und geht unverändert durch. Für solche Fälle können Sie die Deny-List nutzen oder organisatorische Richtlinien erstellen, welche Inhalte überhaupt in KI-Tools eingegeben werden dürfen.</p>
+          <summary>{isEn ? 'Can I use it on my phone?' : 'Kann ich AUSTR.AI am Handy nutzen?'}</summary>
+          <p>{isEn ? 'Yes — install on a server and open the chat in your phone browser. The web UI is fully responsive. No standalone app needed.' : 'Ja — auf einem Server installieren und die Chat-Oberfläche im Handy-Browser öffnen. Die Web-Oberfläche ist voll responsiv. Keine eigenständige App nötig.'}</p>
         </details>
       </div>
     </div>
@@ -227,7 +184,7 @@
     background: var(--color-bg-card);
     border-radius: var(--radius-lg);
     padding: 4px;
-    max-width: 400px;
+    max-width: 500px;
     margin-left: auto;
     margin-right: auto;
     border: 1px solid var(--color-border);
@@ -270,8 +227,8 @@
     width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 0.875rem; font-weight: 700;
-    background: rgba(6, 182, 212, 0.1); color: var(--color-accent);
-    border: 1px solid rgba(6, 182, 212, 0.2);
+    background: rgba(13, 148, 136, 0.1); color: var(--color-accent);
+    border: 1px solid rgba(13, 148, 136, 0.2);
   }
   .how-step strong { display: block; margin-bottom: 0.25rem; }
   .how-step p { font-size: 0.875rem; color: var(--color-text-muted); margin: 0; }
@@ -296,20 +253,20 @@
     transition: all var(--transition-base);
   }
   .deploy-card:hover { border-color: var(--color-border-light); transform: translateY(-2px); }
-  .deploy-card-accent { border-color: rgba(6, 182, 212, 0.3); }
+  .deploy-card-accent { border-color: rgba(13, 148, 136, 0.3); }
   .deploy-header { margin-bottom: 0.75rem; }
   .deploy-badge {
     font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.5px; color: var(--color-text-dim);
-    background: rgba(100, 116, 139, 0.15); padding: 2px 8px;
+    background: rgba(107, 107, 107, 0.1); padding: 2px 8px;
     border-radius: 4px; display: inline-block; margin-bottom: 0.5rem;
   }
-  .badge-accent { color: var(--color-accent); background: rgba(6, 182, 212, 0.1); }
+  .badge-accent { color: var(--color-accent); background: rgba(13, 148, 136, 0.1); }
   .deploy-card h5 { font-size: 1.125rem; }
   .deploy-card > p { font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; line-height: 1.5; }
   .deploy-card ul { list-style: none; }
   .deploy-card li { font-size: 0.8125rem; color: var(--color-text-dim); padding: 0.25rem 0; }
-  .deploy-card li::before { content: "→ "; color: var(--color-accent); }
+  .deploy-card li::before { content: "-> "; color: var(--color-accent); }
 
   /* Important grid */
   .important-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
@@ -333,7 +290,7 @@
     list-style: none; display: flex; align-items: center; gap: 0.75rem;
   }
   .faq-item summary::before { content: "+"; color: var(--color-accent); font-size: 1.25rem; font-weight: 400; flex-shrink: 0; }
-  .faq-item[open] summary::before { content: "−"; }
+  .faq-item[open] summary::before { content: "-"; }
   .faq-item summary::-webkit-details-marker { display: none; }
   .faq-item p {
     font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.7;
@@ -343,9 +300,31 @@
   @media (max-width: 900px) {
     .deploy-grid, .expect-grid, .important-grid { grid-template-columns: 1fr; }
   }
+
+  @media (max-width: 480px) {
+    .audience-tabs {
+      max-width: 100%;
+    }
+    .audience-tab {
+      padding: 0.65rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .audience-hero h3 {
+      font-size: 1.25rem;
+    }
+    .audience-hero p {
+      font-size: 0.9375rem;
+    }
+    .faq-item summary {
+      font-size: 0.875rem;
+    }
+    .faq-item p {
+      margin-left: 1.25rem;
+    }
+  }
 </style>
 
-<script>
+<script is:inline>
   function showAudience(which) {
     document.querySelectorAll('.audience-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.audience-tab').forEach(t => t.classList.remove('active'));

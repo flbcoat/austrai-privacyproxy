@@ -6,27 +6,44 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  noindex?: boolean;
+  lang?: 'de' | 'en';
 }
 
 const {
-  title = 'AUSTR.AI PrivacyProxy — Privacy Firewall fuer KI-Dienste',
-  description = 'PrivacyProxy schuetzt sensible Daten in LLM-Prompts: Namen, IBANs, Passwoerter, Diagnosen, IP-Adressen. Laeuft komplett lokal. DSGVO-konform. Open Source aus Oesterreich.',
+  title = 'AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz | Chatte mit KI ohne deine Daten preiszugeben',
+  description = 'AUSTR.AI anonymisiert deine Daten automatisch bevor sie die KI erreichen. Chatte mit Claude, GPT, Mistral oder Ollama — deine Daten bleiben auf deinem Rechner. Bestätigungsschritt vor jedem Senden. Open Source. Kostenlos. Aus Wien, Oesterreich.',
+  noindex = false,
+  lang = 'de',
 } = Astro.props;
 
+const isEn = lang === 'en';
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL('/og-image.png', Astro.site);
+const altLangPath = isEn ? Astro.url.pathname.replace(/^\/en/, '') || '/' : `/en${Astro.url.pathname === '/' ? '' : Astro.url.pathname}`;
+const altLangURL = new URL(altLangPath, Astro.site);
 ---
 <!doctype html>
-<html lang="de">
+<html lang={lang}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content={description} />
-  <meta name="theme-color" content="#0f172a" />
-  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#FAFAF8" />
+  <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
   <meta name="author" content="FLB.CO.AT — Florian Bieche" />
-  <meta name="keywords" content="Privacy, Datenschutz, DSGVO, KI, AI, Anonymisierung, LLM, ChatGPT, Claude, Open Source, Oesterreich, Austria" />
+  <meta name="keywords" content={isEn ? 'Austria AI, Austrian AI, AI privacy, AI assistant, local AI, GDPR AI, data protection AI, PII anonymization, LLM privacy, ChatGPT privacy, Claude privacy, AI data leak prevention, open source AI, AI with privacy, data anonymization, enterprise AI security, GDPR compliance tool, Ollama, private AI chat' : 'Oesterreich KI, Austrian AI, KI Datenschutz, KI Assistent, lokale KI, DSGVO KI, Datenschutz KI, PII Anonymisierung, LLM Datenschutz, ChatGPT Datenschutz, Claude Datenschutz, KI Datenleck verhindern, Open Source KI, KI mit Datenschutz, Datenanonymisierung, KI Compliance, Datenschutz Tool Wien, Ollama, privater KI Chat'} />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="canonical" href={canonicalURL} />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="sitemap" href="/sitemap.xml" />
+
+  <!-- Hreflang -->
+  <link rel="alternate" hreflang="de" href={isEn ? altLangURL : canonicalURL} />
+  <link rel="alternate" hreflang="en" href={isEn ? canonicalURL : altLangURL} />
+  <link rel="alternate" hreflang="x-default" href={new URL('/', Astro.site)} />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -34,38 +51,87 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonicalURL} />
   <meta property="og:site_name" content="AUSTR.AI" />
-  <meta property="og:locale" content="de_AT" />
+  <meta property="og:locale" content={isEn ? 'en_US' : 'de_AT'} />
+  <meta property="og:locale:alternate" content={isEn ? 'de_AT' : 'en_US'} />
+  <meta property="og:image" content={ogImageURL} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={title} />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageURL} />
 
-  <!-- Structured Data (JSON-LD) -->
+  <!-- Structured Data: SoftwareApplication -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "AUSTR.AI PrivacyProxy",
-    "description": "Open-Source Privacy Firewall für KI-Dienste. Anonymisiert sensible Daten lokal bevor sie an LLMs gesendet werden.",
+    "name": "AUSTR.AI",
+    "alternateName": ["AUSTR.AI", "Austrian AI Privacy Tool", "Austrian AI Assistant"],
+    "description": isEn
+      ? "Local AI assistant with built-in privacy from Austria. Automatically anonymizes personal data before it reaches the AI and restores it in the response. Chat with Claude, GPT, Mistral, or Ollama. Open source. Free."
+      : "Lokaler KI-Assistent mit eingebautem Datenschutz aus Oesterreich. Anonymisiert personenbezogene Daten automatisch bevor sie die KI erreichen und stellt sie in der Antwort wieder her. Chatte mit Claude, GPT, Mistral oder Ollama. Open Source. Kostenlos.",
     "applicationCategory": "SecurityApplication",
+    "applicationSubCategory": isEn ? "Data Protection & Privacy" : "Datenschutz & Privacy",
     "operatingSystem": "macOS, Windows, Linux",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-    "author": { "@type": "Organization", "name": "FLB.CO.AT", "url": "https://flb.co.at" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
+    "author": {
+      "@type": "Organization",
+      "name": "FLB.CO.AT — Florian Bieche",
+      "url": "https://flb.co.at",
+      "description": isEn ? "Communications consulting and AI enablement from Vienna, Austria" : "Kommunikationsberatung und KI-Enablement aus Wien, Oesterreich",
+      "address": { "@type": "PostalAddress", "addressLocality": "Wien", "addressCountry": "AT" },
+      "founder": { "@type": "Person", "name": "Florian Bieche", "jobTitle": isEn ? "Communications Consultant & AI Enabler" : "Kommunikationsberater & KI-Enabler" }
+    },
     "url": "https://austr.ai",
     "downloadUrl": "https://pypi.org/project/austrai/",
-    "softwareVersion": "1.0.0",
+    "installUrl": "https://pypi.org/project/austrai/",
+    "softwareVersion": "2.0.0",
     "license": "https://opensource.org/licenses/MIT",
-    "inLanguage": "de",
-    "keywords": "Privacy, DSGVO, Anonymisierung, LLM, KI, Open Source"
+    "isAccessibleForFree": true,
+    "inLanguage": [lang, isEn ? "de" : "en"],
+    "keywords": isEn
+      ? "AI privacy, AI security, GDPR compliance, data anonymization, PII detection, Austrian AI, open source privacy, LLM security, ChatGPT privacy, prompt anonymization"
+      : "KI Datenschutz, KI Sicherheit, DSGVO Konformitaet, Datenanonymisierung, PII Erkennung, Oesterreich KI, Open Source Privacy, LLM Sicherheit, ChatGPT Datenschutz, Prompt Anonymisierung",
+    "screenshot": "https://austr.ai/og-image.png",
+    "featureList": isEn
+      ? ["AI chat with built-in privacy", "3-layer PII detection (GLiNER + Presidio + first names DB)", "Confirmation step before every send", "Untraceable codename anonymization", "Automatic response restoration", "Multiple AI providers (Ollama, Claude, GPT, Mistral, Gemini)", "Image redaction (OCR)", "Document analysis (PDF, DOCX)", "Audio transcription + anonymization", "Allow-list and deny-list", "Encrypted local storage (AES)", "Server deployment with responsive web UI"]
+      : ["KI-Chat mit eingebautem Datenschutz", "3-Schichten PII-Erkennung (GLiNER + Presidio + Vornamen-DB)", "Bestaetigungsschritt vor jedem Senden", "Nicht-rueckverfolgbare Codename-Anonymisierung", "Automatische Antwort-Wiederherstellung", "Mehrere KI-Anbieter (Ollama, Claude, GPT, Mistral, Gemini)", "Bildschwärzung (OCR)", "Dokumentenanalyse (PDF, DOCX)", "Audio-Transkription + Anonymisierung", "Allow-List und Deny-List", "Verschluesselte lokale Speicherung (AES)", "Server-Deployment mit responsiver Web-Oberflaeche"],
+    "softwareRequirements": "Python 3.10+",
+    "releaseNotes": "https://github.com/flbcoat/austrai-privacyproxy/releases"
+  })} />
+
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AUSTR.AI",
+    "legalName": "FLB.CO.AT — Mag. Florian Bieche",
+    "url": "https://austr.ai",
+    "logo": "https://austr.ai/favicon.svg",
+    "description": isEn
+      ? "Austrian AI privacy company. Developer of AUSTR.AI, an open-source local AI assistant with built-in privacy."
+      : "Oesterreichisches KI-Datenschutz-Unternehmen. Entwickler von AUSTR.AI, einem Open-Source lokalen KI-Assistenten mit eingebautem Datenschutz.",
+    "foundingDate": "2025",
+    "foundingLocation": { "@type": "Place", "name": "Wien, Oesterreich" },
+    "address": { "@type": "PostalAddress", "addressLocality": "Wien", "addressCountry": "AT" },
+    "founder": { "@type": "Person", "name": "Florian Bieche", "url": "https://flb.co.at" },
+    "parentOrganization": { "@type": "Organization", "name": "FLB.CO.AT", "url": "https://flb.co.at" },
+    "sameAs": ["https://github.com/flbcoat/austrai-privacyproxy", "https://pypi.org/project/austrai/"]
   })} />
 
   <title>{title}</title>
+
+  <!-- Analytics (Umami — cookieless, GDPR-compliant, self-hosted) -->
+  <script defer src="https://analytics.austr.ai/script.js" data-website-id="b430727c-997c-4702-a4be-dd082854298d"></script>
 </head>
 <body>
-  <Nav />
+  <Nav lang={lang} />
   <main>
     <slot />
   </main>
-  <Footer />
+  <Footer lang={lang} />
 </body>
 </html>

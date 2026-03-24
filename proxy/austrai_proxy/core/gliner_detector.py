@@ -66,11 +66,45 @@ GLINER_FALSE_POSITIVES = {
     "vollständigkeit", "richtigkeit", "rechtzeitig",
 }
 
+MODEL_ID = "urchade/gliner_multi_pii-v1"
+
 _model = None
 
 
+def is_model_cached() -> bool:
+    """Check if the GLiNER model is already downloaded."""
+    try:
+        from huggingface_hub import try_to_load_from_cache
+        result = try_to_load_from_cache(MODEL_ID, "gliner_config.json")
+        return result is not None and isinstance(result, str)
+    except Exception:
+        return False
+
+
+def download_model(progress_callback=None):
+    """Download GLiNER model with optional progress callback.
+
+    Args:
+        progress_callback: Optional callable(status: str, percent: float|None)
+            status is a human-readable message, percent is 0-100 or None.
+    """
+    from huggingface_hub import snapshot_download, HfApi
+    import warnings
+    warnings.filterwarnings("ignore", message=".*resume_download.*")
+
+    if progress_callback:
+        progress_callback("Lade GLiNER PII-Modell herunter...", 0)
+
+    # Download with tqdm disabled — we track via callback
+    os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+    snapshot_download(MODEL_ID)
+
+    if progress_callback:
+        progress_callback("Modell heruntergeladen.", 100)
+
+
 def _get_model():
-    """Lazy-load GLiNER model (downloads on first use, ~400 MB)."""
+    """Lazy-load GLiNER model (downloads on first use, ~1.1 GB)."""
     global _model
     if _model is not None:
         return _model
@@ -85,8 +119,12 @@ def _get_model():
     except ImportError:
         raise ImportError("GLiNER braucht: pip install gliner")
 
-    logger.info("Lade GLiNER PII-Modell (einmalig, ~400 MB)...")
-    _model = GLiNER.from_pretrained("urchade/gliner_multi_pii-v1")
+    if not is_model_cached():
+        logger.info("GLiNER-Modell wird heruntergeladen (einmalig, ~1.1 GB)...")
+        download_model()
+
+    logger.info("Lade GLiNER PII-Modell...")
+    _model = GLiNER.from_pretrained(MODEL_ID)
     logger.info("GLiNER bereit.")
     return _model
 

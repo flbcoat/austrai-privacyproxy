@@ -1,12 +1,15 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section how-it-works" id="how-it-works">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Technologie</span>
-      <h2>So funktioniert PrivacyProxy</h2>
+      <span class="section-label">{isEn ? 'How it works' : 'So funktioniert es'}</span>
+      <h2>{isEn ? 'Five steps between you and the AI' : 'Fünf Schritte zwischen dir und der KI'}</h2>
       <p>
-        Vier Schritte stehen zwischen deinen sensiblen Daten und dem LLM. Vollautomatisch, transparent, und reversibel.
+        {isEn ? 'Nothing leaves your device without your approval.' : 'Nichts verlässt dein Gerät ohne deine Freigabe.'}
       </p>
     </div>
 
@@ -21,10 +24,10 @@
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </div>
-          <h3>Eingabe</h3>
-          <p>Der Benutzer gibt einen Text mit sensiblen Daten ein.</p>
+          <h3>{isEn ? 'You write' : 'Du schreibst'}</h3>
+          <p>{isEn ? 'Type your message — just like in ChatGPT or Claude.' : 'Schreib deine Nachricht — wie in ChatGPT oder Claude.'}</p>
           <div class="hiw-example">
-            <code>"Bitte erstellen Sie ein Schreiben an <span class="hl-person">Herrn Thomas Gruber</span>, UID <span class="hl-uid">ATU12345678</span>..."</code>
+            <code>"Bitte erstellen Sie ein Schreiben an <span class="hl-person">Herrn Thomas Gruber</span>, IBAN <span class="hl-uid">AT483200000012345864</span>..."</code>
           </div>
         </div>
       </div>
@@ -32,7 +35,7 @@
       <div class="hiw-connector" aria-hidden="true">
         <div class="hiw-connector-line"></div>
         <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 0v12M2 6l6 6 6-6" stroke="#06b6d4" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#0D9488" stroke-width="1.5" transform="rotate(-90 8 8)"/>
         </svg>
       </div>
 
@@ -46,10 +49,10 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </div>
-          <h3>Erkennung</h3>
-          <p>Drei-Schichten-Erkennung: GLiNER (F1 0.98) + Presidio + 2200 Vornamen-DB erkennen Namen, IBANs, Passwörter, Diagnosen, IP-Adressen, Geburtsdaten, Kreditkarten und mehr.</p>
+          <h3>{isEn ? 'AUSTR.AI detects PII' : 'AUSTR.AI erkennt sensible Daten'}</h3>
+          <p>{isEn ? 'Three-layer detection (GLiNER + Presidio + 2,200 first names) finds names, IBANs, addresses, emails, phone numbers and more.' : 'Drei-Schichten-Erkennung (GLiNER + Presidio + 2.200 Vornamen) findet Namen, IBANs, Adressen, E-Mails, Telefonnummern und mehr.'}</p>
           <div class="hiw-example">
-            <code>"...an <mark class="entity-mark entity-PERSON">Herrn Thomas Gruber</mark>, UID <mark class="entity-mark entity-AT_UID_NR">ATU12345678</mark>..."</code>
+            <code>"...an <mark class="entity-mark entity-PERSON">Herrn Thomas Gruber</mark>, IBAN <mark class="entity-mark entity-AT_UID_NR">AT483200000012345864</mark>..."</code>
           </div>
         </div>
       </div>
@@ -57,23 +60,24 @@
       <div class="hiw-connector" aria-hidden="true">
         <div class="hiw-connector-line"></div>
         <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 0v12M2 6l6 6 6-6" stroke="#06b6d4" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#F59E0B" stroke-width="1.5" transform="rotate(-90 8 8)"/>
         </svg>
       </div>
 
-      <!-- Step 3 -->
+      <!-- Step 3 — NEW: Confirmation step -->
       <div class="hiw-step animate-slide-up animate-delay-3">
         <div class="hiw-step-number">03</div>
-        <div class="hiw-step-card hiw-step-card-accent">
-          <div class="hiw-step-icon">
+        <div class="hiw-step-card hiw-step-card-confirm">
+          <div class="hiw-step-icon hiw-icon-confirm">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
             </svg>
           </div>
-          <h3>Anonymisierung</h3>
-          <p>Erkannte Entitäten werden durch nicht-rückverfolgbare Codenames ersetzt (z.B. "Arion", "Nexon Corp"). Strukturierte Daten werden zu Referenz-Codes ([AT_IBAN_1]). Ein verschlüsseltes Mapping wird lokal gespeichert.</p>
-          <div class="hiw-example">
-            <code>"...an <span class="hl-placeholder">Arion</span>, UID <span class="hl-placeholder">[AT_UID_NR_1]</span>..."</code>
+          <h3>{isEn ? 'You check & confirm' : 'Du prüfst & bestätigst'}</h3>
+          <p>{isEn ? 'The preview highlights what gets anonymized. You decide: send, edit, or cancel.' : 'Die Vorschau zeigt farblich, was anonymisiert wird. Du entscheidest: senden, bearbeiten oder abbrechen.'}</p>
+          <div class="hiw-example hiw-example-confirm">
+            <code>"...an <span class="hl-placeholder">Arion</span>, IBAN <span class="hl-placeholder">[AT_IBAN_1]</span>..."<br /><span class="hl-confirm-btn">{isEn ? '[ Confirm & send ]' : '[ Bestätigen & senden ]'}</span></code>
           </div>
         </div>
       </div>
@@ -81,13 +85,37 @@
       <div class="hiw-connector" aria-hidden="true">
         <div class="hiw-connector-line hiw-connector-line-purple"></div>
         <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 0v12M2 6l6 6 6-6" stroke="#8b5cf6" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#7C3AED" stroke-width="1.5" transform="rotate(-90 8 8)"/>
         </svg>
       </div>
 
       <!-- Step 4 -->
       <div class="hiw-step animate-slide-up animate-delay-4">
         <div class="hiw-step-number">04</div>
+        <div class="hiw-step-card hiw-step-card-accent">
+          <div class="hiw-step-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3>{isEn ? 'Anonymized to AI' : 'Anonymisiert an KI'}</h3>
+          <p>{isEn ? 'Names become codenames, IBANs become reference codes. The AI never sees your real data.' : 'Namen werden zu Codenames, IBANs zu Referenz-Codes. Die KI sieht nie deine echten Daten.'}</p>
+          <div class="hiw-example">
+            <code>"...an <span class="hl-placeholder">Arion</span>, IBAN <span class="hl-placeholder">[AT_IBAN_1]</span>..."</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="hiw-connector" aria-hidden="true">
+        <div class="hiw-connector-line hiw-connector-line-purple"></div>
+        <svg class="hiw-connector-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 0v12M2 6l6 6 6-6" stroke="#0D9488" stroke-width="1.5" transform="rotate(-90 8 8)"/>
+        </svg>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="hiw-step animate-slide-up animate-delay-5">
+        <div class="hiw-step-number">05</div>
         <div class="hiw-step-card hiw-step-card-purple">
           <div class="hiw-step-icon hiw-icon-purple">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -98,10 +126,10 @@
               <line x1="4" y1="4" x2="9" y2="9"/>
             </svg>
           </div>
-          <h3>Re-Hydrierung</h3>
-          <p>Die LLM-Antwort kommt mit Codenames zurück. PrivacyProxy ersetzt sie lokal mit den echten Daten.</p>
+          <h3>{isEn ? 'Response restored' : 'Antwort wiederhergestellt'}</h3>
+          <p>{isEn ? 'AUSTR.AI replaces codenames with your real data locally. You see the complete, correct answer.' : 'AUSTR.AI ersetzt die Codenames lokal mit deinen echten Daten. Du siehst die vollständige, korrekte Antwort.'}</p>
           <div class="hiw-example hiw-example-success">
-            <code>"...Sehr geehrter <span class="hl-person">Herr Thomas Gruber</span>, Ihre UID <span class="hl-uid">ATU12345678</span> wurde erfolgreich..."</code>
+            <code>"...Sehr geehrter <span class="hl-person">Herr Thomas Gruber</span>, Ihre IBAN <span class="hl-uid">AT483200000012345864</span> wurde erfolgreich..."</code>
           </div>
         </div>
       </div>
@@ -126,7 +154,7 @@
 
   .hiw-step {
     flex: 1;
-    min-width: 200px;
+    min-width: 180px;
     position: relative;
   }
 
@@ -148,11 +176,16 @@
   }
 
   .hiw-step-card-accent {
-    border-color: rgba(6, 182, 212, 0.2);
+    border-color: rgba(13, 148, 136, 0.2);
+  }
+
+  .hiw-step-card-confirm {
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.06);
   }
 
   .hiw-step-card-purple {
-    border-color: rgba(139, 92, 246, 0.2);
+    border-color: rgba(124, 58, 237, 0.2);
   }
 
   .hiw-step-icon {
@@ -162,6 +195,10 @@
 
   .hiw-icon-purple {
     color: var(--color-accent-purple);
+  }
+
+  .hiw-icon-confirm {
+    color: #F59E0B;
   }
 
   .hiw-step-card h3 {
@@ -190,17 +227,28 @@
   }
 
   .hiw-example-success {
-    border-color: rgba(16, 185, 129, 0.3);
+    border-color: rgba(22, 163, 74, 0.3);
   }
 
-  .hl-person { color: #22d3ee; font-weight: 600; }
-  .hl-uid { color: #a78bfa; font-weight: 600; }
+  .hiw-example-confirm {
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+
+  .hl-person { color: #14B8A6; font-weight: 600; }
+  .hl-uid { color: #8B5CF6; font-weight: 600; }
   .hl-placeholder {
     color: var(--color-accent);
-    background: rgba(6, 182, 212, 0.1);
+    background: rgba(13, 148, 136, 0.1);
     padding: 0.1em 0.3em;
     border-radius: 3px;
     font-weight: 600;
+  }
+  .hl-confirm-btn {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: #F59E0B;
+    font-weight: 600;
+    font-size: 0.6875rem;
   }
 
   .hiw-connector {

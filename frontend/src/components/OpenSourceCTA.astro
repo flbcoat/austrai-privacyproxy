@@ -1,4 +1,7 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section open-source" id="open-source">
   <div class="container">
@@ -7,25 +10,25 @@
         <span class="section-label">Community</span>
         <h2>Open Source.<br /><span class="text-gradient">Made in Austria.</span></h2>
         <p class="oss-desc">
-          PrivacyProxy ist ein Open-Source-Projekt aus Österreich. Läuft komplett lokal auf deinem Rechner — mit <code>pip install austrai</code>. Der gesamte Code ist öffentlich einsehbar, auditierbar und erweiterbar. Kein Vendor-Lock-in, keine versteckten Kosten.
+          {isEn ? <Fragment>AUSTR.AI is open source from Austria. The entire code is public, with no telemetry or tracking. Install with <code>pip install austrai</code> and start chatting.</Fragment> : <Fragment>AUSTR.AI ist Open Source aus Österreich. Der gesamte Code ist öffentlich, ohne Telemetrie oder Tracking. Installieren mit <code>pip install austrai</code> und loschatten.</Fragment>}
         </p>
 
         <ul class="oss-features">
           <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
-            <span><strong>MIT-Lizenz</strong> — Frei nutzbar, auch kommerziell</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
+            <span><strong>{isEn ? 'MIT License' : 'MIT-Lizenz'}</strong> — {isEn ? 'Free to use, including commercially' : 'Frei nutzbar, auch kommerziell'}</span>
           </li>
           <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
-            <span><strong>DSGVO-konforme Erkennung</strong> — Namen, IBANs, Passwörter, API Keys, Diagnosen, IP-Adressen, Geburtsdaten</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
+            <span><strong>{isEn ? 'Transparent code' : 'Transparenter Code'}</strong> — {isEn ? 'Verify what happens to your data' : 'Prüfe nach, was mit deinen Daten passiert'}</span>
           </li>
           <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
-            <span><strong>Lokal oder Cloud</strong> — Läuft auf deinem Rechner oder mit EU-gehostetem LLM (Mistral)</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
+            <span><strong>{isEn ? 'Local or cloud' : 'Lokal oder Cloud'}</strong> — {isEn ? 'Ollama for 100% local, or Claude, GPT, Mistral, Gemini' : 'Ollama für 100% lokal, oder Claude, GPT, Mistral, Gemini'}</span>
           </li>
           <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
-            <span><strong>Kein Logging</strong> — Keine Daten werden gespeichert</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" aria-hidden="true"><polyline points="20,6 9,17 4,12"/></svg>
+            <span><strong>{isEn ? 'Community welcome' : 'Community willkommen'}</strong> — {isEn ? 'Contributions, bug reports, and feature requests on GitHub' : 'Beiträge, Bug-Reports und Feature-Requests auf GitHub'}</span>
           </li>
         </ul>
 
@@ -34,7 +37,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            Auf GitHub ansehen
+            {isEn ? 'View on GitHub' : 'Auf GitHub ansehen'}
           </a>
         </div>
       </div>
@@ -47,18 +50,18 @@
           <span class="pill">Presidio</span>
           <span class="pill">SpaCy</span>
           <span class="pill pill-purple">pip install</span>
-          <span class="pill">API Proxy</span>
-          <span class="pill">Desktop App</span>
+          <span class="pill">FastAPI</span>
+          <span class="pill">LiteLLM</span>
           <span class="pill pill-purple">Whisper</span>
           <span class="pill">Docker</span>
         </div>
 
         <div class="oss-architecture">
-          <h4>Architektur</h4>
+          <h4>{isEn ? 'Architecture' : 'Architektur'}</h4>
           <div class="oss-arch-diagram">
             <div class="oss-arch-box">
-              <span class="oss-arch-label">Frontend</span>
-              <span class="oss-arch-tech">Astro (Static)</span>
+              <span class="oss-arch-label">{isEn ? 'Chat UI (Browser)' : 'Chat-Oberfläche (Browser)'}</span>
+              <span class="oss-arch-tech">{isEn ? 'Responsive Web UI' : 'Responsive Web-Oberfläche'}</span>
             </div>
             <div class="oss-arch-arrow" aria-hidden="true">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -66,8 +69,8 @@
               </svg>
             </div>
             <div class="oss-arch-box oss-arch-box-accent">
-              <span class="oss-arch-label">PrivacyProxy API</span>
-              <span class="oss-arch-tech">FastAPI + Presidio</span>
+              <span class="oss-arch-label">AUSTR.AI Engine</span>
+              <span class="oss-arch-tech">GLiNER + Presidio + FastAPI</span>
             </div>
             <div class="oss-arch-arrow" aria-hidden="true">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -75,8 +78,8 @@
               </svg>
             </div>
             <div class="oss-arch-box oss-arch-box-purple">
-              <span class="oss-arch-label">LLM (Mistral / GPT / Claude)</span>
-              <span class="oss-arch-tech">via LiteLLM oder lokal</span>
+              <span class="oss-arch-label">{isEn ? 'LLM (Ollama / Claude / GPT / Mistral)' : 'LLM (Ollama / Claude / GPT / Mistral)'}</span>
+              <span class="oss-arch-tech">{isEn ? 'via LiteLLM — local or cloud' : 'via LiteLLM — lokal oder Cloud'}</span>
             </div>
           </div>
         </div>
@@ -184,13 +187,13 @@
   }
 
   .oss-arch-box-accent {
-    border-color: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 0 12px rgba(6, 182, 212, 0.08);
+    border-color: rgba(13, 148, 136, 0.3);
+    box-shadow: 0 0 12px rgba(13, 148, 136, 0.08);
   }
 
   .oss-arch-box-purple {
-    border-color: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.08);
+    border-color: rgba(124, 58, 237, 0.3);
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.08);
   }
 
   .oss-arch-label {

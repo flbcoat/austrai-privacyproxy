@@ -20,13 +20,143 @@ if __name__ == "__main__":
 
 import webview
 from webview.menu import Menu, MenuAction, MenuSeparator
-from austrai_proxy.core import get_engine
 
-# Pre-init engine (blocks ~15s for GLiNER + SpaCy, then instant)
-print("AUSTR.AI Engine wird geladen...", flush=True)
-_engine = get_engine(memory_enabled=False)
-_engine.anonymize("warmup")
-print("Engine bereit!", flush=True)
+_engine = None
+_engine_ready = False
+
+# --- i18n ---
+import locale as _locale
+_sys_lang = (_locale.getdefaultlocale()[0] or 'en')[:2]
+LANG = 'de' if _sys_lang == 'de' else 'en'
+
+I18N = {
+    'de': {
+        'loading_start': 'Starte...',
+        'loading_check': 'Pruefe Modelle...',
+        'loading_download': 'Lade KI-Modell herunter (einmalig, ca. 1-2 Min)...',
+        'loading_downloaded': 'Modell heruntergeladen. Initialisiere...',
+        'loading_found': 'Modelle gefunden. Initialisiere...',
+        'loading_warmup': 'Warmup...',
+        'loading_ready': 'Bereit!',
+        'loading_error': 'Fehler: {}',
+        'tab1': '1 Eingabe',
+        'tab2': '2 Geschützt',
+        'tab3': '3 Deanonymisieren',
+        'tab4': '4 Fertig',
+        'step1_label': 'Schritt 1',
+        'step1_title': 'Daten eingeben',
+        'step1_desc': 'Text eingeben oder Datei hochladen. Sensible Daten werden automatisch erkannt — alles lokal.',
+        'tab_text': 'Text',
+        'tab_file': 'Datei',
+        'examples_label': 'Beispiele:',
+        'ex1': 'Geschäfts-E-Mail',
+        'ex2': 'Arzt-Befund',
+        'ex3': 'Passwort &amp; API Key',
+        'placeholder': 'Text mit sensiblen Daten eingeben...',
+        'dropzone_text': 'Datei hierher ziehen',
+        'dropzone_sub': 'oder <span class="dz-link">Datei wählen</span>',
+        'dropzone_fmt': 'PDF, DOCX, XLSX, TXT, CSV, PNG, JPG',
+        'options_label': 'Optionale Einstellungen',
+        'denylist_label': 'Zusätzliche Begriffe <span class="opt-hint">(einer pro Zeile)</span>',
+        'denylist_placeholder': 'z.B.&#10;Firmenname&#10;Projektname',
+        'btn_anonymize': '🔒 Anonymisieren',
+        'btn_analyzing': '⏳ Analysiere...',
+        'step2_label': 'Schritt 2',
+        'step2_title': 'Geschützter Text',
+        'step2_desc': 'Kopiere den Text und füge ihn in ChatGPT, Claude oder ein anderes KI-Tool ein.',
+        'btn_copy': '📋 Text kopieren',
+        'btn_deanon': '→ KI-Antwort deanonymisieren',
+        'step3_label': 'Schritt 3',
+        'step3_title': 'KI-Antwort deanonymisieren',
+        'step3_desc': 'Füge die KI-Antwort ein. Codenames werden durch deine echten Daten ersetzt.',
+        'placeholder_ai': 'KI-Antwort hier einfügen...',
+        'btn_paste': '📋 Aus Zwischenablage einfügen',
+        'btn_restore': '🔓 Deanonymisieren',
+        'step4_label': 'Fertig',
+        'step4_title': 'Wiederhergestellte Antwort',
+        'step4_desc': 'Die KI-Antwort mit deinen echten Daten.',
+        'btn_copy_result': '📋 Kopieren',
+        'btn_new': '↻ Neuer Text',
+        'footer': 'AUSTR.AI v2.0 — Alles läuft lokal auf deinem Rechner',
+        'proxy_on': 'Proxy aktiv',
+        'proxy_off': 'Proxy aus',
+        'toast_analyzing': 'Analysiere lokal...',
+        'toast_protected': '{} Begriffe geschützt. In Zwischenablage kopiert!',
+        'toast_restored': '{} Begriffe wiederhergestellt. Kopiert!',
+        'toast_copied': 'Kopiert!',
+        'toast_pasted': 'Eingefügt!',
+        'toast_error': 'Fehler: {}',
+        'toast_removed': '"{}" wiederhergestellt',
+        'map_count': '{} sensible Begriffe geschützt — klicke × um falsche Erkennungen zu entfernen',
+        'map_title': 'Klicken um diese Erkennung zu entfernen',
+        'file_ready': 'Bereit',
+        'engine_loading': 'Engine wird noch geladen...',
+    },
+    'en': {
+        'loading_start': 'Starting...',
+        'loading_check': 'Checking models...',
+        'loading_download': 'Downloading AI model (one-time, approx. 1-2 min)...',
+        'loading_downloaded': 'Model downloaded. Initializing...',
+        'loading_found': 'Models found. Initializing...',
+        'loading_warmup': 'Warming up...',
+        'loading_ready': 'Ready!',
+        'loading_error': 'Error: {}',
+        'tab1': '1 Input',
+        'tab2': '2 Protected',
+        'tab3': '3 De-anonymize',
+        'tab4': '4 Done',
+        'step1_label': 'Step 1',
+        'step1_title': 'Enter data',
+        'step1_desc': 'Enter text or upload a file. Sensitive data is detected automatically — all locally.',
+        'tab_text': 'Text',
+        'tab_file': 'File',
+        'examples_label': 'Examples:',
+        'ex1': 'Business email',
+        'ex2': 'Medical report',
+        'ex3': 'Password &amp; API Key',
+        'placeholder': 'Enter text with sensitive data...',
+        'dropzone_text': 'Drag file here',
+        'dropzone_sub': 'or <span class="dz-link">choose file</span>',
+        'dropzone_fmt': 'PDF, DOCX, XLSX, TXT, CSV, PNG, JPG',
+        'options_label': 'Optional settings',
+        'denylist_label': 'Additional terms <span class="opt-hint">(one per line)</span>',
+        'denylist_placeholder': 'e.g.&#10;Company name&#10;Project name',
+        'btn_anonymize': '🔒 Anonymize',
+        'btn_analyzing': '⏳ Analyzing...',
+        'step2_label': 'Step 2',
+        'step2_title': 'Protected text',
+        'step2_desc': 'Copy the text and paste it into ChatGPT, Claude, or any other AI tool.',
+        'btn_copy': '📋 Copy text',
+        'btn_deanon': '→ De-anonymize AI response',
+        'step3_label': 'Step 3',
+        'step3_title': 'De-anonymize AI response',
+        'step3_desc': 'Paste the AI response. Codenames are replaced with your real data.',
+        'placeholder_ai': 'Paste AI response here...',
+        'btn_paste': '📋 Paste from clipboard',
+        'btn_restore': '🔓 De-anonymize',
+        'step4_label': 'Done',
+        'step4_title': 'Restored response',
+        'step4_desc': 'The AI response with your real data.',
+        'btn_copy_result': '📋 Copy',
+        'btn_new': '↻ New text',
+        'footer': 'AUSTR.AI v2.0 — Everything runs locally on your machine',
+        'proxy_on': 'Proxy active',
+        'proxy_off': 'Proxy off',
+        'toast_analyzing': 'Analyzing locally...',
+        'toast_protected': '{} terms protected. Copied to clipboard!',
+        'toast_restored': '{} terms restored. Copied!',
+        'toast_copied': 'Copied!',
+        'toast_pasted': 'Pasted!',
+        'toast_error': 'Error: {}',
+        'toast_removed': '"{}" restored',
+        'map_count': '{} sensitive terms protected — click × to remove false detections',
+        'map_title': 'Click to remove this detection',
+        'file_ready': 'Ready',
+        'engine_loading': 'Engine is still loading...',
+    },
+}
+
+T = I18N[LANG]
 
 
 class API:
@@ -34,13 +164,21 @@ class API:
         self.mappings = {}
         self.window = None
 
+    def get_loading_status(self):
+        """Called by loading screen to check engine status."""
+        return {"ready": _engine_ready}
+
     def protect(self, text):
+        if not _engine_ready:
+            return {"error": T['engine_loading']}
         r = _engine.anonymize(text)
         self.mappings = r.mappings
         _clip(r.anonymized_text)
         return {"text": r.anonymized_text, "mappings": r.mappings, "count": len(r.mappings)}
 
     def protect_file(self, path):
+        if not _engine_ready:
+            return {"error": T['engine_loading']}
         try:
             from austrai_proxy.core.extractor import extract_from_file
             ex = extract_from_file(path)
@@ -53,6 +191,8 @@ class API:
             return {"error": str(e)}
 
     def restore(self, text):
+        if not _engine_ready:
+            return {"error": T['engine_loading']}
         restored = _engine.rehydrate(text, self.mappings)
         cnt = sum(1 for k in self.mappings if k in text)
         _clip(restored)
@@ -107,8 +247,80 @@ def _clip(text):
     except: pass
 
 
-HTML = r"""<!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8">
+def _init_engine(window):
+    """Initialize engine in background thread, update loading screen via JS."""
+    global _engine, _engine_ready
+
+    def _update(msg):
+        try:
+            window.evaluate_js(f'updateStatus("{msg}")')
+        except Exception:
+            pass
+
+    try:
+        # Step 1: Check if GLiNER model needs downloading
+        _update(T['loading_check'])
+        from austrai_proxy.core.gliner_detector import is_model_cached, download_model
+
+        if not is_model_cached():
+            _update(T['loading_download'])
+            download_model()
+            _update(T['loading_downloaded'])
+        else:
+            _update(T['loading_found'])
+
+        # Step 2: Init engine
+        from austrai_proxy.core import get_engine
+        _engine = get_engine(memory_enabled=False)
+
+        _update(T['loading_warmup'])
+        _engine.anonymize("warmup")
+
+        _engine_ready = True
+        _update(T['loading_ready'])
+
+        # Step 3: Switch to main UI
+        import time
+        time.sleep(0.5)
+        window.evaluate_js('switchToApp()')
+
+    except Exception as e:
+        _update(f"Fehler: {e}")
+        print(f"Engine init error: {e}", flush=True)
+
+
+LOADING_HTML = f"""<!DOCTYPE html>
+<html lang="{LANG}"><head><meta charset="UTF-8">
+<style>
+:root{{--bg:#0f172a;--accent:#06b6d4;--purple:#8b5cf6;--text:#f1f5f9;--muted:#94a3b8;--dim:#64748b}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;-webkit-font-smoothing:antialiased}}
+body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(6,182,212,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}}
+.wrap{{text-align:center;position:relative;z-index:1}}
+.logo{{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 40px rgba(6,182,212,.2);margin-bottom:20px;animation:pulse 2s ease-in-out infinite}}
+@keyframes pulse{{0%,100%{{box-shadow:0 0 20px rgba(6,182,212,.15)}}50%{{box-shadow:0 0 40px rgba(6,182,212,.3)}}}}
+h1{{font-size:22px;font-weight:700;letter-spacing:.5px;margin-bottom:6px}}
+.sub{{font-size:13px;color:var(--dim);margin-bottom:28px}}
+.bar-wrap{{width:280px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin:0 auto 14px}}
+.bar{{height:100%;width:20%;background:linear-gradient(90deg,var(--accent),var(--purple));border-radius:2px;animation:load 1.5s ease-in-out infinite}}
+@keyframes load{{0%{{width:20%;margin-left:0}}50%{{width:40%;margin-left:30%}}100%{{width:20%;margin-left:80%}}}}
+#status{{font-size:12px;color:var(--muted);min-height:18px}}
+</style></head><body>
+<div class="wrap">
+<div class="logo">&#x1f6e1;</div>
+<h1>AUSTR.AI</h1>
+<div class="sub">Privacy Firewall</div>
+<div class="bar-wrap"><div class="bar"></div></div>
+<div id="status">{T['loading_start']}</div>
+</div>
+<script>
+function updateStatus(msg){{document.getElementById('status').textContent=msg}}
+function switchToApp(){{document.getElementById('status').textContent='{T['loading_ready']}'}}
+</script>
+</body></html>"""
+
+_HTML_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="__LANG__"><head><meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -242,35 +454,35 @@ textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(6,182,212,.0
   <div id="toast" class="toast"></div>
 
   <div class="tabs">
-    <button class="tab on" onclick="go('input')">1 Eingabe</button>
-    <button class="tab" onclick="go('result')">2 Geschützt</button>
-    <button class="tab" onclick="go('deanon')">3 Deanonymisieren</button>
-    <button class="tab" onclick="go('done')">4 Fertig</button>
+    <button class="tab on" onclick="go('input')">__TAB1__</button>
+    <button class="tab" onclick="go('result')">__TAB2__</button>
+    <button class="tab" onclick="go('deanon')">__TAB3__</button>
+    <button class="tab" onclick="go('done')">__TAB4__</button>
   </div>
 
   <!-- 1: INPUT -->
   <div class="panel on" id="p-input">
-    <div class="sec-label">Schritt 1</div>
-    <div class="sec-title">Daten eingeben</div>
-    <div class="sec-desc">Text eingeben oder Datei hochladen. Sensible Daten werden automatisch erkannt — alles lokal.</div>
+    <div class="sec-label">__STEP1_LABEL__</div>
+    <div class="sec-title">__STEP1_TITLE__</div>
+    <div class="sec-desc">__STEP1_DESC__</div>
     <div class="itabs">
-      <button class="itab on" onclick="setMode('text')">Text</button>
-      <button class="itab" onclick="setMode('file')">Datei</button>
+      <button class="itab on" onclick="setMode('text')">__TAB_TEXT__</button>
+      <button class="itab" onclick="setMode('file')">__TAB_FILE__</button>
     </div>
     <div class="imode on" id="m-text">
       <div class="examples">
-        <span class="ex-label">Beispiele:</span>
-        <button class="ex-btn" onclick="loadEx(0)">Geschäfts-E-Mail</button>
-        <button class="ex-btn" onclick="loadEx(1)">Arzt-Befund</button>
-        <button class="ex-btn" onclick="loadEx(2)">Passwort &amp; API Key</button>
+        <span class="ex-label">__EXAMPLES_LABEL__</span>
+        <button class="ex-btn" onclick="loadEx(0)">__EX1__</button>
+        <button class="ex-btn" onclick="loadEx(1)">__EX2__</button>
+        <button class="ex-btn" onclick="loadEx(2)">__EX3__</button>
       </div>
-      <textarea id="input" placeholder="Text mit sensiblen Daten eingeben..."></textarea>
+      <textarea id="input" placeholder="__PLACEHOLDER__"></textarea>
     </div>
     <div class="imode" id="m-file">
       <div class="dropzone" id="dz" onclick="openFile()">
         <div class="dz-icon">📄</div>
-        <div class="dz-text">Datei hierher ziehen</div>
-        <div class="dz-sub">oder <span class="dz-link">Datei wählen</span></div>
+        <div class="dz-text">__DROPZONE_TEXT__</div>
+        <div class="dz-sub">__DROPZONE_SUB__</div>
         <div class="dz-fmt">PDF, DOCX, XLSX, TXT, CSV, PNG, JPG</div>
       </div>
       <div class="file-card" id="fcard" style="display:none">
@@ -280,52 +492,52 @@ textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(6,182,212,.0
       </div>
     </div>
     <div class="opt-toggle" onclick="this.classList.toggle('open');document.getElementById('opts').classList.toggle('open')">
-      <span class="arr">▶</span> Optionale Einstellungen
+      <span class="arr">▶</span> __OPTIONS_LABEL__
     </div>
     <div class="opt-panel" id="opts">
-      <div class="opt-label">Zusätzliche Begriffe <span class="opt-hint">(einer pro Zeile)</span></div>
-      <textarea class="opt-input" id="deny" rows="2" placeholder="z.B.&#10;Firmenname&#10;Projektname"></textarea>
+      <div class="opt-label">__DENYLIST_LABEL__</div>
+      <textarea class="opt-input" id="deny" rows="2" placeholder="__DENYLIST_PLACEHOLDER__"></textarea>
     </div>
-    <button class="btn btn-a" id="btnA" onclick="anonymize()">🔒 Anonymisieren</button>
+    <button class="btn btn-a" id="btnA" onclick="anonymize()">__BTN_ANONYMIZE__</button>
   </div>
 
   <!-- 2: RESULT -->
   <div class="panel" id="p-result">
-    <div class="sec-label">Schritt 2</div>
-    <div class="sec-title">Geschützter Text</div>
-    <div class="sec-desc">Kopiere den Text und füge ihn in ChatGPT, Claude oder ein anderes KI-Tool ein.</div>
+    <div class="sec-label">__STEP2_LABEL__</div>
+    <div class="sec-title">__STEP2_TITLE__</div>
+    <div class="sec-desc">__STEP2_DESC__</div>
     <div class="result" id="anonText"></div>
     <div class="map-card" id="mapCard">
       <div class="map-head"><span class="ico">🔒</span><span id="mapCount"></span></div>
       <div id="mapList"></div>
     </div>
-    <button class="btn btn-a" onclick="copyAnon()">📋 Text kopieren</button>
-    <button class="btn btn-g" onclick="go('deanon')" style="margin-top:8px">→ KI-Antwort deanonymisieren</button>
+    <button class="btn btn-a" onclick="copyAnon()">__BTN_COPY__</button>
+    <button class="btn btn-g" onclick="go('deanon')" style="margin-top:8px">__BTN_DEANON__</button>
   </div>
 
   <!-- 3: DEANON -->
   <div class="panel" id="p-deanon">
-    <div class="sec-label">Schritt 3</div>
-    <div class="sec-title">KI-Antwort deanonymisieren</div>
-    <div class="sec-desc">Füge die KI-Antwort ein. Codenames werden durch deine echten Daten ersetzt.</div>
-    <textarea id="aiResp" placeholder="KI-Antwort hier einfügen..."></textarea>
-    <button class="btn btn-o" onclick="pasteAI()" style="margin-top:8px">📋 Aus Zwischenablage einfügen</button>
-    <button class="btn btn-g" onclick="deanonymize()">🔓 Deanonymisieren</button>
+    <div class="sec-label">__STEP3_LABEL__</div>
+    <div class="sec-title">__STEP3_TITLE__</div>
+    <div class="sec-desc">__STEP3_DESC__</div>
+    <textarea id="aiResp" placeholder="__PLACEHOLDER_AI__"></textarea>
+    <button class="btn btn-o" onclick="pasteAI()" style="margin-top:8px">__BTN_PASTE__</button>
+    <button class="btn btn-g" onclick="deanonymize()">__BTN_RESTORE__</button>
   </div>
 
   <!-- 4: DONE -->
   <div class="panel" id="p-done">
-    <div class="sec-label">Fertig</div>
-    <div class="sec-title">Wiederhergestellte Antwort</div>
-    <div class="sec-desc">Die KI-Antwort mit deinen echten Daten.</div>
+    <div class="sec-label">__STEP4_LABEL__</div>
+    <div class="sec-title">__STEP4_TITLE__</div>
+    <div class="sec-desc">__STEP4_DESC__</div>
     <div class="result" id="resText"></div>
     <div class="btn-row">
-      <button class="btn btn-a" onclick="copyRes()">📋 Kopieren</button>
-      <button class="btn btn-o" onclick="reset()">↻ Neuer Text</button>
+      <button class="btn btn-a" onclick="copyRes()">__BTN_COPY_RESULT__</button>
+      <button class="btn btn-o" onclick="reset()">__BTN_NEW__</button>
     </div>
   </div>
 
-  <div class="footer">AUSTR.AI v1.0 — Alles läuft lokal auf deinem Rechner</div>
+  <div class="footer">__FOOTER__</div>
 </div>
 
 <script>
@@ -360,32 +572,32 @@ function clearFile(){filePath=null;document.getElementById('fcard').style.displa
 
 async function anonymize(){
   const btn=document.getElementById('btnA');
-  btn.textContent='⏳ Analysiere...';btn.disabled=true;
-  toast('Analysiere lokal...','info');
+  btn.textContent='__BTN_ANALYZING__';btn.disabled=true;
+  toast('__TOAST_ANALYZING__','info');
   try{
     let r;
-    if(mode==='file'&&filePath){r=await window.pywebview.api.protect_file(filePath);if(r.error){toast(r.error,'err');btn.textContent='🔒 Anonymisieren';btn.disabled=false;return}}
-    else{const t=document.getElementById('input').value.trim();if(!t){btn.textContent='🔒 Anonymisieren';btn.disabled=false;return}r=await window.pywebview.api.protect(t)}
+    if(mode==='file'&&filePath){r=await window.pywebview.api.protect_file(filePath);if(r.error){toast(r.error,'err');btn.textContent='__BTN_ANONYMIZE__';btn.disabled=false;return}}
+    else{const t=document.getElementById('input').value.trim();if(!t){btn.textContent='__BTN_ANONYMIZE__';btn.disabled=false;return}r=await window.pywebview.api.protect(t)}
     lastResult=r;
     document.getElementById('anonText').textContent=r.text;
-    document.getElementById('mapCount').textContent=r.count+' sensible Begriffe geschützt — klicke × um falsche Erkennungen zu entfernen';
+    document.getElementById('mapCount').textContent=r.count+' __MAP_COUNT_SUFFIX__';
     renderMappings(r);
-    toast(r.count+' Begriffe geschützt. In Zwischenablage kopiert!','ok');
+    toast(r.count+' __TOAST_PROTECTED_SUFFIX__','ok');
     go('result');
   }catch(e){toast('Fehler: '+e,'err')}
-  btn.textContent='🔒 Anonymisieren';btn.disabled=false;
+  btn.textContent='__BTN_ANONYMIZE__';btn.disabled=false;
 }
 
 async function deanonymize(){
   const t=document.getElementById('aiResp').value.trim();if(!t)return;
-  try{const r=await window.pywebview.api.restore(t);document.getElementById('resText').textContent=r.text;toast(r.count+' Begriffe wiederhergestellt. Kopiert!','ok');go('done')}
+  try{const r=await window.pywebview.api.restore(t);document.getElementById('resText').textContent=r.text;toast(r.count+' __TOAST_RESTORED_SUFFIX__','ok');go('done')}
   catch(e){toast('Fehler: '+e,'err')}
 }
 
 function renderMappings(r){
   const ml=document.getElementById('mapList');
   ml.innerHTML=Object.entries(r.mappings).map(([k,v])=>
-    '<div class="m-row" style="cursor:pointer" title="Klicken um diese Erkennung zu entfernen" onclick="removeMapping(\''+esc(k).replace(/'/g,"\\'")+'\',\''+esc(v).replace(/'/g,"\\'")+'\')"><span class="m-old">'+esc(v)+'</span><span class="m-arr">→</span><span class="m-new">'+esc(k)+'</span><span style="color:var(--error);opacity:0.5;margin-left:auto;font-size:14px"> ×</span></div>'
+    '<div class="m-row" style="cursor:pointer" title="__MAP_TITLE__" onclick="removeMapping(\''+esc(k).replace(/'/g,"\\'")+'\',\''+esc(v).replace(/'/g,"\\'")+'\')"><span class="m-old">'+esc(v)+'</span><span class="m-arr">→</span><span class="m-new">'+esc(k)+'</span><span style="color:var(--error);opacity:0.5;margin-left:auto;font-size:14px"> ×</span></div>'
   ).join('');
 }
 
@@ -404,36 +616,78 @@ function removeMapping(codename,original){
   lastResult.count=Object.keys(newMappings).length;
   // Update display
   document.getElementById('anonText').textContent=newText;
-  document.getElementById('mapCount').textContent=lastResult.count+' sensible Begriffe geschützt';
+  document.getElementById('mapCount').textContent=lastResult.count+' __MAP_COUNT_SHORT__';
   renderMappings(lastResult);
   // Copy updated text
   navigator.clipboard.writeText(newText).catch(()=>{});
-  toast('"'+original+'" wiederhergestellt','ok');
+  toast('"'+original+'" __TOAST_REMOVED_SUFFIX__','ok');
 }
 
-function copyAnon(){navigator.clipboard.writeText(document.getElementById('anonText').textContent);toast('Kopiert!','ok')}
-function copyRes(){navigator.clipboard.writeText(document.getElementById('resText').textContent);toast('Kopiert!','ok')}
+function copyAnon(){navigator.clipboard.writeText(document.getElementById('anonText').textContent);toast('__TOAST_COPIED__','ok')}
+function copyRes(){navigator.clipboard.writeText(document.getElementById('resText').textContent);toast('__TOAST_COPIED__','ok')}
 function reset(){document.getElementById('input').value='';document.getElementById('aiResp').value='';clearFile();go('input')}
 
-async function pasteAI(){try{const t=await window.pywebview.api.paste_clipboard();if(t)document.getElementById("aiResp").value=t;toast("Eingefügt!","ok")}catch(e){}}
+async function pasteAI(){try{const t=await window.pywebview.api.paste_clipboard();if(t)document.getElementById("aiResp").value=t;toast("__TOAST_PASTED__","ok")}catch(e){}}
 
 async function proxyToggle(){document.getElementById('pLabel').textContent='…';try{await window.pywebview.api.proxy_toggle()}catch(e){}setTimeout(checkProxy,1500)}
-async function checkProxy(){try{const s=await window.pywebview.api.proxy_status();document.getElementById('dot').classList.toggle('on',s.running);document.getElementById('pLabel').textContent=s.running?'Proxy aktiv':'Proxy aus'}catch(e){}}
+async function checkProxy(){try{const s=await window.pywebview.api.proxy_status();document.getElementById('dot').classList.toggle('on',s.running);document.getElementById('pLabel').textContent=s.running?'__PROXY_ON__':'__PROXY_OFF__'}catch(e){}}
 
 window.addEventListener('pywebviewready',()=>{checkProxy();setInterval(checkProxy,8000)});
 </script>
 </body></html>"""
 
-window = webview.create_window("AUSTR.AI", html=HTML, js_api=API(), width=720, height=820,
-                               min_size=(520, 600), background_color="#0f172a")
-API().window = window  # won't work for file dialog, fix below
+# --- Apply i18n to HTML template ---
+_REPLACEMENTS = {
+    '__LANG__': LANG,
+    '__TAB1__': T['tab1'], '__TAB2__': T['tab2'], '__TAB3__': T['tab3'], '__TAB4__': T['tab4'],
+    '__STEP1_LABEL__': T['step1_label'], '__STEP1_TITLE__': T['step1_title'], '__STEP1_DESC__': T['step1_desc'],
+    '__TAB_TEXT__': T['tab_text'], '__TAB_FILE__': T['tab_file'],
+    '__EXAMPLES_LABEL__': T['examples_label'], '__EX1__': T['ex1'], '__EX2__': T['ex2'], '__EX3__': T['ex3'],
+    '__PLACEHOLDER__': T['placeholder'], '__PLACEHOLDER_AI__': T['placeholder_ai'],
+    '__DROPZONE_TEXT__': T['dropzone_text'], '__DROPZONE_SUB__': T['dropzone_sub'],
+    '__OPTIONS_LABEL__': T['options_label'],
+    '__DENYLIST_LABEL__': T['denylist_label'], '__DENYLIST_PLACEHOLDER__': T['denylist_placeholder'],
+    '__BTN_ANONYMIZE__': T['btn_anonymize'], '__BTN_ANALYZING__': T['btn_analyzing'],
+    '__STEP2_LABEL__': T['step2_label'], '__STEP2_TITLE__': T['step2_title'], '__STEP2_DESC__': T['step2_desc'],
+    '__BTN_COPY__': T['btn_copy'], '__BTN_DEANON__': T['btn_deanon'],
+    '__STEP3_LABEL__': T['step3_label'], '__STEP3_TITLE__': T['step3_title'], '__STEP3_DESC__': T['step3_desc'],
+    '__BTN_PASTE__': T['btn_paste'], '__BTN_RESTORE__': T['btn_restore'],
+    '__STEP4_LABEL__': T['step4_label'], '__STEP4_TITLE__': T['step4_title'], '__STEP4_DESC__': T['step4_desc'],
+    '__BTN_COPY_RESULT__': T['btn_copy_result'], '__BTN_NEW__': T['btn_new'],
+    '__FOOTER__': T['footer'],
+    '__PROXY_ON__': T['proxy_on'], '__PROXY_OFF__': T['proxy_off'],
+    '__TOAST_ANALYZING__': T['toast_analyzing'],
+    '__TOAST_PROTECTED_SUFFIX__': T['toast_protected'].replace('{}', ''),
+    '__TOAST_RESTORED_SUFFIX__': T['toast_restored'].replace('{}', ''),
+    '__TOAST_COPIED__': T['toast_copied'], '__TOAST_PASTED__': T['toast_pasted'],
+    '__TOAST_REMOVED_SUFFIX__': T['toast_removed'].split('"')[0] if '"' in T['toast_removed'] else 'restored',
+    '__MAP_COUNT_SUFFIX__': T['map_count'].replace('{}', '').strip(),
+    '__MAP_COUNT_SHORT__': T['map_count'].split('—')[0].replace('{}', '').strip() if '—' in T['map_count'] else T['map_count'].replace('{}', '').strip(),
+    '__MAP_TITLE__': T['map_title'],
+}
+
+HTML = _HTML_TEMPLATE
+for k, v in _REPLACEMENTS.items():
+    HTML = HTML.replace(k, v)
+
+
+def _on_loaded(window, api):
+    """Called when webview window is ready — start engine init in background."""
+    def _boot():
+        _init_engine(window)
+        # Once engine is ready, load the main UI
+        if _engine_ready:
+            window.load_html(HTML)
+            api.window = window
+    threading.Thread(target=_boot, daemon=True).start()
+
 
 def main():
     api = API()
-    w = webview.create_window("AUSTR.AI", html=HTML, js_api=api, width=720, height=820,
+    w = webview.create_window("AUSTR.AI", html=LOADING_HTML, js_api=api, width=720, height=820,
                               min_size=(520, 600), background_color="#0f172a")
-    api.window = w
-    webview.start()
+    webview.start(_on_loaded, args=(w, api))
+
 
 if __name__ == "__main__":
     main()

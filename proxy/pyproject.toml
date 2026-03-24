@@ -20,15 +20,21 @@ dependencies = [
     "numpy>=1.24",
     "cryptography>=43.0",
     "gliner>=0.2",
+    # Dokument-Verarbeitung (PDF, DOCX, XLSX, Bilder) — Standard, kein Extra
+    "PyMuPDF>=1.24",
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "Pillow>=10.0",
+    "pytesseract>=0.3",
+    # Audio-Transkription — Standard, kein Extra
+    "faster-whisper>=1.0",
 ]
 
 [project.optional-dependencies]
 memory = ["chromadb>=0.5", "sentence-transformers>=3.0"]
 desktop = ["pywebview>=5.0"]
-docs = ["PyMuPDF>=1.24", "python-docx>=1.1", "openpyxl>=3.1", "Pillow>=10.0", "pytesseract>=0.3"]
 llm = ["llama-cpp-python>=0.3"]
-audio = ["faster-whisper>=1.0"]
-all = ["austrai[memory,desktop,docs,llm,audio]"]
+all = ["austrai[memory,desktop,llm]"]
 
 [project.scripts]
 aai = "austrai_proxy.cli:main"

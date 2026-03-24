@@ -54,7 +54,7 @@ class PrivacyEngine:
         confidence_threshold: float = 0.5,
         spacy_model: str = "de_core_news_sm",
         use_gliner: bool = True,
-        use_llm_detector: bool = False,
+        use_llm_detector: bool | None = None,  # None = auto-detect
         llm_method: str = "ollama",
         llm_model: str = "qwen3.5:0.8b",
         memory_enabled: bool = True,
@@ -63,13 +63,14 @@ class PrivacyEngine:
         self._confidence_threshold = confidence_threshold
         self._spacy_model = spacy_model
         self._use_gliner = use_gliner
-        self._use_llm_detector = use_llm_detector
+        self._use_llm_detector = use_llm_detector  # None = auto
         self._llm_method = llm_method
         self._llm_model = llm_model
         self._memory_enabled = memory_enabled
         self._mapping_store = None
         self._memory = None
         self._gliner_available = False
+        self._session_dismiss: set[str] = set()  # Terms dismissed by user in this session
 
     def _ensure_initialized(self):
         if self._initialized:
@@ -105,8 +106,17 @@ class PrivacyEngine:
         detector.init_analyzer()
         logger.info("Schicht 2: Presidio + SpaCy (%s) + Regex-Patterns geladen.", self._spacy_model)
 
-        # Layer 3: LLM detector (optional, for contextual detection)
-        if self._use_llm_detector:
+        # Layer 3: LLM detector (auto-detect if None, explicit if True/False)
+        if self._use_llm_detector is None:
+            # Auto-detect: use Ollama if available
+            from .llm_detector import is_ollama_available
+            if is_ollama_available(self._llm_model):
+                self._use_llm_detector = True
+                logger.info("Schicht 3: Ollama erkannt — LLM Detector automatisch aktiviert (%s).", self._llm_model)
+            else:
+                self._use_llm_detector = False
+                logger.info("Schicht 3: Ollama nicht verfuegbar — uebersprungen. Fuer bessere Erkennung: ollama serve && ollama pull %s", self._llm_model)
+        elif self._use_llm_detector:
             from .llm_detector import is_ollama_available
             if is_ollama_available(self._llm_model):
                 logger.info("Schicht 3: LLM Detector aktiv (Ollama: %s).", self._llm_model)
@@ -136,6 +146,7 @@ class PrivacyEngine:
         self,
         text: str,
         deny_list: list[str] | None = None,
+        allow_list: list[str] | None = None,
         entity_types: list[str] | None = None,
     ) -> AnonymizeResult:
         """Detect and anonymize PII in text.
@@ -193,6 +204,47 @@ class PrivacyEngine:
         # Merge & deduplicate: resolve overlapping entities from different layers
         from .models import resolve_overlaps
         merged = resolve_overlaps(all_entities)
+
+        # Max-Span-Limit: entities longer than 5 words are almost always false positives
+        MAX_ENTITY_WORDS = 5
+        before_span = len(merged)
+        merged = [e for e in merged if len(e.text.split()) <= MAX_ENTITY_WORDS]
+        span_removed = before_span - len(merged)
+        if span_removed:
+            logger.info("Max-Span-Filter: %d zu lange Entitaeten entfernt.", span_removed)
+
+        # Document-type-aware threshold adjustment
+        doc_type = _detect_document_type(text)
+        if doc_type == "legal":
+            # Legal documents: higher threshold, skip common legal terms
+            legal_terms = {"auftragnehmer", "auftraggeber", "vertragspartner", "vertragspartei",
+                           "arbeitnehmer", "arbeitgeber", "geschaeftsfuehrer", "gesellschafter",
+                           "prokurist", "klaeger", "beklagter", "schuldner", "glaeubiger"}
+            before_legal = len(merged)
+            merged = [e for e in merged if e.text.lower().strip() not in legal_terms]
+            if before_legal - len(merged):
+                logger.info("Legal-Filter: %d juristische Begriffe uebersprungen.", before_legal - len(merged))
+        elif doc_type == "medical":
+            # Medical: keep threshold low, protect more
+            pass
+
+        # Apply allow_list: remove entities whose text matches a whitelisted term
+        if allow_list:
+            allow_lower = {t.lower() for t in allow_list}
+            before = len(merged)
+            merged = [e for e in merged if e.text.lower().strip() not in allow_lower]
+            removed = before - len(merged)
+            if removed:
+                logger.info("Allow-List: %d Entitaeten uebersprungen.", removed)
+
+        # Apply session_dismiss_list: terms dismissed by user in current session
+        if self._session_dismiss:
+            dismiss_lower = {t.lower() for t in self._session_dismiss}
+            before_dismiss = len(merged)
+            merged = [e for e in merged if e.text.lower().strip() not in dismiss_lower]
+            dismissed = before_dismiss - len(merged)
+            if dismissed:
+                logger.info("Session-Dismiss: %d Entitaeten uebersprungen.", dismissed)
 
         anonymized_text, mappings = anonymize(text, merged)
 
@@ -276,6 +328,44 @@ class PrivacyEngine:
         if not self._memory:
             return 0
         return self._memory.clear()
+
+    # --- Session Dismiss (Feedback Loop) ---
+
+    def dismiss_term(self, term: str) -> None:
+        """Mark a term as dismissed for this session (won't be anonymized again)."""
+        self._session_dismiss.add(term.lower().strip())
+        logger.info("Session-Dismiss: '%s' wird bis Neustart ignoriert.", term)
+
+    def clear_session_dismiss(self) -> None:
+        """Clear all session-dismissed terms."""
+        self._session_dismiss.clear()
+
+
+def _detect_document_type(text: str) -> str:
+    """Detect document type for threshold adjustment.
+
+    Returns: 'legal', 'medical', or 'general'
+    """
+    text_lower = text.lower()
+    legal_keywords = {
+        "vereinbarung", "vertrag", "paragraph", "auftragnehmer", "auftraggeber",
+        "vertragspartner", "kuendigung", "haftung", "gerichtsstand", "schadenersatz",
+        "gewährleistung", "gewaehrleistung", "verguetung", "klausel",
+        "agreement", "contract", "clause", "liability", "termination", "jurisdiction",
+    }
+    medical_keywords = {
+        "patient", "diagnose", "befund", "medikament", "therapie", "anamnese",
+        "symptom", "behandlung", "arzt", "klinik", "rezept", "dosierung",
+        "diagnosis", "medication", "treatment", "prescription", "clinical",
+    }
+    legal_count = sum(1 for k in legal_keywords if k in text_lower)
+    medical_count = sum(1 for k in medical_keywords if k in text_lower)
+
+    if legal_count >= 3:
+        return "legal"
+    if medical_count >= 2:
+        return "medical"
+    return "general"
 
 
 def get_engine(**kwargs) -> PrivacyEngine:

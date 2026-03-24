@@ -5,7 +5,7 @@ PII-Bereiche direkt im Bild. Das Originalbild wird nie weitergegeben.
 
 Unterstützt: PNG, JPG, JPEG, TIFF, BMP, WEBP
 
-Benötigt: pip install austrai[docs]  (Pillow + pytesseract)
+Benötigt: Pillow + pytesseract (im Standard-Install enthalten)
 Tesseract muss separat installiert sein (brew install tesseract)
 """
 
@@ -43,12 +43,12 @@ def redact_image(
     try:
         from PIL import Image, ImageDraw
     except ImportError:
-        raise ImportError("Bildschwärzung braucht Pillow: pip install austrai[docs]")
+        raise ImportError("Bildschwärzung braucht Pillow: pip install austrai")
 
     try:
         import pytesseract
     except ImportError:
-        raise ImportError("Bildschwärzung braucht pytesseract: pip install austrai[docs]")
+        raise ImportError("Bildschwärzung braucht pytesseract: pip install austrai")
 
     from austrai_proxy.core import get_engine
 
@@ -147,12 +147,12 @@ def redact_pdf_pages(
         import fitz  # PyMuPDF
         from PIL import Image
     except ImportError:
-        raise ImportError("PDF-Schwärzung braucht PyMuPDF + Pillow: pip install austrai[docs]")
+        raise ImportError("PDF-Schwärzung braucht PyMuPDF + Pillow: pip install austrai")
 
     try:
         import pytesseract
     except ImportError:
-        raise ImportError("PDF-Schwärzung braucht pytesseract: pip install austrai[docs]")
+        raise ImportError("PDF-Schwärzung braucht pytesseract: pip install austrai")
 
     from austrai_proxy.core import get_engine
     import tempfile

@@ -1,12 +1,15 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section problem" id="problem">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Das Problem</span>
-      <h2>Jeder Prompt ist ein Datenleck</h2>
+      <span class="section-label">{isEn ? 'The problem' : 'Das Problem'}</span>
+      <h2>{isEn ? 'Your data is already out there.' : 'Deine Daten sind schon draußen.'}</h2>
       <p>
-        Wenn du sensible Daten in ein KI-Tool eingibst, verlassen sie dein Unternehmen. Unwiderruflich. PrivacyProxy verhindert genau das.
+        {isEn ? 'Every day, people paste names, IBANs, contracts, and medical reports into AI tools. The providers see everything.' : 'Jeden Tag kopieren Menschen Namen, IBANs, Verträge und Arztbefunde in KI-Tools. Die Anbieter sehen alles.'}
       </p>
     </div>
 
@@ -18,17 +21,33 @@
             <circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
-        <h3>Personendaten</h3>
+        <h3>{isEn ? '"Summarize this contract"' : '"Fasse diesen Vertrag zusammen"'}</h3>
         <p class="problem-desc">
-          Namen, Sozialversicherungsnummern, Adressen, Telefonnummern — all das landet in Prompts und auf fremden Servern.
+          {isEn ? 'A sales rep pastes a full customer contract into ChatGPT — names, IBANs, amounts included. All of it now sits on OpenAI servers.' : 'Ein Vertriebsmitarbeiter kopiert einen Kundenvertrag in ChatGPT — mit Namen, IBANs, Beträgen. All das liegt jetzt auf OpenAI-Servern.'}
         </p>
         <div class="problem-stat">
           <span class="problem-stat-number">82%</span>
-          <span class="problem-stat-label">der Unternehmen geben an, dass Mitarbeitende sensible Daten in KI-Tools eingeben</span>
+          <span class="problem-stat-label">{isEn ? 'of companies report employees entering sensitive data into AI tools' : 'der Unternehmen geben an, dass Mitarbeitende sensible Daten in KI-Tools eingeben'}</span>
         </div>
       </div>
 
       <div class="card card-glow animate-slide-up animate-delay-2">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h3>{isEn ? '"Translate this medical report"' : '"Übersetze diesen Befund"'}</h3>
+        <p class="problem-desc">
+          {isEn ? 'A doctor has a patient report translated by AI. Patient name, social security number, diagnosis — stored by the provider for up to 30 days.' : 'Eine Ärztin lässt einen Befund von der KI übersetzen. Patientenname, Sozialversicherungsnummer, Diagnose — der Anbieter speichert alles, teils bis zu 30 Tage.'}
+        </p>
+        <div class="problem-stat">
+          <span class="problem-stat-number">Art. 9</span>
+          <span class="problem-stat-label">{isEn ? 'GDPR: Health data requires special protection — violations can cost up to EUR 20M' : 'DSGVO: Gesundheitsdaten erfordern besonderen Schutz — Verstöße können bis zu 20 Mio. EUR kosten'}</span>
+        </div>
+      </div>
+
+      <div class="card card-glow animate-slide-up animate-delay-3">
         <div class="card-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -37,29 +56,13 @@
             <line x1="14" y1="11" x2="18" y2="11"/>
           </svg>
         </div>
-        <h3>Geschäftsdaten</h3>
+        <h3>{isEn ? '"Help me with my tax return"' : '"Hilf mir bei der Steuererklärung"'}</h3>
         <p class="problem-desc">
-          UIDs, IBANs, Firmenbuchnummern, Vertragsdetails — vertrauliche Geschäftsinformationen in KI-Prompts sind ein Compliance-Risiko.
+          {isEn ? 'A freelancer pastes income details, tax ID, and address into the chat. Google, OpenAI, or Anthropic now have that data.' : 'Ein Freiberufler kopiert Einkommensdaten, Steuernummer und Adresse in den Chat. Google, OpenAI oder Anthropic haben diese Daten jetzt.'}
         </p>
         <div class="problem-stat">
-          <span class="problem-stat-number">DSGVO</span>
-          <span class="problem-stat-label">Verstöße können bis zu 20 Mio. EUR oder 4% des Jahresumsatzes kosten</span>
-        </div>
-      </div>
-
-      <div class="card card-glow animate-slide-up animate-delay-3">
-        <div class="card-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </div>
-        <h3>Gesundheitsdaten</h3>
-        <p class="problem-desc">
-          Befunde, Diagnosen, Patientennamen — medizinische Daten sind besonders schützenswert und unterliegen strengen Regulierungen.
-        </p>
-        <div class="problem-stat">
-          <span class="problem-stat-number">Art. 9</span>
-          <span class="problem-stat-label">DSGVO: Gesundheitsdaten sind "besondere Kategorien" mit erhöhtem Schutzbedarf</span>
+          <span class="problem-stat-number">{isEn ? 'GDPR' : 'DSGVO'}</span>
+          <span class="problem-stat-label">{isEn ? 'Violations can cost up to EUR 20M or 4% of annual revenue' : 'Verstöße können bis zu 20 Mio. EUR oder 4% des Jahresumsatzes kosten'}</span>
         </div>
       </div>
     </div>

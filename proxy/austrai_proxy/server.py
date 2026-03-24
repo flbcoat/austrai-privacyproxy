@@ -17,7 +17,7 @@ import httpx
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, StreamingResponse, Response
-from starlette.routing import Route
+from starlette.routing import Route, Mount
 
 from .config import ProxyConfig
 from .stream_rehydrator import StreamRehydrator
@@ -400,10 +400,14 @@ def create_app(config: ProxyConfig | None = None) -> Starlette:
     _config = config or ProxyConfig.load()
     _init_file_logging()
 
+    from .chat_api import create_chat_app
+    chat_app = create_chat_app()
+
     return Starlette(
         routes=[
             Route("/v1/messages", handle_anthropic, methods=["POST"]),
             Route("/v1/chat/completions", handle_openai, methods=["POST"]),
             Route("/health", handle_health, methods=["GET"]),
+            Mount("/chat", app=chat_app),
         ],
     )

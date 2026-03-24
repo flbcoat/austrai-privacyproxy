@@ -1,11 +1,12 @@
 """Interactive AUSTR.AI shell — control center for privacy settings.
 
 This is NOT an auto-anonymizer. It's a control panel where you manage
-settings, deny-lists, proxy, and explicitly anonymize text when needed.
+settings, deny-lists, allow-lists, proxy, and explicitly anonymize text when needed.
 
 Commands:
   /settings           Show & edit settings (models, keys, thresholds)
-  /denylist            Manage deny-list
+  /denylist            Manage deny-list (terms that are ALWAYS anonymized)
+  /allowlist           Manage allow-list (terms that are NEVER anonymized)
   /proxy               Start/stop/status of the proxy
   /anonymize TEXT      Explicitly anonymize text
   /status              System status
@@ -27,7 +28,7 @@ from prompt_toolkit.styles import Style
 from .config import ProxyConfig, CONFIG_DIR
 
 COMMANDS = [
-    "/settings", "/denylist", "/proxy",
+    "/settings", "/denylist", "/allowlist", "/proxy",
     "/status", "/help", "/quit",
 ]
 
@@ -79,6 +80,8 @@ def run_interactive():
             _cmd_settings(config, arg)
         elif cmd == "/denylist":
             _cmd_denylist(config, arg)
+        elif cmd == "/allowlist":
+            _cmd_allowlist(config, arg)
         elif cmd == "/proxy":
             _cmd_proxy(config, arg)
         elif cmd == "/status":
@@ -102,7 +105,7 @@ def _print_banner(config):
     print(f"""
   🛡  AUSTR.AI — Privacy Control Center
 
-  Proxy: {proxy}   Keys: {keys_str}   Deny-List: {len(config.deny_list)}
+  Proxy: {proxy}   Keys: {keys_str}   Deny: {len(config.deny_list)}   Allow: {len(config.allow_list)}
   Modus: Lokal (alles auf deinem Rechner)
 
   /help fuer alle Befehle
@@ -122,10 +125,15 @@ def _cmd_help():
     /settings model          Modell auswaehlen
     /settings threshold      Erkennungs-Schwelle anpassen
 
-    /denylist                Deny-List anzeigen
+    /denylist                Deny-List anzeigen (immer anonymisiert)
     /denylist add X,Y        Begriffe hinzufuegen
     /denylist remove X       Begriff entfernen
     /denylist clear          Alles leeren
+
+    /allowlist               Allow-List anzeigen (nie anonymisiert)
+    /allowlist add X,Y       Begriffe hinzufuegen
+    /allowlist remove X      Begriff entfernen
+    /allowlist clear         Alles leeren
 
     /proxy start             Proxy starten
     /proxy stop              Proxy stoppen
@@ -279,6 +287,47 @@ def _cmd_denylist(config, arg):
 
 
 # -----------------------------------------------------------------------
+# /allowlist
+# -----------------------------------------------------------------------
+
+def _cmd_allowlist(config, arg):
+    if not arg:
+        if config.allow_list:
+            print(f"\n  Allow-List ({len(config.allow_list)} Begriffe):")
+            for t in config.allow_list:
+                print(f"    • {t}")
+        else:
+            print("\n  Allow-List ist leer.")
+        print("\n  /allowlist add Firma,Projekt   — hinzufuegen")
+        print("  /allowlist remove Begriff      — entfernen")
+        print("  /allowlist clear               — leeren\n")
+        return
+
+    parts = arg.split(maxsplit=1)
+    action = parts[0].lower()
+    value = parts[1] if len(parts) > 1 else ""
+
+    if action == "add" and value:
+        new_terms = [t.strip() for t in value.split(",") if t.strip()]
+        existing = set(config.allow_list)
+        added = [t for t in new_terms if t not in existing]
+        config.allow_list.extend(added)
+        config.save()
+        print(f"  ✅ {len(added)} Begriffe hinzugefuegt: {', '.join(added)}")
+    elif action == "remove" and value:
+        before = len(config.allow_list)
+        config.allow_list = [t for t in config.allow_list if t.lower() != value.lower()]
+        config.save()
+        print(f"  ✅ {before - len(config.allow_list)} Begriffe entfernt.")
+    elif action == "clear":
+        config.allow_list = []
+        config.save()
+        print("  ✅ Allow-List geleert.")
+    else:
+        print("  Nutzung: /allowlist add X,Y | /allowlist remove X | /allowlist clear")
+
+
+# -----------------------------------------------------------------------
 # /proxy
 # -----------------------------------------------------------------------
 
@@ -346,6 +395,7 @@ def _cmd_status(config):
     SpaCy:       {config.spacy_model}
     Schwelle:    {config.confidence_threshold}
     Deny-List:   {len(config.deny_list)} Begriffe
+    Allow-List:  {len(config.allow_list)} Begriffe
     Config:      {CONFIG_DIR / 'proxy.yaml'}
 """)
 
@@ -364,7 +414,11 @@ def _cmd_anonymize(config, text):
     try:
         from .core import get_engine
         engine = get_engine()
-        result = engine.anonymize(text, deny_list=config.deny_list if config.deny_list else None)
+        result = engine.anonymize(
+            text,
+            deny_list=config.deny_list if config.deny_list else None,
+            allow_list=config.allow_list if config.allow_list else None,
+        )
 
         if not result.mappings:
             print("  ℹ️  Keine sensiblen Daten erkannt.")

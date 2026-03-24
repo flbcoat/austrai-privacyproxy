@@ -19,8 +19,12 @@ class ProxyConfig:
     google_api_key: str = ""
     port: int = DEFAULT_PORT
     deny_list: list[str] = field(default_factory=list)
+    allow_list: list[str] = field(default_factory=list)
     confidence_threshold: float = 0.6
     spacy_model: str = "de_core_news_sm"
+    default_provider: str = ""
+    default_model: str = ""
+    ollama_url: str = "http://localhost:11434"
 
     @classmethod
     def load(cls) -> "ProxyConfig":
@@ -36,8 +40,12 @@ class ProxyConfig:
                 config.google_api_key = data.get("google_api_key", "")
                 config.port = data.get("port", DEFAULT_PORT)
                 config.deny_list = data.get("deny_list", [])
+                config.allow_list = data.get("allow_list", [])
                 config.confidence_threshold = data.get("confidence_threshold", 0.6)
                 config.spacy_model = data.get("spacy_model", "de_core_news_lg")
+                config.default_provider = data.get("default_provider", "")
+                config.default_model = data.get("default_model", "")
+                config.ollama_url = data.get("ollama_url", "http://localhost:11434")
             except Exception:
                 pass
 
@@ -65,8 +73,12 @@ class ProxyConfig:
             "google_api_key": self.google_api_key,
             "port": self.port,
             "deny_list": self.deny_list,
+            "allow_list": self.allow_list,
             "confidence_threshold": self.confidence_threshold,
             "spacy_model": self.spacy_model,
+            "default_provider": self.default_provider,
+            "default_model": self.default_model,
+            "ollama_url": self.ollama_url,
         }
         CONFIG_FILE.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
         CONFIG_FILE.chmod(0o600)

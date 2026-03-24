@@ -1,59 +1,64 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
 <section class="section download-section" id="install">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Installieren</span>
-      <h2>Jetzt starten — <span class="text-gradient">in 60 Sekunden.</span></h2>
+      <span class="section-label">{isEn ? 'Install' : 'Installieren'}</span>
+      <h2>{isEn ? 'Get started — ' : 'Jetzt starten — '}<span class="text-gradient">{isEn ? 'in 5 minutes.' : 'in 5 Minuten.'}</span></h2>
       <p>
-        Lade die Desktop-App herunter oder installiere AUSTR.AI per Terminal.
-        Alles läuft lokal auf deinem Rechner — keine Cloud, kein Drittanbieter.
+        {isEn ? 'Locally, on your server, or via Docker. The web UI works on all devices.' : 'Lokal, auf deinem Server oder via Docker. Die Web-Oberfläche läuft auf allen Geräten.'}
       </p>
     </div>
 
     <div class="download-grid">
-      <!-- Desktop App -->
+      <!-- Local install -->
       <div class="download-card download-card-primary">
         <div class="download-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="3" width="20" height="14" rx="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
         </div>
-        <h3>Desktop App</h3>
-        <p class="download-desc">Für macOS — Drag & Drop, One-Click Anonymisierung, Bildschwärzung, Audio-Transkription. Kein Terminal nötig.</p>
-        <div class="download-badge">macOS · In Vorbereitung</div>
-        <span class="download-note" style="display:block;padding:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;color:#f59e0b;font-size:0.8125rem;margin-bottom:0.75rem;">
-          Die Desktop-App als eigenständiger Download (.dmg) ist in Vorbereitung. Bis dahin: <code>pip install austrai</code> und <code>aai app</code> im Terminal.
-        </span>
+        <h3>{isEn ? 'Local installation' : 'Lokale Installation'}</h3>
+        <p class="download-desc">{isEn ? 'Install and start chatting. The setup wizard handles the rest.' : 'Installieren und loschatten. Der Setup-Assistent erledigt den Rest.'}</p>
+        <div class="download-code">
+          <code>pip install austrai && aai setup && aai chat</code>
+        </div>
+        <div class="download-commands">
+          <code>aai chat &nbsp; # {isEn ? 'Start the chat UI' : 'Chat-Oberfläche starten'}</code>
+          <code>aai anon "Text" &nbsp; # {isEn ? 'Anonymize text directly' : 'Text direkt anonymisieren'}</code>
+          <code>aai setup &nbsp; # {isEn ? 'Configuration wizard' : 'Konfigurations-Assistent'}</code>
+        </div>
         <a href="https://pypi.org/project/austrai/" class="btn btn-primary btn-lg download-btn" target="_blank" rel="noopener noreferrer">
-          pip install austrai → aai app
+          {isEn ? 'Install via pip' : 'Via pip installieren'}
         </a>
-        <span class="download-note">Windows-Version ebenfalls in Vorbereitung</span>
+        <span class="download-note">{isEn ? 'Requires Python 3.10+. Models are downloaded automatically on first start (~400 MB).' : 'Benötigt Python 3.10+. Modelle werden beim ersten Start automatisch heruntergeladen (~400 MB).'}</span>
       </div>
 
-      <!-- Terminal / pip -->
+      <!-- Server Deployment -->
       <div class="download-card">
         <div class="download-icon download-icon-purple">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polyline points="4 17 10 11 4 5"/>
-            <line x1="12" y1="19" x2="20" y2="19"/>
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
           </svg>
         </div>
-        <h3>Terminal (pip)</h3>
-        <p class="download-desc">Für Entwickler — CLI, API Proxy, Shell. Python 3.10+ erforderlich.</p>
+        <h3>{isEn ? 'Server deployment' : 'Server-Deployment'}</h3>
+        <p class="download-desc">{isEn ? 'Your server, your data. Team access via browser — from any device.' : 'Dein Server, deine Daten. Teamzugriff per Browser — von jedem Gerät.'}</p>
         <div class="download-code">
-          <code>pip install austrai</code>
+          <code>pip install austrai && aai setup && aai chat --host 0.0.0.0</code>
         </div>
         <div class="download-commands">
-          <code>aai anon "Dein Text hier"</code>
-          <code>aai start &nbsp; # Proxy starten</code>
-          <code>aai shell &nbsp; # Einstellungen</code>
+          <code>docker run -p 8282:8282 austrai/austrai</code>
         </div>
-        <a href="https://pypi.org/project/austrai/" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
-          Auf PyPI ansehen
+        <a href="https://github.com/flbcoat/austrai-privacyproxy" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
+          {isEn ? 'Deployment guide' : 'Deployment-Anleitung'}
         </a>
+        <span class="download-note">{isEn ? 'Responsive web UI — works on desktop, tablet, and mobile.' : 'Responsive Web-Oberfläche — Desktop, Tablet und Handy.'}</span>
       </div>
 
       <!-- GitHub -->
@@ -64,9 +69,9 @@
           </svg>
         </div>
         <h3>Source Code</h3>
-        <p class="download-desc">MIT-Lizenz. Frei nutzbar, veränderbar und erweiterbar. Auch kommerziell.</p>
+        <p class="download-desc">{isEn ? 'MIT license. Public code, free to use and modify — including commercially.' : 'MIT-Lizenz. Öffentlicher Code, frei nutzbar und veränderbar — auch kommerziell.'}</p>
         <a href="https://github.com/flbcoat/austrai-privacyproxy" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
-          Auf GitHub ansehen
+          {isEn ? 'View on GitHub' : 'Auf GitHub ansehen'}
         </a>
       </div>
     </div>
@@ -100,12 +105,12 @@
   }
 
   .download-card-primary {
-    border-color: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 0 24px rgba(6, 182, 212, 0.06);
+    border-color: rgba(13, 148, 136, 0.3);
+    box-shadow: 0 0 24px rgba(13, 148, 136, 0.06);
   }
 
   .download-card-primary:hover {
-    box-shadow: 0 0 32px rgba(6, 182, 212, 0.12);
+    box-shadow: 0 0 32px rgba(13, 148, 136, 0.12);
   }
 
   .download-icon {
@@ -145,7 +150,7 @@
     padding: 0.75rem 1rem;
     margin-bottom: 0.75rem;
     font-family: var(--font-mono);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--color-accent);
   }
 

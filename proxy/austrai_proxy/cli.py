@@ -86,12 +86,6 @@ def start(port, background, anthropic_key, openai_key):
     if port:
         config.port = port
 
-    if not config.anthropic_api_key and not config.openai_api_key:
-        click.echo("Kein API Key konfiguriert. Setze mindestens einen:")
-        click.echo("  aai config")
-        click.echo("  Oder: aai start --anthropic-key sk-ant-...")
-        raise SystemExit(1)
-
     if background:
         _start_proxy_background(config)
     else:
@@ -138,6 +132,51 @@ def app():
 
     click.echo("🛡  AUSTR.AI Desktop-App wird geoeffnet...")
     subprocess.Popen([sys.executable, app_path])
+
+
+# -----------------------------------------------------------------------
+# aai chat — Open privacy-protected AI chat
+# -----------------------------------------------------------------------
+
+@main.command()
+@click.option("--port", "-p", default=None, type=int, help="Port (Standard: 8282)")
+@click.option("--no-browser", is_flag=True, help="Browser nicht automatisch oeffnen")
+@click.option("--app", "use_app", is_flag=True, help="Als Standalone-App oeffnen (pywebview)")
+def chat(port, no_browser, use_app):
+    """Privacy-geschuetzten KI-Chat oeffnen."""
+    import shutil
+    config = ProxyConfig.load()
+    if port:
+        config.port = port
+
+    # Auto-check critical system dependencies on first run
+    if not shutil.which("tesseract"):
+        click.echo("⚠️  Tesseract OCR nicht gefunden (nötig für Bildschwärzung).")
+        click.echo("   Installiere mit: aai setup\n")
+
+    # Start proxy if not running (no API key requirement — onboarding handles that)
+    if not _is_proxy_running():
+        _start_proxy_background(config)
+        time.sleep(1)
+
+    url = f"http://localhost:{config.port}/chat"
+
+    click.echo(f"\n  AUSTR.AI Chat")
+    click.echo(f"  {url}\n")
+
+    if use_app:
+        try:
+            import webview
+            w = webview.create_window("AUSTR.AI Chat", url, width=1100, height=800,
+                                      min_size=(800, 600), background_color="#0f172a")
+            webview.start()
+        except ImportError:
+            click.echo("pywebview nicht installiert. Oeffne im Browser stattdessen...")
+            import webbrowser
+            webbrowser.open(url)
+    elif not no_browser:
+        import webbrowser
+        webbrowser.open(url)
 
 
 # -----------------------------------------------------------------------
@@ -372,6 +411,90 @@ def audio(file_path, model, lang, deny):
         raise SystemExit(1)
 
 
+@main.command()
+def setup():
+    """System-Abhaengigkeiten pruefen und installieren. Einmal nach dem Install ausfuehren."""
+    import platform
+    import shutil
+
+    click.echo("\n🛡  AUSTR.AI Setup — System-Dependencies prüfen\n")
+
+    ok = True
+
+    # 1. Tesseract OCR (needed for image redaction + OCR)
+    tesseract = shutil.which("tesseract")
+    if tesseract:
+        click.echo(f"  ✓ Tesseract OCR: {tesseract}")
+    else:
+        click.echo("  ✗ Tesseract OCR: nicht gefunden")
+        system = platform.system()
+        if system == "Darwin":
+            click.echo("    Installiere mit: brew install tesseract")
+            if click.confirm("    Jetzt installieren?", default=True):
+                try:
+                    subprocess.run(["brew", "install", "tesseract"], check=True, timeout=300)
+                    click.echo("    ✓ Tesseract installiert")
+                except Exception as e:
+                    click.echo(f"    ✗ Installation fehlgeschlagen: {e}")
+                    ok = False
+        elif system == "Linux":
+            click.echo("    Installiere mit: sudo apt-get install tesseract-ocr")
+            if click.confirm("    Jetzt installieren?", default=True):
+                try:
+                    subprocess.run(["sudo", "apt-get", "install", "-y", "tesseract-ocr"], check=True, timeout=300)
+                    click.echo("    ✓ Tesseract installiert")
+                except Exception as e:
+                    click.echo(f"    ✗ Installation fehlgeschlagen: {e}")
+                    ok = False
+        else:
+            click.echo("    Bitte manuell installieren: https://github.com/tesseract-ocr/tesseract")
+            ok = False
+
+    # 2. spaCy German model
+    try:
+        import spacy
+        try:
+            spacy.load("de_core_news_sm")
+            click.echo("  ✓ spaCy DE-Modell: de_core_news_sm")
+        except OSError:
+            click.echo("  ✗ spaCy DE-Modell: nicht installiert")
+            click.echo("    Installiere...")
+            try:
+                subprocess.run([sys.executable, "-m", "spacy", "download", "de_core_news_sm"], check=True, timeout=120)
+                click.echo("    ✓ spaCy DE-Modell installiert")
+            except Exception as e:
+                click.echo(f"    ✗ Installation fehlgeschlagen: {e}")
+                ok = False
+    except ImportError:
+        click.echo("  ✗ spaCy: nicht installiert")
+        ok = False
+
+    # 3. Python dependencies check
+    deps = [
+        ("fitz", "PyMuPDF"),
+        ("docx", "python-docx"),
+        ("openpyxl", "openpyxl"),
+        ("PIL", "Pillow"),
+        ("pytesseract", "pytesseract"),
+        ("faster_whisper", "faster-whisper"),
+        ("cryptography", "cryptography"),
+    ]
+    for module, name in deps:
+        try:
+            __import__(module)
+            click.echo(f"  ✓ {name}")
+        except ImportError:
+            click.echo(f"  ✗ {name}: nicht installiert")
+            ok = False
+
+    if ok:
+        click.echo("\n✅ Alles bereit! Starte mit: aai chat\n")
+    else:
+        click.echo("\n⚠️  Einige Dependencies fehlen. Installiere mit:")
+        click.echo(f"  pip install austrai")
+        click.echo()
+
+
 @main.command(name="shell")
 def shell():
     """Interaktive Shell mit Slash-Commands (/help, /settings, /denylist, ...)."""
@@ -468,10 +591,10 @@ def _start_proxy_background(config):
         click.echo("✗ Proxy konnte nicht gestartet werden.")
 
 
-def _ensure_proxy_running(config):
+def _ensure_proxy_running(config, require_key=True):
     """Make sure the proxy is running, start it if not."""
     if not _is_proxy_running():
-        if config.anthropic_api_key or config.openai_api_key:
+        if not require_key or config.anthropic_api_key or config.openai_api_key:
             _start_proxy_background(config)
         else:
             click.echo("Proxy nicht gestartet — kein API Key konfiguriert.")
