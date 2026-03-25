@@ -7,37 +7,46 @@ const isEn = lang === 'en';
   <div class="container">
     <div class="section-header">
       <span class="section-label">{isEn ? 'Install' : 'Installieren'}</span>
-      <h2>{isEn ? 'Get started — ' : 'Jetzt starten — '}<span class="text-gradient">{isEn ? 'in 5 minutes.' : 'in 5 Minuten.'}</span></h2>
+      <h2>{isEn ? 'Two commands.' : 'Zwei Befehle.'} <span class="text-gradient">{isEn ? "That's it." : 'Mehr nicht.'}</span></h2>
       <p>
-        {isEn ? 'Locally, on your server, or via Docker. The web UI works on all devices.' : 'Lokal, auf deinem Server oder via Docker. Die Web-Oberfläche läuft auf allen Geräten.'}
+        {isEn ? 'Works on your laptop, your company server, or in Docker. The rest happens automatically.' : 'Funktioniert auf deinem Laptop, Firmenserver oder in Docker. Den Rest erledigt AUSTR.AI automatisch.'}
       </p>
     </div>
 
     <div class="download-grid">
-      <!-- Local install -->
+      <!-- Main install (one card, prominent) -->
       <div class="download-card download-card-primary">
         <div class="download-icon">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
         </div>
-        <h3>{isEn ? 'Local installation' : 'Lokale Installation'}</h3>
-        <p class="download-desc">{isEn ? 'Install and start chatting. The setup wizard handles the rest.' : 'Installieren und loschatten. Der Setup-Assistent erledigt den Rest.'}</p>
-        <div class="download-code">
-          <code>pip install austrai && aai setup && aai chat</code>
+        <h3>{isEn ? 'Install & Start' : 'Installieren & Starten'}</h3>
+        <div class="download-code" style="font-size: 1.1rem; padding: 1.25rem 1.5rem;">
+          <code>pip install austrai</code><br>
+          <code>aai chat</code>
         </div>
-        <div class="download-commands">
-          <code>aai chat &nbsp; # {isEn ? 'Start the chat UI' : 'Chat-Oberfläche starten'}</code>
-          <code>aai anon "Text" &nbsp; # {isEn ? 'Anonymize text directly' : 'Text direkt anonymisieren'}</code>
-          <code>aai setup &nbsp; # {isEn ? 'Configuration wizard' : 'Konfigurations-Assistent'}</code>
+        <p class="download-desc" style="margin-top: 1rem;">
+          {isEn
+            ? 'That\'s all. AUSTR.AI downloads all required models automatically on first start, opens your browser, and guides you through the setup.'
+            : 'Das ist alles. AUSTR.AI lädt beim ersten Start alle Modelle automatisch herunter, öffnet deinen Browser und führt dich durch die Einrichtung.'}
+        </p>
+        <div class="download-what-happens">
+          <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.5rem;"><strong>{isEn ? 'What happens:' : 'Was passiert:'}</strong></p>
+          <ol style="font-size: 0.8125rem; color: var(--color-text-muted); padding-left: 1.2rem; line-height: 1.8;">
+            <li>{isEn ? 'Models are downloaded automatically (~1 GB, one-time)' : 'Modelle werden automatisch geladen (~1 GB, einmalig)'}</li>
+            <li>{isEn ? 'Your browser opens with the setup wizard' : 'Dein Browser öffnet sich mit dem Einrichtungs-Assistenten'}</li>
+            <li>{isEn ? 'Choose your AI provider (local with Ollama or cloud)' : 'Wähle deinen KI-Anbieter (lokal mit Ollama oder Cloud)'}</li>
+            <li>{isEn ? 'Start chatting — with automatic privacy protection' : 'Loschatten — mit automatischem Datenschutz'}</li>
+          </ol>
         </div>
         <a href="https://pypi.org/project/austrai/" class="btn btn-primary btn-lg download-btn" target="_blank" rel="noopener noreferrer">
-          {isEn ? 'Install via pip' : 'Via pip installieren'}
+          PyPI →
         </a>
-        <span class="download-note">{isEn ? 'Requires Python 3.10+. Models are downloaded automatically on first start (~400 MB).' : 'Benötigt Python 3.10+. Modelle werden beim ersten Start automatisch heruntergeladen (~400 MB).'}</span>
+        <span class="download-note">{isEn ? 'Requires Python 3.10+' : 'Benötigt Python 3.10+'}</span>
       </div>
 
-      <!-- Server Deployment -->
+      <!-- Server / Docker -->
       <div class="download-card">
         <div class="download-icon download-icon-purple">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -47,18 +56,18 @@ const isEn = lang === 'en';
             <line x1="6" y1="18" x2="6.01" y2="18"/>
           </svg>
         </div>
-        <h3>{isEn ? 'Server deployment' : 'Server-Deployment'}</h3>
-        <p class="download-desc">{isEn ? 'Your server, your data. Team access via browser — from any device.' : 'Dein Server, deine Daten. Teamzugriff per Browser — von jedem Gerät.'}</p>
+        <h3>{isEn ? 'On your server' : 'Auf deinem Server'}</h3>
+        <p class="download-desc">{isEn ? 'Same installation, but accessible from anywhere. Your team opens the URL in the browser — including on mobile.' : 'Gleiche Installation, aber von überall erreichbar. Dein Team öffnet die URL im Browser — auch am Handy.'}</p>
         <div class="download-code">
-          <code>pip install austrai && aai setup && aai chat --host 0.0.0.0</code>
+          <code>pip install austrai && aai chat --no-browser</code>
         </div>
-        <div class="download-commands">
+        <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 0.75rem;">
+          {isEn ? 'Or with Docker:' : 'Oder mit Docker:'}
+        </p>
+        <div class="download-code">
           <code>docker run -p 8282:8282 austrai/austrai</code>
         </div>
-        <a href="https://github.com/flbcoat/austrai-privacyproxy" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
-          {isEn ? 'Deployment guide' : 'Deployment-Anleitung'}
-        </a>
-        <span class="download-note">{isEn ? 'Responsive web UI — works on desktop, tablet, and mobile.' : 'Responsive Web-Oberfläche — Desktop, Tablet und Handy.'}</span>
+        <span class="download-note">{isEn ? 'Responsive — works on desktop, tablet, and phone.' : 'Responsive — funktioniert auf Desktop, Tablet und Handy.'}</span>
       </div>
 
       <!-- GitHub -->
@@ -68,10 +77,10 @@ const isEn = lang === 'en';
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
         </div>
-        <h3>Source Code</h3>
-        <p class="download-desc">{isEn ? 'MIT license. Public code, free to use and modify — including commercially.' : 'MIT-Lizenz. Öffentlicher Code, frei nutzbar und veränderbar — auch kommerziell.'}</p>
+        <h3>Open Source</h3>
+        <p class="download-desc">{isEn ? 'MIT license. Use it, modify it, contribute.' : 'MIT-Lizenz. Nutzen, verändern, beitragen.'}</p>
         <a href="https://github.com/flbcoat/austrai-privacyproxy" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
-          {isEn ? 'View on GitHub' : 'Auf GitHub ansehen'}
+          GitHub →
         </a>
       </div>
     </div>
@@ -79,108 +88,55 @@ const isEn = lang === 'en';
 </section>
 
 <style>
-  .download-section {
-    position: relative;
-  }
-
+  .download-section { padding-block: 6rem; }
   .download-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1.3fr 1fr 1fr;
     gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
   }
-
   .download-card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 2rem;
-    text-align: center;
-    transition: all var(--transition-base);
   }
-
-  .download-card:hover {
-    border-color: var(--color-border-light);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-
   .download-card-primary {
     border-color: rgba(13, 148, 136, 0.3);
-    box-shadow: 0 0 24px rgba(13, 148, 136, 0.06);
+    box-shadow: var(--shadow-glow);
   }
-
-  .download-card-primary:hover {
-    box-shadow: 0 0 32px rgba(13, 148, 136, 0.12);
-  }
-
   .download-icon {
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(13, 148, 136, 0.08);
     color: var(--color-accent);
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: center;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.25rem;
   }
-
   .download-icon-purple {
+    background: rgba(124, 58, 237, 0.08);
     color: var(--color-accent-purple);
   }
-
-  .download-card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .download-desc {
-    font-size: 0.9375rem;
-    color: var(--color-text-muted);
-    margin-bottom: 1.25rem;
-    line-height: 1.5;
-  }
-
-  .download-badge {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--color-text-dim);
-    margin-bottom: 1rem;
-  }
-
+  .download-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+  .download-desc { font-size: 0.9375rem; color: var(--color-text-muted); line-height: 1.6; }
   .download-code {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
+    background: #1e1e2e;
     border-radius: var(--radius-sm);
     padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
+    margin-top: 1rem;
     font-family: var(--font-mono);
     font-size: 0.875rem;
-    color: var(--color-accent);
+    color: #e0e0e0;
+    overflow-x: auto;
   }
-
-  .download-commands {
-    text-align: left;
-    margin-bottom: 1.25rem;
-  }
-
-  .download-commands code {
-    display: block;
-    font-size: 0.8125rem;
-    color: var(--color-text-dim);
-    padding: 0.2rem 0;
-  }
-
-  .download-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
+  .download-btn { margin-top: 1.25rem; display: inline-flex; }
   .download-note {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--color-text-dim);
-    margin-top: 0.75rem;
+    display: block; margin-top: 0.75rem;
+    font-size: 0.75rem; color: var(--color-text-dim);
   }
 
   @media (max-width: 900px) {
-    .download-grid {
-      grid-template-columns: 1fr;
-    }
+    .download-grid { grid-template-columns: 1fr; }
   }
 </style>

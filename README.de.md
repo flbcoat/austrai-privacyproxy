@@ -21,11 +21,10 @@ Die KI funktioniert genauso gut — weiß aber nicht, wer du bist.
 
 ```bash
 pip install austrai
-aai setup     # Prüft System-Abhängigkeiten
-aai chat      # Öffnet den Chat im Browser
+aai chat
 ```
 
-Wähle deinen KI-Anbieter (Ollama für komplett lokal, oder Claude/GPT/Mistral/Gemini mit API-Key) und starte. Ein Bestätigungsschritt zeigt dir vor jedem Senden, was anonymisiert wird.
+Das ist alles. AUSTR.AI lädt beim ersten Start alle Modelle automatisch, öffnet deinen Browser und führt dich durch die Einrichtung. Wähle deinen KI-Anbieter (Ollama für komplett lokal, oder Claude/GPT/Mistral/Gemini mit API-Key) und chatte los.
 
 ## Features
 

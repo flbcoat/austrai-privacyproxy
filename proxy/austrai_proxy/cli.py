@@ -141,42 +141,115 @@ def app():
 @main.command()
 @click.option("--port", "-p", default=None, type=int, help="Port (Standard: 8282)")
 @click.option("--no-browser", is_flag=True, help="Browser nicht automatisch oeffnen")
-@click.option("--app", "use_app", is_flag=True, help="Als Standalone-App oeffnen (pywebview)")
-def chat(port, no_browser, use_app):
-    """Privacy-geschuetzten KI-Chat oeffnen."""
+def chat(port, no_browser):
+    """AUSTR.AI starten — alles wird automatisch eingerichtet."""
     import shutil
     config = ProxyConfig.load()
     if port:
         config.port = port
 
-    # Auto-check critical system dependencies on first run
-    if not shutil.which("tesseract"):
-        click.echo("⚠️  Tesseract OCR nicht gefunden (nötig für Bildschwärzung).")
-        click.echo("   Installiere mit: aai setup\n")
+    click.echo("\n🛡  AUSTR.AI\n")
 
-    # Start proxy if not running (no API key requirement — onboarding handles that)
+    # ── Auto-Setup: alles prüfen und installieren ──────────────
+    first_run = not (CONFIG_DIR / "proxy.yaml").exists()
+    needs_setup = first_run
+
+    # 1. spaCy model
+    try:
+        import spacy
+        spacy.load("de_core_news_sm")
+    except (OSError, ImportError):
+        needs_setup = True
+
+    if needs_setup:
+        click.echo("  Erster Start — wird eingerichtet...\n")
+        _auto_setup()
+        click.echo("")
+
+    # 2. Tesseract (optional, non-blocking)
+    if not shutil.which("tesseract"):
+        click.echo("  Hinweis: Tesseract OCR ist nicht installiert.")
+        click.echo("  Bildschwärzung funktioniert erst nach der Installation:")
+        if sys.platform == "darwin":
+            click.echo("    brew install tesseract\n")
+        elif sys.platform.startswith("linux"):
+            click.echo("    sudo apt install tesseract-ocr\n")
+        else:
+            click.echo("    https://github.com/tesseract-ocr/tesseract\n")
+
+    # ── Server starten ─────────────────────────────────────────
     if not _is_proxy_running():
         _start_proxy_background(config)
-        time.sleep(1)
+        time.sleep(2)
 
     url = f"http://localhost:{config.port}/chat"
+    click.echo(f"  Bereit: {url}")
+    click.echo(f"  Zum Beenden: Ctrl+C\n")
 
-    click.echo(f"\n  AUSTR.AI Chat")
-    click.echo(f"  {url}\n")
-
-    if use_app:
-        try:
-            import webview
-            w = webview.create_window("AUSTR.AI Chat", url, width=1100, height=800,
-                                      min_size=(800, 600), background_color="#0f172a")
-            webview.start()
-        except ImportError:
-            click.echo("pywebview nicht installiert. Oeffne im Browser stattdessen...")
-            import webbrowser
-            webbrowser.open(url)
-    elif not no_browser:
+    if not no_browser:
         import webbrowser
         webbrowser.open(url)
+
+
+def _auto_setup():
+    """Automatisches Setup beim ersten Start. Kein User-Input nötig."""
+
+    # 1. spaCy Sprachmodell
+    try:
+        import spacy
+        try:
+            spacy.load("de_core_news_sm")
+            click.echo("  ✓ Sprachmodell geladen")
+        except OSError:
+            click.echo("  ↓ Sprachmodell wird heruntergeladen (15 MB)...")
+            try:
+                result = subprocess.run(
+                    [sys.executable, "-m", "spacy", "download", "de_core_news_sm"],
+                    capture_output=True, text=True, timeout=600,
+                )
+                if result.returncode == 0:
+                    click.echo("  ✓ Sprachmodell installiert")
+                else:
+                    click.echo("  ⚠ Sprachmodell konnte nicht geladen werden")
+                    click.echo("    Manuell: python -m spacy download de_core_news_sm")
+            except subprocess.TimeoutExpired:
+                click.echo("  ⚠ Download dauert zu lange — bitte manuell ausführen:")
+                click.echo("    python -m spacy download de_core_news_sm")
+    except ImportError:
+        click.echo("  ⚠ spaCy nicht installiert")
+
+    # 2. GLiNER Erkennungsmodell (pre-check, download happens on first use)
+    gliner_ready = False
+    try:
+        from huggingface_hub import scan_cache_dir
+        cache = scan_cache_dir()
+        for repo in cache.repos:
+            if "gliner" in repo.repo_id.lower() or "urchade" in repo.repo_id.lower():
+                gliner_ready = True
+                break
+    except Exception:
+        pass
+
+    if gliner_ready:
+        click.echo("  ✓ Erkennungsmodell geladen")
+    else:
+        click.echo("  ↓ Erkennungsmodell wird beim ersten Chat geladen (~1 GB)")
+        click.echo("    Das dauert einmalig 1-2 Minuten.")
+
+    # 3. Python Dependencies
+    missing = []
+    for mod, name in [("fitz", "PyMuPDF"), ("docx", "python-docx"), ("PIL", "Pillow"),
+                      ("pytesseract", "pytesseract"), ("cryptography", "cryptography")]:
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(name)
+
+    if missing:
+        click.echo(f"  ⚠ Fehlende Pakete: {', '.join(missing)}")
+        click.echo("    pip install austrai")
+    else:
+        click.echo("  ✓ Alle Pakete installiert")
 
 
 # -----------------------------------------------------------------------
@@ -460,7 +533,7 @@ def setup():
             click.echo("  ✗ spaCy DE-Modell: nicht installiert")
             click.echo("    Installiere...")
             try:
-                subprocess.run([sys.executable, "-m", "spacy", "download", "de_core_news_sm"], check=True, timeout=120)
+                subprocess.run([sys.executable, "-m", "spacy", "download", "de_core_news_sm"], check=True, timeout=600)
                 click.echo("    ✓ spaCy DE-Modell installiert")
             except Exception as e:
                 click.echo(f"    ✗ Installation fehlgeschlagen: {e}")

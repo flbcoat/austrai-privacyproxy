@@ -21,11 +21,10 @@ The AI works just as well — but never sees who you are.
 
 ```bash
 pip install austrai
-aai setup     # Checks system dependencies
-aai chat      # Opens the chat in your browser
+aai chat
 ```
 
-Choose your AI provider (Ollama for fully local, or Claude/GPT/Mistral/Gemini with API key) and start chatting. A confirmation step shows you exactly what gets anonymized before anything is sent.
+That's it. AUSTR.AI downloads all models automatically on first start, opens your browser, and guides you through the setup. Choose your AI provider (Ollama for fully local, or Claude/GPT/Mistral/Gemini with API key) and start chatting.
 
 ## Features
 
