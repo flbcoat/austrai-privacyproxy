@@ -31,11 +31,18 @@ function render() {
         <p>${t('welcomeSub')}</p>
       </div>
 
-      <div class="aai-welcome-tools" style="grid-template-columns: repeat(3, 1fr)">
+      <div class="aai-welcome-tools" style="grid-template-columns: repeat(2, 1fr)">
         <div class="aai-tool-card" data-tool="text-anon">
           <div class="aai-tool-card-icon aai-tool-card-icon--text">${SVG_TEXT}</div>
           <h3>${isDE ? 'Text anonymisieren' : 'Anonymize Text'}</h3>
           <p>${isDE ? 'Text einfügen und Schritt für Schritt anonymisieren' : 'Paste text and anonymize step by step'}</p>
+        </div>
+        <div class="aai-tool-card" data-tool="excel">
+          <div class="aai-tool-card-icon" style="background:rgba(217,119,6,0.08);color:#D97706">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          </div>
+          <h3>${isDE ? 'Excel analysieren' : 'Analyze Excel'}</h3>
+          <p>${isDE ? 'Tabellen hochladen — alle Begriffe werden anonymisiert, Zahlen bleiben erhalten' : 'Upload spreadsheets — all terms anonymized, numbers preserved'}</p>
         </div>
         <div class="aai-tool-card" data-tool="anonymize">
           <div class="aai-tool-card-icon aai-tool-card-icon--doc">${SVG_DOC}</div>
@@ -63,19 +70,21 @@ function render() {
       const tool = card.dataset.tool;
 
       if (tool === 'text-anon') {
-        // Switch to Werkzeuge view (sidebar nav + tool view)
         switchToTools();
         return;
       }
 
-      // File-based tools → open file picker
       const fileInput = document.getElementById('file-input');
-      if (tool === 'redact') {
+      if (tool === 'excel') {
+        fileInput.accept = '.xlsx,.csv,.xls';
+        fileInput.dataset.mode = 'attach';
+      } else if (tool === 'redact') {
         fileInput.accept = '.png,.jpg,.jpeg,.tiff,.bmp,.webp,.pdf';
+        fileInput.dataset.mode = tool;
       } else {
         fileInput.accept = '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
+        fileInput.dataset.mode = tool;
       }
-      fileInput.dataset.mode = tool;
       fileInput.click();
     });
   });

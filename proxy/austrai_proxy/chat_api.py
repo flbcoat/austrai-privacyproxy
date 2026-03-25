@@ -106,6 +106,61 @@ _debug_log: list[dict] = []
 _DEBUG_LOG_MAX = 50
 
 
+def _extract_spreadsheet_terms(file_path: str, suffix: str) -> list[str]:
+    """Extract all unique text values from a spreadsheet.
+
+    For XLSX/CSV files, every text cell is potentially identifying.
+    Returns a list of unique terms (>= 2 chars, not pure numbers)
+    to be used as deny_list for aggressive anonymization.
+    """
+    import re
+    terms = set()
+
+    # Common words that should NOT be anonymized (column headers, labels)
+    SKIP_WORDS = {
+        "summe", "gesamt", "total", "durchschnitt", "mittelwert", "anzahl",
+        "datum", "monat", "jahr", "quartal", "q1", "q2", "q3", "q4",
+        "januar", "februar", "märz", "april", "mai", "juni",
+        "juli", "august", "september", "oktober", "november", "dezember",
+        "umsatz", "kosten", "gewinn", "verlust", "netto", "brutto",
+        "stück", "menge", "preis", "betrag", "prozent", "anteil",
+        "name", "adresse", "telefon", "email", "notizen", "status",
+        "ja", "nein", "offen", "erledigt", "aktiv", "inaktiv",
+        "nr", "nummer", "id", "position", "kategorie", "typ", "art",
+        "beschreibung", "bemerkung", "kommentar", "einheit", "währung",
+        "eur", "usd", "chf", "gbp",
+    }
+
+    try:
+        if suffix == ".xlsx":
+            import openpyxl
+            wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+            for ws in wb.worksheets:
+                for row in ws.iter_rows(values_only=True):
+                    for cell in row:
+                        if cell is not None and isinstance(cell, str):
+                            val = cell.strip()
+                            if len(val) >= 2 and not re.match(r'^[\d\s.,€$%+-]+$', val):
+                                if val.lower() not in SKIP_WORDS:
+                                    terms.add(val)
+            wb.close()
+
+        elif suffix == ".csv":
+            import csv
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    for cell in row:
+                        val = cell.strip()
+                        if len(val) >= 2 and not re.match(r'^[\d\s.,€$%+-]+$', val):
+                            if val.lower() not in SKIP_WORDS:
+                                terms.add(val)
+    except Exception as e:
+        logger.warning("Spreadsheet term extraction failed: %s", e)
+
+    return list(terms)
+
+
 def _get_config() -> ProxyConfig:
     global _config
     if _config is None:
@@ -675,13 +730,24 @@ async def upload_file(request: Request) -> JSONResponse:
             try:
                 from .core.extractor import extract_from_file
                 ex = extract_from_file(tmp_path)
+
+                # Spreadsheets (XLSX, CSV): aggressive mode — anonymize ALL text terms
+                # because in tabular data, every term can potentially identify the source
+                deny_list = list(config.deny_list or [])
+                is_spreadsheet = suffix in (".xlsx", ".csv")
+
+                if is_spreadsheet:
+                    # Extract all unique text values from cells and add as deny_list
+                    spreadsheet_terms = _extract_spreadsheet_terms(tmp_path, suffix)
+                    deny_list = list(set(deny_list + spreadsheet_terms))
+
                 anon_result = engine.anonymize(
                     ex.text,
-                    deny_list=config.deny_list or None,
+                    deny_list=deny_list or None,
                     allow_list=config.allow_list or None,
                 )
                 return JSONResponse({
-                    "type": "document",
+                    "type": "spreadsheet" if is_spreadsheet else "document",
                     "filename": file.filename,
                     "extracted_text": ex.text[:500],  # Preview only
                     "anonymized_text": anon_result.anonymized_text,
@@ -690,6 +756,7 @@ async def upload_file(request: Request) -> JSONResponse:
                     "format": ex.format,
                     "pages": ex.pages,
                     "chars": len(ex.text),
+                    "spreadsheet_mode": is_spreadsheet,
                 })
             except ImportError:
                 return JSONResponse({"error": "Document support not installed. Run: pip install austrai (Neuinstallation nötig)"}, status_code=400)
