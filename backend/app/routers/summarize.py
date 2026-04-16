@@ -43,7 +43,7 @@ async def summarize_text(request: Request, body: TextRequest) -> SummarizeRespon
 
     # PII erkennen und anonymisieren
     entities = detect(body.text, deny_list=body.deny_list if hasattr(body, 'deny_list') else None)
-    anonymized_text, mappings = anonymize(body.text, entities)
+    anonymized_text, mappings, _ = anonymize(body.text, entities)
 
     # Dokumenttyp lokal klassifizieren
     doc_type = "sonstiges"

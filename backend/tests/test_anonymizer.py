@@ -23,7 +23,7 @@ class TestAnonymizer(unittest.TestCase):
         entities = [
             Entity(entity_type="PERSON", start=0, end=13, score=0.9, text="Thomas Gruber"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         self.assertEqual(anonymized, "[PERSON_1] hat angerufen.")
         self.assertEqual(mappings["[PERSON_1]"], "Thomas Gruber")
@@ -35,7 +35,7 @@ class TestAnonymizer(unittest.TestCase):
             Entity(entity_type="PERSON", start=0, end=13, score=0.9, text="Thomas Gruber"),
             Entity(entity_type="PERSON", start=18, end=34, score=0.85, text="Maria Steinbauer"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         self.assertEqual(anonymized, "[PERSON_1] und [PERSON_2] sind Kollegen.")
         self.assertEqual(mappings["[PERSON_1]"], "Thomas Gruber")
@@ -49,7 +49,7 @@ class TestAnonymizer(unittest.TestCase):
             Entity(entity_type="AT_IBAN", start=20, end=44, score=0.95, text="AT48 3200 0000 1234 5678"),
             Entity(entity_type="AT_UID_NR", start=46, end=57, score=0.9, text="ATU12345678"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         self.assertIn("[PERSON_1]", anonymized)
         self.assertIn("[AT_IBAN_1]", anonymized)
@@ -63,7 +63,7 @@ class TestAnonymizer(unittest.TestCase):
             Entity(entity_type="AT_UID_NR", start=0, end=11, score=0.95, text="ATU12345678"),
             Entity(entity_type="LOCATION", start=0, end=5, score=0.6, text="ATU12"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         self.assertEqual(anonymized, "[AT_UID_NR_1] ist die Nummer.")
         self.assertEqual(len(mappings), 1)
@@ -71,7 +71,7 @@ class TestAnonymizer(unittest.TestCase):
     def test_empty_entities(self) -> None:
         """Test anonymization with no entities returns original text."""
         text = "Ein ganz normaler Satz."
-        anonymized, mappings = anonymize(text, [])
+        anonymized, mappings, _ = anonymize(text, [])
 
         self.assertEqual(anonymized, text)
         self.assertEqual(len(mappings), 0)
@@ -83,7 +83,7 @@ class TestAnonymizer(unittest.TestCase):
             Entity(entity_type="PERSON", start=2, end=8, score=0.9, text="Thomas"),
             Entity(entity_type="PERSON", start=11, end=16, score=0.85, text="Maria"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         self.assertEqual(anonymized, "A [PERSON_1] B [PERSON_2] C")
 
@@ -94,7 +94,7 @@ class TestAnonymizer(unittest.TestCase):
             Entity(entity_type="AT_IBAN", start=5, end=29, score=0.95, text="AT48 3200 0000 1234 5678"),
             Entity(entity_type="PERSON", start=37, end=50, score=0.9, text="Thomas Gruber"),
         ]
-        anonymized, mappings = anonymize(text, entities)
+        anonymized, mappings, _ = anonymize(text, entities)
 
         # Verify we can reconstruct parts of the original from mappings
         for placeholder, original in mappings.items():

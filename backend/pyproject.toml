@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "austrai-privacyproxy"
-version = "2.0.0"
+version = "2.1.0"
 description = "Open-Source Anonymisierungsproxy für LLM-Anfragen. Erkennt sensible Daten, anonymisiert sie automatisch und re-hydriert die Antwort."
 readme = "../README.md"
 license = {text = "MIT"}

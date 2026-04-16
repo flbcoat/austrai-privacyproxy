@@ -224,7 +224,7 @@ def summarize_locally(text: str, max_tokens: int = 512) -> str:
         from app.services.detector import detect
         from app.services.anonymizer import anonymize
         entities = detect(text)
-        anon_text, _ = anonymize(text, entities)
+        anon_text, _, _ = anonymize(text, entities)
     except Exception:
         anon_text = text
 

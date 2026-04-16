@@ -281,54 +281,97 @@ class CredentialsRecognizer(EntityRecognizer):
         return results
 
 
-class EUDataProtectionRecognizer(PatternRecognizer):
-    """Erkennt EU-weit relevante personenbezogene Daten (DSGVO Art. 4 + Art. 9).
+class DateOfBirthRecognizer(PatternRecognizer):
+    """Erkennt Geburtsdaten in verschiedenen Formaten."""
 
-    Abgedeckt:
-    - IP-Adressen (IPv4 + IPv6)
-    - Deutsche/EU IBANs (DE, AT, CH, etc.)
-    - Kreditkartennummern (Visa, Mastercard, Amex)
-    - Geburtsdaten in verschiedenen Formaten
-    - KFZ-Kennzeichen (AT, DE)
-    - Passnummern
-    - Steuernummern (DE)
+    def __init__(self) -> None:
+        patterns = [
+            Pattern("birthdate_de", r"\b(?:0[1-9]|[12]\d|3[01])\.(?:0[1-9]|1[0-2])\.\d{4}\b", 0.65),
+            Pattern("birthdate_iso", r"\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b", 0.65),
+        ]
+        super().__init__(
+            supported_entity="DATE_OF_BIRTH",
+            patterns=patterns,
+            name="Date of Birth Recognizer",
+            supported_language="de",
+            context=["Geburtsdatum", "geboren", "geb.", "birth", "DOB"],
+        )
+
+
+class IPAddressRecognizer(PatternRecognizer):
+    """Erkennt IP-Adressen (IPv4 + IPv6)."""
+
+    def __init__(self) -> None:
+        patterns = [
+            Pattern("ipv4", r"\b(?:\d{1,3}\.){3}\d{1,3}\b", 0.6),
+            Pattern("ipv6", r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b", 0.8),
+        ]
+        super().__init__(
+            supported_entity="IP_ADDRESS",
+            patterns=patterns,
+            name="IP Address Recognizer",
+            supported_language="de",
+            context=["IP", "IP-Adresse", "Server", "Host"],
+        )
+
+
+class LicensePlateRecognizer(PatternRecognizer):
+    """Erkennt KFZ-Kennzeichen (AT, DE)."""
+
+    def __init__(self) -> None:
+        patterns = [
+            Pattern("at_plate", r"\b[A-Z]{1,2}\s?\d{1,5}\s?[A-Z]{1,3}\b", 0.4),
+            Pattern("de_plate", r"\b[A-ZÄÖÜ]{1,3}\s?[A-Z]{1,2}\s?\d{1,4}[EH]?\b", 0.4),
+        ]
+        super().__init__(
+            supported_entity="LICENSE_PLATE",
+            patterns=patterns,
+            name="License Plate Recognizer",
+            supported_language="de",
+            context=["Kennzeichen", "Nummernschild", "Fahrzeug", "PKW", "KFZ"],
+        )
+
+
+class PassportRecognizer(PatternRecognizer):
+    """Erkennt Passnummern (AT: 1 Buchstabe + 7 Ziffern)."""
+
+    def __init__(self) -> None:
+        patterns = [
+            Pattern("passport_at", r"\b[A-Z]\d{7}\b", 0.4),
+        ]
+        super().__init__(
+            supported_entity="PASSPORT_NUMBER",
+            patterns=patterns,
+            name="Passport Recognizer",
+            supported_language="de",
+            context=["Pass", "Reisepass", "Ausweis", "Passport"],
+        )
+
+
+class EUDataProtectionRecognizer(PatternRecognizer):
+    """Erkennt verbleibende EU-weite PII (IBANs, Kreditkarten, Steuernummern).
+
+    Geburtsdaten, IP-Adressen, Kennzeichen und Paesse sind in eigene
+    semantische Recognizer ausgelagert.
     """
 
     def __init__(self) -> None:
         patterns = [
-            # IPv4
-            Pattern("ipv4", r"\b(?:\d{1,3}\.){3}\d{1,3}\b", 0.6),
-            # IPv6 (simplified)
-            Pattern("ipv6", r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b", 0.8),
             # EU IBANs (2 letter country + 2 check + up to 30 alphanumeric)
             Pattern("eu_iban", r"\b[A-Z]{2}\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?[\d\s]{0,10}\b", 0.85),
             # Credit cards (Visa, MC, Amex)
             Pattern("visa", r"\b4\d{3}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b", 0.8),
             Pattern("mastercard", r"\b5[1-5]\d{2}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b", 0.8),
             Pattern("amex", r"\b3[47]\d{2}[\s-]?\d{6}[\s-]?\d{5}\b", 0.8),
-            # Birth dates (DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
-            Pattern("birthdate_de", r"\b(?:0[1-9]|[12]\d|3[01])\.(?:0[1-9]|1[0-2])\.\d{4}\b", 0.65),
-            Pattern("birthdate_iso", r"\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b", 0.65),
-            # AT license plates (W 12345X, G 1234 AB)
-            Pattern("at_plate", r"\b[A-Z]{1,2}\s?\d{1,5}\s?[A-Z]{1,3}\b", 0.4),
-            # DE license plates (M AB 1234)
-            Pattern("de_plate", r"\b[A-ZÄÖÜ]{1,3}\s?[A-Z]{1,2}\s?\d{1,4}[EH]?\b", 0.4),
             # DE Steuernummer (11 digits with optional slashes)
             Pattern("de_steuer", r"\b\d{2,3}/?\.?\d{3,4}/?\.?\d{4,5}\b", 0.3),
-            # Passport numbers (AT: 1 letter + 7 digits, DE: various)
-            Pattern("passport_at", r"\b[A-Z]\d{7}\b", 0.4),
         ]
         super().__init__(
             supported_entity="EU_PII",
             patterns=patterns,
             name="EU Data Protection Recognizer",
             supported_language="de",
-            context=[
-                "IP", "Adresse", "IP-Adresse", "IBAN", "Konto", "Kreditkarte",
-                "Visa", "Mastercard", "Geburtsdatum", "geboren", "geb.",
-                "Kennzeichen", "Nummernschild", "Steuer", "Steuernummer",
-                "Pass", "Reisepass", "Ausweis",
-            ],
+            context=["IBAN", "Konto", "Kreditkarte", "Visa", "Mastercard", "Steuer", "Steuernummer"],
         )
 
 
@@ -905,7 +948,12 @@ def get_all_austrian_recognizers() -> list[EntityRecognizer]:
         AustrianFirmenbuchRecognizer(),
         DocumentMetadataRecognizer(),
         CredentialsRecognizer(),
-        EUDataProtectionRecognizer(),
+        # Semantic recognizers (split from former monolithic EUDataProtectionRecognizer)
+        DateOfBirthRecognizer(),
+        IPAddressRecognizer(),
+        LicensePlateRecognizer(),
+        PassportRecognizer(),
+        EUDataProtectionRecognizer(),  # remaining: IBANs, credit cards, tax numbers
         SensitiveDataRecognizer(),
         FirstNameRecognizer(),
     ]

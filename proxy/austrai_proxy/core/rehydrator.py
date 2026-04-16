@@ -68,6 +68,59 @@ def rehydrate(llm_response: str, mappings: dict[str, str]) -> str:
     return result
 
 
+def rehydrate_tiered(
+    llm_response: str,
+    tiered_mappings: dict[int, dict[str, str]],
+    max_level: int = 2,
+) -> tuple[str, int, list[str]]:
+    """Rehydrate with access control: only restore entities up to max_level.
+
+    Args:
+        llm_response: The LLM response containing placeholders.
+        tiered_mappings: {protection_level: {placeholder: original_text}}.
+        max_level: Maximum protection level to restore (1-4).
+                   Default 2 = only PUBLIC + INTERNAL.
+
+    Returns:
+        Tuple of:
+        - restored text (higher levels stay anonymized)
+        - count of restored entities
+        - list of entity types that remained redacted (for UI feedback)
+    """
+    if not tiered_mappings:
+        return llm_response, 0, []
+
+    # Merge only the levels we're allowed to access
+    allowed_mappings: dict[str, str] = {}
+    redacted_types: list[str] = []
+
+    for level in sorted(tiered_mappings.keys()):
+        level_mappings = tiered_mappings[level]
+        if level <= max_level:
+            allowed_mappings.update(level_mappings)
+        else:
+            # Collect the types that remain redacted
+            for placeholder in level_mappings:
+                # Extract type from bracket placeholders like [AT_SVNR_1]
+                inner = placeholder.strip("[]")
+                parts = inner.rsplit("_", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    redacted_types.append(parts[0])
+                else:
+                    redacted_types.append(inner)
+
+    # Restore the allowed entities using the standard 3-pass strategy
+    restored = rehydrate(llm_response, allowed_mappings)
+
+    # Count how many replacements were actually made
+    count = 0
+    for placeholder in allowed_mappings:
+        if placeholder in llm_response or placeholder.lower() in llm_response.lower():
+            count += 1
+
+    return restored, count, list(dict.fromkeys(redacted_types))
+
+
 def _build_fuzzy_pattern(placeholder: str) -> str:
     """Build a fuzzy regex pattern for a placeholder.
 

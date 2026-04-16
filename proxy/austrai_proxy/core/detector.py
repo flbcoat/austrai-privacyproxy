@@ -42,6 +42,9 @@ ALLOWED_ENTITY_TYPES = {
     "AT_SVNR", "AT_FIRMENBUCH_NR", "EMAIL_ADDRESS", "DOC_METADATA",
     "ORGANIZATION", "ORG", "CREDIT_CARD", "CUSTOM", "CREDENTIAL",
     "EU_PII", "SENSITIVE_DATA",
+    # Semantic types (replacing generic EU_PII / SENSITIVE_DATA)
+    "DATE_OF_BIRTH", "IP_ADDRESS", "MEDICAL_CONDITION",
+    "PASSPORT_NUMBER", "LICENSE_PLATE",
 }
 
 # Known product/brand names that SpaCy tags as PERSON (they're PROPN but not PII)

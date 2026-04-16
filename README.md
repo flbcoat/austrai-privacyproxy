@@ -99,8 +99,8 @@ AUSTR.AI supports GDPR compliance:
 
 ## Roadmap
 
-- **API Proxy** — Middleware for integration into existing tools (experimental, available via `aai start`)
-- **Desktop App** — Standalone application, no browser needed
+- **API Proxy** — Middleware for integration into existing tools (available via `aai start`)
+- **Data Classification** — 4-tier protection levels (Public, Internal, Confidential, Restricted) with level-based TTLs
 - **Browser Extension** — Anonymize directly in ChatGPT, Claude, etc.
 
 ## License

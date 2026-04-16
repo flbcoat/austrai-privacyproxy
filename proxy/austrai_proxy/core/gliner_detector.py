@@ -30,7 +30,8 @@ PII_LABELS = [
     "license plate",
 ]
 
-# Map GLiNER labels to AUSTR.AI entity types
+# Map GLiNER labels to AUSTR.AI entity types.
+# Each type gets a SEMANTIC bracket code so the LLM understands the data category.
 LABEL_MAP = {
     "person": "PERSON",
     "organization": "ORGANIZATION",
@@ -39,13 +40,13 @@ LABEL_MAP = {
     "iban": "AT_IBAN",
     "credit card number": "CREDIT_CARD",
     "address": "LOCATION",
-    "date of birth": "EU_PII",
+    "date of birth": "DATE_OF_BIRTH",
     "password": "CREDENTIAL",
-    "ip address": "EU_PII",
-    "medical condition": "SENSITIVE_DATA",
+    "ip address": "IP_ADDRESS",
+    "medical condition": "MEDICAL_CONDITION",
     "social security number": "AT_SVNR",
-    "passport number": "EU_PII",
-    "license plate": "EU_PII",
+    "passport number": "PASSPORT_NUMBER",
+    "license plate": "LICENSE_PLATE",
 }
 
 # Common German terms that GLiNER falsely detects as persons/orgs

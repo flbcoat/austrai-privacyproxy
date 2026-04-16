@@ -44,9 +44,18 @@ OPENAI_API = "https://api.openai.com"
 
 # System prompt fragment injected to preserve bracket references
 BRACKET_HINT = (
-    "The text contains reference codes in square brackets "
-    "(e.g. [AT_IBAN_1], [PHONE_NUMBER_1]). "
-    "Reproduce these EXACTLY as they appear."
+    "IMPORTANT: The user's text has been automatically anonymized for privacy. "
+    "Personal data has been replaced with typed placeholders:\n"
+    "- Names are replaced with fictional codenames (e.g. Arion, Brynn, Nexon Corp)\n"
+    "- Structured data uses semantic brackets: [DATE_OF_BIRTH_1], [AT_IBAN_1], "
+    "[PHONE_NUMBER_1], [LOCATION_1], [MEDICAL_CONDITION_1], [AT_SVNR_1], etc.\n\n"
+    "Rules:\n"
+    "1. Treat codenames and brackets as if they were real data — respond naturally.\n"
+    "2. Reproduce each placeholder EXACTLY as written (same spelling, same number).\n"
+    "3. Never swap placeholders — [DATE_OF_BIRTH_1] is always a birth date, "
+    "[AT_IBAN_1] is always a bank account.\n"
+    "4. Do not mention that the data is anonymized or that you see placeholders.\n"
+    "5. If you need to reference the data, use the exact placeholder or codename."
 )
 
 # Global config, set by create_app()
@@ -89,13 +98,18 @@ def _extract_and_anonymize_messages(body: dict, mappings_out: dict, deny_list: l
 
 
 async def _anonymize_request_body(body: dict, api_format: str, deny_list: list[str] | None) -> dict[str, str]:
-    """Anonymize all user messages in-place. Returns merged mappings."""
+    """Anonymize ALL messages in-place (user AND assistant). Returns merged mappings.
+
+    Assistant messages may contain rehydrated PII from previous turns.
+    Defense in depth: anonymize everything before it leaves the device.
+    """
     merged_mappings: dict[str, str] = {}
     messages = body.get("messages", [])
 
     for i, msg in enumerate(messages):
-        if msg.get("role") != "user":
-            continue
+        role = msg.get("role", "")
+        if role == "system":
+            continue  # System prompts are ours, don't anonymize
 
         content = msg.get("content", "")
 
@@ -294,7 +308,7 @@ async def _proxy_request(request: Request, api_format: str) -> Response:
             logger.info(
                 "Anonymisiert: %d Begriffe ersetzt (%s)",
                 len(mappings),
-                ", ".join(list(mappings.values())[:3]),
+                ", ".join(list(mappings.keys())[:3]),
             )
     except Exception as e:
         logger.error("Anonymisierung fehlgeschlagen: %s — Request abgelehnt (fail-closed)", e)
@@ -401,9 +415,20 @@ def create_app(config: ProxyConfig | None = None) -> Starlette:
     _init_file_logging()
 
     from .chat_api import create_chat_app
+    from starlette.middleware import Middleware
+    from starlette.middleware.cors import CORSMiddleware
+
     chat_app = create_chat_app()
 
     return Starlette(
+        middleware=[
+            Middleware(
+                CORSMiddleware,
+                allow_origins=["http://127.0.0.1:8282", "http://localhost:8282"],
+                allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                allow_headers=["*"],
+            ),
+        ],
         routes=[
             Route("/v1/messages", handle_anthropic, methods=["POST"]),
             Route("/v1/chat/completions", handle_openai, methods=["POST"]),

@@ -121,7 +121,7 @@ async def upload_file(
     annotated_html = generate_annotated_html(extracted.text, entities)
 
     # Schritt 4: Text anonymisieren
-    anonymized_text, mappings = anonymize(extracted.text, entities)
+    anonymized_text, mappings, _ = anonymize(extracted.text, entities)
 
     # Schritt 5: Session erstellen
     session_id = session_store.create_session(mappings)

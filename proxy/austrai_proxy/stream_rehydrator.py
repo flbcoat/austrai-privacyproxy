@@ -22,11 +22,30 @@ class StreamRehydrator:
     """
 
     def __init__(self, mappings: dict[str, str]):
-        self._mappings = mappings
-        self._sorted = sorted(mappings.keys(), key=len, reverse=True)
-        self._max_len = max(len(k) for k in mappings) if mappings else 0
+        # Add fuzzy variants for bracket-type codenames:
+        # [EU_PII_1] → also match [EUPII1], [EU_PII1], [Eu_Pii_1], etc.
+        expanded = dict(mappings)
+        for codename, original in list(mappings.items()):
+            if codename.startswith("[") and codename.endswith("]"):
+                inner = codename[1:-1]
+                # Variant without underscores: [EU_PII_1] → [EUPII1]
+                no_under = inner.replace("_", "")
+                variant = f"[{no_under}]"
+                if variant not in expanded:
+                    expanded[variant] = original
+                # Variant with only trailing number underscore: [EUPII_1]
+                parts = inner.rsplit("_", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    compact = f"[{parts[0].replace('_', '')}_{parts[1]}]"
+                    if compact not in expanded:
+                        expanded[compact] = original
+
+        self._mappings = expanded
+        self._sorted = sorted(expanded.keys(), key=len, reverse=True)
+        self._max_len = max(len(k) for k in expanded) if expanded else 0
         self._buffer = ""
         self._prefixes = self._build_prefixes()
+        self.restored_count = 0  # count of codenames replaced during streaming
 
     def _build_prefixes(self) -> set[str]:
         """Build set of all valid prefixes of all codenames."""
@@ -49,7 +68,10 @@ class StreamRehydrator:
             return ""
         result = self._buffer
         for codename in self._sorted:
-            result = result.replace(codename, self._mappings[codename])
+            count = result.count(codename)
+            if count:
+                result = result.replace(codename, self._mappings[codename])
+                self.restored_count += count
         self._buffer = ""
         return result
 
@@ -63,6 +85,7 @@ class StreamRehydrator:
                 if self._buffer.startswith(codename):
                     output.append(self._mappings[codename])
                     self._buffer = self._buffer[len(codename):]
+                    self.restored_count += 1
                     matched = True
                     break
             if matched:

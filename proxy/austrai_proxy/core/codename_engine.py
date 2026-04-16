@@ -54,11 +54,16 @@ _POOLS: dict[str, list[str]] = {
 }
 
 # Entity types that get [TYPE_N] bracket format (structured data that
-# LLMs tend to "correct" when given fake values)
+# LLMs tend to "correct" when given fake values).
+# Semantic names help the LLM understand the data category.
 BRACKET_TYPES = {
     "AT_IBAN", "IBAN_CODE", "AT_UID_NR", "AT_SVNR",
     "AT_FIRMENBUCH_NR", "PHONE_NUMBER", "CREDIT_CARD",
     "EMAIL_ADDRESS", "LOCATION", "CREDENTIAL",
+    # Semantic types (replacing generic EU_PII / SENSITIVE_DATA)
+    "DATE_OF_BIRTH", "IP_ADDRESS", "MEDICAL_CONDITION",
+    "PASSPORT_NUMBER", "LICENSE_PLATE",
+    # Legacy fallback
     "EU_PII", "SENSITIVE_DATA",
 }
 

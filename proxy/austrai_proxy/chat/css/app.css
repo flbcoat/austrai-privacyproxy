@@ -295,6 +295,7 @@ a:hover { text-decoration: underline; }
 
 .aai-select:hover { border-color: var(--text-muted); }
 .aai-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-subtle); }
+.aai-select option:disabled { color: var(--text-muted); font-style: italic; }
 
 .aai-input {
   background: var(--bg-input);
@@ -594,6 +595,44 @@ a:hover { text-decoration: underline; }
   background: var(--success-subtle); color: var(--success);
   border-color: rgba(22, 163, 74, 0.15);
 }
+.aai-rehydrate-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 6px; padding: 3px 10px;
+  border-radius: var(--r-full); font-size: 11px; font-weight: 500;
+  background: var(--success-subtle); color: var(--success);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+}
+.aai-rehydrate-badge svg { width: 11px; height: 11px; }
+.aai-rehydrate-hint {
+  font-size: 11px; color: var(--text-muted); margin-top: 2px;
+  padding-left: 10px;
+}
+
+/* Raw response toggle (what the LLM actually saw) */
+.aai-raw-response {
+  margin-top: 8px; padding: 10px 12px;
+  background: var(--bg-sidebar); border: 1px solid var(--border);
+  border-radius: var(--r-md); font-size: 13px;
+}
+.aai-raw-header {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.aai-raw-header svg { width: 12px; height: 12px; }
+.aai-raw-text {
+  font-family: var(--mono); font-size: 12px; line-height: 1.6;
+  color: var(--text-secondary); white-space: pre-wrap;
+  max-height: 200px; overflow-y: auto;
+}
+.aai-msg-action.active { color: var(--accent); }
+
+/* Enter key hint on buttons */
+.aai-key-hint {
+  display: inline-block; margin-left: 6px; padding: 1px 5px;
+  font-size: 10px; font-weight: 600; background: rgba(255,255,255,0.2);
+  border-radius: 3px; vertical-align: middle;
+}
 
 /* Entity details shown below the badge */
 .aai-privacy-details {
@@ -713,6 +752,23 @@ a:hover { text-decoration: underline; }
 }
 .aai-preview-entity .aai-entity-action:hover { background: var(--accent); color: var(--text-inverse); }
 .aai-preview-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.aai-preview-actions .active { background: var(--accent-subtle); color: var(--accent); border-color: var(--accent); }
+
+/* Edit mode: text selection for manual deny-list */
+.aai-preview-edit-hint {
+  margin-top: 8px; padding: 10px 12px;
+  border: 1px dashed var(--accent); border-radius: var(--r-md);
+  background: var(--accent-subtle);
+}
+.aai-preview-edit-text {
+  font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+  cursor: text; user-select: text; padding: 6px 0;
+}
+.aai-preview-edit-text::selection { background: rgba(220, 38, 38, 0.2); color: var(--danger); }
+.aai-preview-edit-info {
+  font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 6px;
+  padding-top: 6px; border-top: 1px solid var(--accent-border);
+}
 
 /* ---- 12. Privacy Panel ---- */
 
@@ -1049,6 +1105,47 @@ a:hover { text-decoration: underline; }
 .aai-tool-entity-x { color: var(--text-muted); font-size: 13px; }
 .aai-tool-entity-tag:hover .aai-tool-entity-x { color: var(--danger); }
 .aai-tool-mapping-table { padding: 10px 16px; border-top: 1px solid var(--border-light); }
+
+/* Protection Level Badges */
+.aai-plevel {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: var(--r-full);
+  font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.aai-plevel-1 { background: #6B7280; } /* gray — public */
+.aai-plevel-2 { background: #3B82F6; } /* blue — internal */
+.aai-plevel-3 { background: #F59E0B; } /* amber — confidential */
+.aai-plevel-4 { background: #EF4444; } /* red — restricted */
+
+/* Document type badge */
+.aai-doc-type-badge {
+  display: inline-block; margin-left: 8px; padding: 2px 8px;
+  border-radius: var(--r-full); font-size: 11px; font-weight: 600;
+}
+.aai-doc-type-medical { background: rgba(239,68,68,0.12); color: #DC2626; }
+.aai-doc-type-legal { background: rgba(168,85,247,0.12); color: #7C3AED; }
+
+/* Vault Status Display */
+.aai-vault-info {
+  padding: 10px 16px; border-top: 1px solid var(--border-light);
+  background: var(--bg-sidebar); border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.aai-vault-header {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;
+}
+.aai-vault-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0; font-size: 12px;
+}
+.aai-vault-label { flex: 1; color: var(--text-secondary); }
+.aai-vault-timer {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--accent);
+}
+.aai-vault-warning .aai-vault-timer { color: #F59E0B; }
+.aai-vault-expired .aai-vault-timer { color: var(--danger); text-decoration: line-through; }
+.aai-vault-expired .aai-vault-label { color: var(--text-muted); text-decoration: line-through; }
 
 /* Selectable text area (for click-to-anonymize) */
 .aai-tool-selectable { cursor: text; user-select: text; }

@@ -36,6 +36,9 @@ class AnonymizeResult:
     mappings: dict[str, str]
     entities: list
     session_id: str | None = None
+    level_map: dict[str, int] = field(default_factory=dict)
+    max_protection_level: int = 2
+    doc_type: str = "general"
 
 
 class PrivacyEngine:
@@ -81,16 +84,18 @@ class PrivacyEngine:
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
         warnings.filterwarnings("ignore", message=".*resume_download.*")
         warnings.filterwarnings("ignore", message=".*unauthenticated.*")
-        logger.info("Initialisiere AUSTR.AI Privacy Engine v3.2...")
+        logger.info("Initialisiere AUSTR.AI Privacy Engine v3.3 (Classification)...")
 
         # Layer 1: GLiNER (primary PII detection, F1 0.98)
         if self._use_gliner:
             try:
-                from .gliner_detector import is_available, _get_model
+                from .gliner_detector import is_available, _get_model, detect_with_gliner
                 if is_available():
-                    _get_model()  # Pre-load
+                    _get_model()  # Pre-load model weights
+                    # Warm up with a real inference pass — first call is 15-20s without this
+                    detect_with_gliner("Warmup Thomas Gruber AT48", threshold=0.6)
                     self._gliner_available = True
-                    logger.info("Schicht 1: GLiNER PII-Modell geladen (F1 0.98).")
+                    logger.info("Schicht 1: GLiNER PII-Modell geladen + aufgewaermt (F1 0.98).")
                 else:
                     logger.info("GLiNER nicht verfuegbar — Fallback auf Presidio.")
             except Exception as e:
@@ -246,18 +251,33 @@ class PrivacyEngine:
             if dismissed:
                 logger.info("Session-Dismiss: %d Entitaeten uebersprungen.", dismissed)
 
-        anonymized_text, mappings = anonymize(text, merged)
+        # Classify entities: assign protection levels based on type + doc context
+        from .classifier import classify_entities, get_max_protection_level
+        classify_entities(merged, doc_risk_level=None, doc_sensitivity_categories=None)
 
-        # Store in persistent mapping store
+        # Context-aware upgrade: if document type is medical, upgrade all entities
+        if doc_type == "medical":
+            classify_entities(
+                merged,
+                doc_risk_level="high",
+                doc_sensitivity_categories={"MEDICAL"},
+            )
+
+        anonymized_text, mappings, level_map = anonymize(text, merged)
+
+        # Store in persistent mapping store (tiered by protection level)
         session_id = None
         if mappings and self._mapping_store:
-            session_id = self._mapping_store.create_session(mappings)
+            session_id = self._mapping_store.create_session(mappings, level_map)
 
         return AnonymizeResult(
             anonymized_text=anonymized_text,
             mappings=mappings,
             entities=merged,
             session_id=session_id,
+            level_map=level_map,
+            max_protection_level=get_max_protection_level(merged),
+            doc_type=doc_type,
         )
 
     def rehydrate(self, text: str, mappings: dict[str, str]) -> str:
@@ -283,6 +303,42 @@ class PrivacyEngine:
             if codename in original or codename.lower() in original.lower()
         )
         return restored, replacements
+
+    def rehydrate_tiered(
+        self,
+        text: str,
+        session_id: str,
+        max_level: int = 2,
+    ) -> tuple[str, int, list[str]]:
+        """Restore original values with access control by protection level.
+
+        Args:
+            text: Text containing codenames/placeholders.
+            session_id: Session UUID from anonymization.
+            max_level: Max protection level to restore (1-4).
+                       Default 2 = only PUBLIC + INTERNAL.
+
+        Returns:
+            (restored_text, count_restored, redacted_types)
+        """
+        self._ensure_initialized()
+
+        if not self._mapping_store:
+            return text, 0, []
+
+        tiered = self._mapping_store.get_session_tiered(session_id)
+        if not tiered:
+            return text, 0, []
+
+        from .rehydrator import rehydrate_tiered
+        return rehydrate_tiered(text, tiered, max_level)
+
+    def get_session_info(self, session_id: str) -> dict | None:
+        """Get session metadata (levels, TTLs, expiry) for UI display."""
+        self._ensure_initialized()
+        if not self._mapping_store:
+            return None
+        return self._mapping_store.get_session_info(session_id)
 
     def get_latest_mappings(self) -> dict[str, str] | None:
         """Get mappings from the most recent session (for CLI deanon)."""

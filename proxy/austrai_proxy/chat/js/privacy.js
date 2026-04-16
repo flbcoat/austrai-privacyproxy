@@ -67,6 +67,7 @@ function render() {
         <h4>${t('entitiesDetected')}</h4>
         ${mappings.map(m => `
           <div class="aai-entity-item">
+            <span class="aai-plevel aai-plevel-${m.protection_level || 2}">${m.protection_level || 2}</span>
             <span class="aai-entity-type">${escHtml(m.type || 'ENTITY')}</span>
             <span class="aai-entity-code">${escHtml(m.codename || '')}</span>
             <button class="aai-entity-action" data-dismiss="${escAttr(m.codename || '')}">${t('dismiss')}</button>

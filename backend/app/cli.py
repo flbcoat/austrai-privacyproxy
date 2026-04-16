@@ -24,7 +24,7 @@ error_console = Console(stderr=True)
 CONFIG_DIR = Path.home() / ".privacyproxy"
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -453,7 +453,7 @@ def anonymize(input_arg: str, output_path: str | None, output_format: str, local
     entities = detect(text, deny_list=custom if custom else None)
 
     # Anonymize
-    anonymized_text, mappings = do_anonymize(text, entities)
+    anonymized_text, mappings, _ = do_anonymize(text, entities)
 
     result: dict = {
         "source": source,

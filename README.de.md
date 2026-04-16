@@ -99,8 +99,8 @@ AUSTR.AI unterstützt DSGVO-Konformität:
 
 ## Roadmap
 
-- **API Proxy** — Middleware zur Integration in bestehende Tools (experimentell, verfügbar über `aai start`)
-- **Desktop App** — Eigenständige Anwendung ohne Browser
+- **API Proxy** — Middleware zur Integration in bestehende Tools (verfuegbar ueber `aai start`)
+- **Datenklassifizierung** — 4-stufige Schutzklassen (Oeffentlich, Intern, Vertraulich, Streng Vertraulich) mit stufenbasierten TTLs
 - **Browser Extension** — Direkt in ChatGPT, Claude etc. anonymisieren
 
 ## Lizenz

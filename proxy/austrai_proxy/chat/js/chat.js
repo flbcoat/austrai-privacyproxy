@@ -34,7 +34,14 @@ export function init() {
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      // If preview is showing, Enter confirms and sends
+      if (pendingConfirmation && previewPanel && !previewPanel.hidden) {
+        const text = pendingConfirmation.text;
+        closePreview();
+        sendConfirmed(text);
+      } else {
+        handleSend();
+      }
     }
   });
 
@@ -78,6 +85,10 @@ export function init() {
 }
 
 function sendIcon() {
+  // Show shield icon when confirm-send is enabled (= "Prüfen" mode)
+  if (getConfirmSend()) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  }
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
 }
 
@@ -138,6 +149,7 @@ function renderPreview(r) {
       <div class="aai-preview-entities">
         ${r.entities.map(e => `
           <span class="aai-preview-entity">
+            <span class="aai-plevel aai-plevel-${e.protection_level || 2}">${e.protection_level || 2}</span>
             <span class="aai-entity-type">${escHtml(e.type)}</span>
             <span style="color:var(--danger);text-decoration:line-through">${escHtml(e.original)}</span>
             → <span style="color:var(--accent);font-family:var(--mono);font-size:12px">${escHtml(e.codename)}</span>
@@ -149,14 +161,45 @@ function renderPreview(r) {
     <div class="aai-preview-actions">
       <button class="aai-btn aai-btn--ghost aai-btn--sm" id="preview-edit">Bearbeiten</button>
       <button class="aai-btn aai-btn--primary aai-btn--sm" id="preview-confirm">
-        ${hasChanges ? 'Anonymisiert absenden' : 'Absenden'}
+        ${hasChanges ? 'Absenden' : 'Absenden'} <span class="aai-key-hint">Enter</span>
       </button>
+    </div>
+    <div class="aai-preview-edit-hint" id="preview-edit-panel" hidden>
+      <div class="aai-preview-edit-text aai-tool-selectable" id="preview-edit-text">${escHtml(r.original)}</div>
+      <div class="aai-preview-edit-info">Text markieren → Begriff wird anonymisiert</div>
     </div>
   `;
 
   // Wire
   previewPanel.querySelector('#preview-close')?.addEventListener('click', closePreview);
-  previewPanel.querySelector('#preview-edit')?.addEventListener('click', () => { closePreview(); inputEl.focus(); });
+  previewPanel.querySelector('#preview-edit')?.addEventListener('click', () => {
+    const editPanel = previewPanel.querySelector('#preview-edit-panel');
+    if (editPanel) {
+      editPanel.hidden = !editPanel.hidden;
+      previewPanel.querySelector('#preview-edit')?.classList.toggle('active', !editPanel.hidden);
+    }
+  });
+
+  // Text selection in edit mode → add to deny-list
+  const editText = previewPanel.querySelector('#preview-edit-text');
+  if (editText) {
+    editText.addEventListener('mouseup', async () => {
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+      if (selectedText.length < 2 || selectedText.length > 200) return;
+      try {
+        const config = await api.getSettings();
+        const denyList = [...(config.deny_list || [])];
+        if (!denyList.includes(selectedText)) {
+          denyList.push(selectedText);
+          await api.putSettings({ deny_list: denyList });
+        }
+        toast(`"${selectedText}" → Deny-List`, 'success');
+        selection.removeAllRanges();
+        if (pendingConfirmation) setTimeout(() => showPreview(pendingConfirmation.text), 400);
+      } catch (err) { toast(err.message, 'error'); }
+    });
+  }
   previewPanel.querySelector('#preview-confirm')?.addEventListener('click', () => {
     const text = pendingConfirmation?.text;
     closePreview();
@@ -201,7 +244,7 @@ async function handleSend(chipText) {
   const text = typeof chipText === 'string' ? chipText : inputEl.value.trim();
   if (!text) return;
 
-  // Show confirmation preview before sending (if enabled in settings)
+  // Two-step flow: first Enter = "Prüfen" (show preview), second Enter = "Absenden"
   // Skip for chip-submitted text since it's pre-defined
   if (typeof chipText !== 'string' && getConfirmSend()) {
     showPreview(text);
@@ -305,7 +348,7 @@ async function sendConfirmed(text) {
       onDone(data) {
         if (data.full_response) streamedText = data.full_response;
         const msgs = [...get('messages')];
-        if (msgs[msgIdx]) msgs[msgIdx] = { role: 'assistant', content: streamedText, meta, doneData: data };
+        if (msgs[msgIdx]) msgs[msgIdx] = { role: 'assistant', content: streamedText, meta, doneData: data, rawResponse: data.raw_response || null };
         if (meta && msgs[msgIdx - 1]) msgs[msgIdx - 1] = { ...msgs[msgIdx - 1], meta };
         set('messages', msgs);
         saveMessages(convId, msgs);
@@ -352,7 +395,7 @@ function renderMessages() {
         const n = m.meta.anonymized_count;
         const label = n === 1 ? t('privacyBadge1') : t('privacyBadge', { n });
         const entities = (m.meta.mappings_preview || []).map(e =>
-          `<span class="aai-badge-entity"><span class="aai-entity-type">${escHtml(e.type)}</span> ${escHtml(e.codename)}</span>`
+          `<span class="aai-badge-entity"><span class="aai-plevel aai-plevel-${e.protection_level || 2}">${e.protection_level || 2}</span><span class="aai-entity-type">${escHtml(e.type)}</span> ${escHtml(e.codename)}</span>`
         ).join('');
         badgeHtml = `<div class="aai-privacy-badge">${SVG.shield} ${label}</div>`;
         if (entities) {
@@ -363,10 +406,29 @@ function renderMessages() {
       }
     }
 
+    // Rehydration indicator on assistant messages
+    let rehydrateHtml = '';
+    if (!isUser && m.doneData && m.doneData.restored_count > 0) {
+      const rc = m.doneData.restored_count;
+      // Get anonymized count from the preceding user message's meta
+      const prevMsg = i > 0 ? messages[i - 1] : null;
+      const ac = prevMsg?.meta?.anonymized_count || 0;
+      if (ac > 0 && rc < ac) {
+        rehydrateHtml = `<div class="aai-rehydrate-badge">${SVG.check} ${rc} von ${ac} Begriff(en) in der Antwort wiederhergestellt</div>
+          <div class="aai-rehydrate-hint">${ac - rc} Begriff(e) wurden anonymisiert, aber von der KI nicht in der Antwort verwendet.</div>`;
+      } else {
+        rehydrateHtml = `<div class="aai-rehydrate-badge">${SVG.check} ${rc} Begriff(e) wiederhergestellt</div>`;
+      }
+    }
+
     // Actions
     let actionsHtml = '';
     if (!isUser && m.content && !isStreaming) {
+      const rawBtn = m.rawResponse
+        ? `<button class="aai-msg-action" data-action="show-raw" data-idx="${i}">${SVG.shield} Was die KI sah</button>`
+        : '';
       actionsHtml = `<div class="aai-msg-actions">
+        ${rawBtn}
         <button class="aai-msg-action" data-action="copy" data-idx="${i}">${SVG.copy} ${t('copy')}</button>
       </div>`;
     }
@@ -377,6 +439,7 @@ function renderMessages() {
         <div class="aai-msg-body">
           <div class="aai-msg-text">${contentHtml}</div>
           ${badgeHtml}
+          ${rehydrateHtml}
           ${actionsHtml}
         </div>
       </div>
@@ -402,6 +465,20 @@ function renderMessages() {
       const msg = get('messages')[idx];
       if (btn.dataset.action === 'copy' && msg) {
         navigator.clipboard.writeText(msg.content).then(() => toast(t('copied'), 'success'));
+      }
+      if (btn.dataset.action === 'show-raw' && msg?.rawResponse) {
+        const msgEl = btn.closest('.aai-message');
+        const existing = msgEl.querySelector('.aai-raw-response');
+        if (existing) {
+          existing.remove();
+          btn.classList.remove('active');
+        } else {
+          const rawDiv = document.createElement('div');
+          rawDiv.className = 'aai-raw-response';
+          rawDiv.innerHTML = `<div class="aai-raw-header">${SVG.shield} Roh-Antwort der KI (vor Wiederherstellung)</div><div class="aai-raw-text">${escHtml(msg.rawResponse)}</div>`;
+          msgEl.querySelector('.aai-msg-body').appendChild(rawDiv);
+          btn.classList.add('active');
+        }
       }
     };
   });

@@ -11,6 +11,12 @@ class Entity(BaseModel):
     end: int = Field(..., description="End position in text")
     score: float = Field(..., description="Detection confidence (0-1)")
     text: str = Field(..., description="The detected text")
+    protection_level: int = Field(
+        default=2,
+        ge=1,
+        le=4,
+        description="Data classification: 1=Public, 2=Internal, 3=Confidential, 4=Restricted",
+    )
 
 
 def resolve_overlaps(entities: list[Entity]) -> list[Entity]:

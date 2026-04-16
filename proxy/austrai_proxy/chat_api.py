@@ -88,11 +88,22 @@ PROVIDERS = {
     },
 }
 
-# Bracket preservation hint for LLMs
+# Privacy context prompt — tells the LLM it's working with anonymized data.
+# This prevents the LLM from confusing placeholder types (e.g. using a
+# DATE_OF_BIRTH code where an IBAN should be) and preserves conversational context.
 BRACKET_HINT = (
-    "The text contains reference codes in square brackets "
-    "(e.g. [AT_IBAN_1], [PHONE_NUMBER_1]). "
-    "Reproduce these EXACTLY as they appear."
+    "IMPORTANT: The user's text has been automatically anonymized for privacy. "
+    "Personal data has been replaced with typed placeholders:\n"
+    "- Names are replaced with fictional codenames (e.g. Arion, Brynn, Nexon Corp)\n"
+    "- Structured data uses semantic brackets: [DATE_OF_BIRTH_1], [AT_IBAN_1], "
+    "[PHONE_NUMBER_1], [LOCATION_1], [MEDICAL_CONDITION_1], [AT_SVNR_1], etc.\n\n"
+    "Rules:\n"
+    "1. Treat codenames and brackets as if they were real data — respond naturally.\n"
+    "2. Reproduce each placeholder EXACTLY as written (same spelling, same number).\n"
+    "3. Never swap placeholders — [DATE_OF_BIRTH_1] is always a birth date, "
+    "[AT_IBAN_1] is always a bank account.\n"
+    "4. Do not mention that the data is anonymized or that you see placeholders.\n"
+    "5. If you need to reference the data, use the exact placeholder or codename."
 )
 
 _config: ProxyConfig | None = None
@@ -191,6 +202,38 @@ def _get_api_key(provider: str, config: ProxyConfig) -> str:
     }.get(provider, "")
 
 
+def _entity_type_for_codename(codename: str, entities: list) -> str:
+    """Extract the entity type for a codename.
+
+    For bracket codenames like [AT_IBAN_1], extract from the bracket.
+    For pool codenames like Arion, look up in the entities list.
+    """
+    if codename.startswith("[") and codename.endswith("]"):
+        inner = codename[1:-1]
+        # Strip trailing _N counter: AT_IBAN_1 → AT_IBAN
+        parts = inner.rsplit("_", 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            return parts[0]
+        return inner
+
+    # Pool codename (Arion, Brynn, Nexon Corp, etc.) — look up in entities
+    for entity in entities:
+        if hasattr(entity, 'entity_type') and hasattr(entity, 'text'):
+            # Check if this entity's text maps to this codename
+            # by checking the anonymizer's codename engine
+            pass
+
+    # Fallback: check known pool types
+    from .core.codename_engine import PERSON_POOL, ORG_POOL, CUSTOM_POOL
+    if codename in PERSON_POOL:
+        return "PERSON"
+    if codename in ORG_POOL:
+        return "ORGANIZATION"
+    if codename in CUSTOM_POOL:
+        return "CUSTOM"
+    return "PERSON"
+
+
 # ---------------------------------------------------------------------------
 # GET /chat — Serve the chat UI
 # ---------------------------------------------------------------------------
@@ -255,31 +298,38 @@ async def chat_message(request: Request) -> Response:
             status_code=503,
         )
 
-    # Also anonymize history messages (user messages only)
+    # Anonymize ALL history messages — user AND assistant
+    # Assistant messages were rehydrated for display and contain real data.
+    # They must be re-anonymized before sending to the LLM.
     anonymized_history = []
     all_mappings = dict(mappings)
     for msg in history:
-        if msg.get("role") == "user" and msg.get("content"):
-            try:
-                hist_result = engine.anonymize(
-                    msg["content"],
-                    deny_list=config.deny_list or None,
-                    allow_list=config.allow_list or None,
-                )
-                anonymized_history.append({"role": "user", "content": hist_result.anonymized_text})
-                all_mappings.update(hist_result.mappings)
-            except Exception:
-                anonymized_history.append({"role": "user", "content": msg["content"]})
-        else:
-            # Assistant messages: rehydrate stored content back to anonymized form
+        content = msg.get("content", "")
+        if not content:
             anonymized_history.append(msg)
+            continue
+        try:
+            hist_result = engine.anonymize(
+                content,
+                deny_list=config.deny_list or None,
+                allow_list=config.allow_list or None,
+            )
+            anonymized_history.append({"role": msg.get("role", "user"), "content": hist_result.anonymized_text})
+            all_mappings.update(hist_result.mappings)
+        except Exception as e:
+            # FAIL-CLOSED: if ANY message can't be anonymized, abort the entire request.
+            # Never send un-anonymized data to an external LLM.
+            logger.error("History anonymization failed: %s — request blocked (fail-closed)", e)
+            return JSONResponse(
+                {"error": "Anonymization failed. Message blocked to protect privacy."},
+                status_code=503,
+            )
 
-    # Build system prompt with bracket hint
+    # Inject privacy context prompt whenever ANY anonymization happened
+    # (codenames like Arion need it just as much as bracket codes)
     sys_prompt = system_prompt or ""
     if all_mappings:
-        bracket_codes = [k for k in all_mappings if k.startswith("[")]
-        if bracket_codes:
-            sys_prompt = f"{sys_prompt}\n\n{BRACKET_HINT}" if sys_prompt else BRACKET_HINT
+        sys_prompt = f"{sys_prompt}\n\n{BRACKET_HINT}" if sys_prompt else BRACKET_HINT
 
     # Build request body based on API format
     if api_format == "anthropic":
@@ -315,14 +365,12 @@ async def chat_message(request: Request) -> Response:
         if api_key:
             headers["authorization"] = f"Bearer {api_key}"
 
-    # --- Debug log: record exactly what goes to the LLM ---
+    # --- Debug log: record ONLY anonymized data, never originals ---
     _debug_log.append({
         "timestamp": time.time(),
-        "original_message": message,
         "anonymized_message": anonymized_message,
-        "mappings": dict(mappings),
-        "all_mappings": dict(all_mappings),
         "entity_count": entity_count,
+        "codenames_used": list(mappings.keys()),
         "provider": provider,
         "model": model,
         "api_url": url,
@@ -330,9 +378,6 @@ async def chat_message(request: Request) -> Response:
             {"role": m.get("role", ""), "content": m.get("content", "")[:500]}
             for m in api_body.get("messages", [])
         ],
-        "system_prompt_sent": api_body.get("system", sys_prompt)[:500] if api_format == "anthropic" else (
-            api_body["messages"][0]["content"][:500] if api_body.get("messages") and api_body["messages"][0].get("role") == "system" else ""
-        ),
         "pii_detected": entity_count > 0,
         "pii_removed": anonymized_message != message,
     })
@@ -348,14 +393,21 @@ async def chat_message(request: Request) -> Response:
             "model": model,
             "provider": provider,
             "mappings_preview": [
-                {"type": v.split("]")[0].replace("[", "") if v.startswith("[") else "PERSON", "codename": k}
-                for k, v in list(mappings.items())[:5]
+                {
+                    "type": _entity_type_for_codename(k, result.entities if hasattr(result, 'entities') else []),
+                    "codename": k,
+                    "protection_level": result.level_map.get(k, 2) if hasattr(result, 'level_map') else 2,
+                }
+                for k, v in list(mappings.items())[:10]
             ] if mappings else [],
+            "max_protection_level": result.max_protection_level if hasattr(result, 'max_protection_level') else 2,
+            "doc_type": result.doc_type if hasattr(result, 'doc_type') else "general",
         }
         yield f"event: meta\ndata: {json.dumps(meta)}\n\n"
 
         rehydrator = StreamRehydrator(all_mappings) if all_mappings else None
         full_response = []
+        raw_response = []  # Pre-rehydration text (what the LLM actually said)
 
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
@@ -392,6 +444,10 @@ async def chat_message(request: Request) -> Response:
                         if delta_text is None:
                             continue
 
+                        # Collect raw LLM text (before rehydration)
+                        if delta_text:
+                            raw_response.append(delta_text)
+
                         # Rehydrate
                         if rehydrator:
                             text = rehydrator.feed(delta_text)
@@ -409,9 +465,16 @@ async def chat_message(request: Request) -> Response:
                     full_response.append(remaining)
                     yield f"data: {json.dumps({'content': remaining})}\n\n"
 
-            # Done event
-            restored_count = sum(1 for k in all_mappings if any(k in chunk for chunk in full_response)) if all_mappings else 0
-            yield f"event: done\ndata: {json.dumps({'restored_count': restored_count, 'full_response': ''.join(full_response)})}\n\n"
+            # Done event — get actual count from StreamRehydrator
+            restored_count = rehydrator.restored_count if rehydrator else 0
+            done_data = {
+                'restored_count': restored_count,
+                'full_response': ''.join(full_response),
+            }
+            # Include raw (pre-rehydration) response so the UI can show what the LLM actually saw
+            if raw_response and restored_count > 0:
+                done_data['raw_response'] = ''.join(raw_response)
+            yield f"event: done\ndata: {json.dumps(done_data)}\n\n"
 
         except httpx.ConnectError as e:
             yield f"event: error\ndata: {json.dumps({'error': f'Connection failed: {e}. Is the provider running?'})}\n\n"
@@ -960,15 +1023,25 @@ async def debug_test(request: Request) -> JSONResponse:
     except Exception as e:
         return JSONResponse({"error": f"Anonymization error: {e}"}, status_code=500)
 
-    # Build detailed entity breakdown
+    # Build detailed entity breakdown with protection levels
+    from .core.classifier import LEVEL_LABELS, LEVEL_LABELS_EN
     entities = []
     for codename, original in result.mappings.items():
         entity_type = codename.split("]")[0].replace("[", "") if codename.startswith("[") else "UNKNOWN"
+        level = result.level_map.get(codename, 2)
         entities.append({
             "original": original,
             "codename": codename,
             "type": entity_type,
+            "protection_level": level,
+            "protection_label": LEVEL_LABELS.get(level, "Intern"),
+            "protection_label_en": LEVEL_LABELS_EN.get(level, "Internal"),
         })
+
+    # Session info for vault countdown
+    session_info = None
+    if result.session_id:
+        session_info = engine.get_session_info(result.session_id)
 
     return JSONResponse({
         "original": text,
@@ -980,6 +1053,10 @@ async def debug_test(request: Request) -> JSONResponse:
         "confidence_threshold": config.confidence_threshold,
         "allow_list": config.allow_list,
         "deny_list": config.deny_list,
+        "max_protection_level": result.max_protection_level,
+        "doc_type": result.doc_type,
+        "session_id": result.session_id,
+        "session_info": session_info,
     })
 
 

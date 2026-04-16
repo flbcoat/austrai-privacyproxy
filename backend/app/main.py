@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title="AUSTR.AI PrivacyProxy",
     description="Anonymisierungs-Proxy für LLM-Anfragen — Schützt personenbezogene Daten nach österreichischem/EU-Datenschutzrecht.",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
 )
 

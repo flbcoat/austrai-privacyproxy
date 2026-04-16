@@ -23,6 +23,12 @@ class Entity(BaseModel):
     end: int = Field(..., description="Endposition im Text")
     score: float = Field(..., description="Konfidenzwert der Erkennung (0-1)")
     text: str = Field(..., description="Der erkannte Text")
+    protection_level: int = Field(
+        default=2,
+        ge=1,
+        le=4,
+        description="Schutzklasse: 1=Oeffentlich, 2=Intern, 3=Vertraulich, 4=Streng Vertraulich",
+    )
 
 
 class AnalyzeResponse(BaseModel):

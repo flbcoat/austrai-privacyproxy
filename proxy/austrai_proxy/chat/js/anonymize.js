@@ -151,18 +151,20 @@ function renderStepContent() {
           <div class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable" id="tool-original-text">${esc(r.original)}</div>
         </div>`;
 
-    case 1: // Detection — click to dismiss
+    case 1: // Detection — click to dismiss, with protection level badges
       return `
         <div class="aai-tool-pane">
           <div class="aai-tool-pane-header">
             ${isDE
               ? `${r.entity_count - state.dismissedEntities.size} Entität(en) erkannt — klicke auf eine Markierung um sie zu entfernen`
               : `${r.entity_count - state.dismissedEntities.size} entity/entities detected — click a highlight to remove it`}
+            ${r.doc_type && r.doc_type !== 'general' ? `<span class="aai-doc-type-badge aai-doc-type-${r.doc_type}">${r.doc_type === 'medical' ? (isDE ? 'Medizinisch' : 'Medical') : (isDE ? 'Rechtlich' : 'Legal')}</span>` : ''}
           </div>
           <div class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable" id="tool-detect-text">${highlightEntities(r.original, r.entities)}</div>
           <div class="aai-tool-entity-legend">
             ${r.entities.filter(e => !state.dismissedEntities.has(e.original)).map(e => `
               <span class="aai-tool-entity-tag" data-dismiss="${escAttr(e.original)}">
+                <span class="aai-plevel aai-plevel-${e.protection_level || 2}" title="${esc(e.protection_label || 'Intern')}">${e.protection_level || 2}</span>
                 <span class="aai-entity-type">${esc(e.type)}</span>
                 ${esc(e.original)}
                 <span class="aai-tool-entity-x">&times;</span>
@@ -170,6 +172,7 @@ function renderStepContent() {
             `).join('')}
             ${state.dismissedEntities.size ? `<span style="font-size:11px;color:var(--text-muted);padding:4px">${state.dismissedEntities.size} entfernt</span>` : ''}
           </div>
+          ${r.session_info ? renderVaultInfo(r.session_info, isDE) : ''}
         </div>`;
 
     case 2: // Anonymized
@@ -182,10 +185,11 @@ function renderStepContent() {
           ${r.entities.length ? `
             <div class="aai-tool-mapping-table">
               <table class="aai-table">
-                <thead><tr><th>Original</th><th>→</th><th>Codename</th></tr></thead>
+                <thead><tr><th>${isDE ? 'Stufe' : 'Level'}</th><th>Original</th><th></th><th>Codename</th></tr></thead>
                 <tbody>
                   ${r.entities.filter(e => !state.dismissedEntities.has(e.original)).map(e => `
                     <tr>
+                      <td><span class="aai-plevel aai-plevel-${e.protection_level || 2}">${e.protection_level || 2}</span></td>
                       <td style="color:var(--danger)">${esc(e.original)}</td>
                       <td style="color:var(--text-muted)">→</td>
                       <td style="color:var(--accent);font-family:var(--mono)">${esc(e.codename)}</td>
@@ -461,6 +465,35 @@ function getTypeColor(type) {
   if (type.includes('LOCATION') || type.includes('ADDRESS')) return 'hl-location';
   if (type.includes('DATE')) return 'hl-date';
   return 'hl-other';
+}
+
+/* ---- Vault Info / TTL Display ---- */
+
+const LEVEL_NAMES_DE = { 1: 'Oeffentlich', 2: 'Intern', 3: 'Vertraulich', 4: 'Streng Vertraulich' };
+const LEVEL_NAMES_EN = { 1: 'Public', 2: 'Internal', 3: 'Confidential', 4: 'Restricted' };
+
+function renderVaultInfo(info, isDE) {
+  if (!info || !info.levels) return '';
+  const names = isDE ? LEVEL_NAMES_DE : LEVEL_NAMES_EN;
+  const rows = Object.values(info.levels).map(lv => {
+    const remaining = lv.remaining_seconds;
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    const timeStr = remaining > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : (isDE ? 'Abgelaufen' : 'Expired');
+    const cls = lv.expired ? 'aai-vault-expired' : (remaining < 120 ? 'aai-vault-warning' : '');
+    return `
+      <div class="aai-vault-row ${cls}">
+        <span class="aai-plevel aai-plevel-${lv.protection_level}">${lv.protection_level}</span>
+        <span class="aai-vault-label">${names[lv.protection_level] || '?'}</span>
+        <span class="aai-vault-timer">${timeStr}</span>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="aai-vault-info">
+      <div class="aai-vault-header">${isDE ? 'Vault-Status' : 'Vault Status'}</div>
+      ${rows}
+    </div>`;
 }
 
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }

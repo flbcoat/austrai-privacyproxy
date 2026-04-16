@@ -411,20 +411,32 @@ def _kill_port(port: int) -> None:
 
 
 def _save_last_session(mappings: dict, session_id: str) -> None:
+    """Save session_id only — mappings are in the encrypted MappingStore."""
     import json
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "last_session.json").write_text(
-        json.dumps({"session_id": session_id, "mappings": mappings}, ensure_ascii=False)
+        json.dumps({"session_id": session_id}, ensure_ascii=False)
     )
 
 
 def _load_last_session() -> dict | None:
+    """Load mappings from the encrypted MappingStore via session_id."""
     import json
     f = CONFIG_DIR / "last_session.json"
     if not f.exists():
         return None
     try:
-        return json.loads(f.read_text()).get("mappings")
+        data = json.loads(f.read_text())
+        session_id = data.get("session_id")
+        # Legacy: if mappings are still in the file, use them but don't persist
+        if data.get("mappings"):
+            return data["mappings"]
+        # New: look up from encrypted store
+        if session_id:
+            from .core import get_engine
+            engine = get_engine()
+            return engine.get_latest_mappings()
+        return None
     except Exception:
         return None
 

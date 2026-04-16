@@ -104,8 +104,10 @@ function populateProviderDropdowns(providers, activeProvider, activeModel) {
   const selModel = document.getElementById('sel-model');
 
   selProvider.innerHTML = Object.entries(providers).map(([pid, prov]) => {
-    const configured = prov.configured ? '' : ' (—)';
-    return `<option value="${pid}" ${pid === activeProvider ? 'selected' : ''}>${prov.name}${configured}</option>`;
+    const configured = prov.configured;
+    const suffix = configured ? '' : ' (kein Key)';
+    const disabled = configured ? '' : 'disabled';
+    return `<option value="${pid}" ${pid === activeProvider ? 'selected' : ''} ${disabled}>${prov.name}${suffix}</option>`;
   }).join('');
 
   updateModelDropdown(providers, activeProvider, activeModel);

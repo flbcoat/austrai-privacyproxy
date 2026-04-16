@@ -50,7 +50,7 @@ async def process_text(request: Request, body: ProcessRequest) -> ProcessRespons
     annotated_html = generate_annotated_html(body.text, entities)
 
     # Step 3: Anonymize text
-    anonymized_text, mappings = anonymize(body.text, entities)
+    anonymized_text, mappings, _ = anonymize(body.text, entities)
 
     # Step 4: Create session for mapping storage
     session_id = session_store.create_session(mappings)
