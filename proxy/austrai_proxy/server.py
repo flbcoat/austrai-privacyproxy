@@ -55,7 +55,10 @@ BRACKET_HINT = (
     "3. Never swap placeholders — [DATE_OF_BIRTH_1] is always a birth date, "
     "[AT_IBAN_1] is always a bank account.\n"
     "4. Do not mention that the data is anonymized or that you see placeholders.\n"
-    "5. If you need to reference the data, use the exact placeholder or codename."
+    "5. If you need to reference the data, use the exact placeholder or codename.\n"
+    "6. NEVER put your own square brackets [ ] around values. Only placeholders "
+    "that already appear in square brackets in the text may be written with brackets. "
+    "All other values, numbers, URLs, and text must be written normally without brackets."
 )
 
 # Global config, set by create_app()
