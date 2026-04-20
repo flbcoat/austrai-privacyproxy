@@ -25,6 +25,7 @@ class ProxyConfig:
     default_provider: str = ""
     default_model: str = ""
     ollama_url: str = "http://localhost:11434"
+    lmstudio_url: str = "http://localhost:1234"
 
     @classmethod
     def load(cls) -> "ProxyConfig":
@@ -46,6 +47,7 @@ class ProxyConfig:
                 config.default_provider = data.get("default_provider", "")
                 config.default_model = data.get("default_model", "")
                 config.ollama_url = data.get("ollama_url", "http://localhost:11434")
+                config.lmstudio_url = data.get("lmstudio_url", "http://localhost:1234")
             except Exception:
                 pass
 
@@ -79,6 +81,7 @@ class ProxyConfig:
             "default_provider": self.default_provider,
             "default_model": self.default_model,
             "ollama_url": self.ollama_url,
+            "lmstudio_url": self.lmstudio_url,
         }
         CONFIG_FILE.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
         CONFIG_FILE.chmod(0o600)

@@ -86,6 +86,13 @@ PROVIDERS = {
         "auth_header": None,
         "models": [],  # Discovered dynamically
     },
+    "lmstudio": {
+        "name": "LM Studio (lokal)",
+        "format": "openai",
+        "base_url": "http://localhost:1234",
+        "auth_header": None,
+        "models": [],  # Discovered dynamically via /v1/models
+    },
 }
 
 # Privacy context prompt — tells the LLM it's working with anonymized data.
@@ -274,13 +281,15 @@ async def chat_message(request: Request) -> Response:
     api_format = prov["format"]
     base_url = prov["base_url"]
 
-    # For Ollama, use configured URL
+    # For local providers, use configured URL
     if provider == "ollama":
         base_url = getattr(config, "ollama_url", "http://localhost:11434")
+    elif provider == "lmstudio":
+        base_url = getattr(config, "lmstudio_url", "http://localhost:1234")
 
     # Get API key
     api_key = _get_api_key(provider, config)
-    if not api_key and provider != "ollama":
+    if not api_key and provider not in ("ollama", "lmstudio"):
         return JSONResponse({"error": f"No API key configured for {provider}"}, status_code=400)
 
     # Anonymize the user message
@@ -514,6 +523,7 @@ async def get_settings(request: Request) -> JSONResponse:
         "default_provider": getattr(config, "default_provider", ""),
         "default_model": getattr(config, "default_model", ""),
         "ollama_url": getattr(config, "ollama_url", "http://localhost:11434"),
+        "lmstudio_url": getattr(config, "lmstudio_url", "http://localhost:1234"),
         "onboarding_done": (CONFIG_DIR / "proxy.yaml").exists(),
     })
 
@@ -548,6 +558,8 @@ async def update_settings(request: Request) -> JSONResponse:
         config.default_model = body["default_model"]
     if "ollama_url" in body:
         config.ollama_url = body["ollama_url"]
+    if "lmstudio_url" in body:
+        config.lmstudio_url = body["lmstudio_url"]
 
     config.save()
     _config = config
@@ -565,10 +577,10 @@ async def get_providers(request: Request) -> JSONResponse:
 
     for pid, prov in PROVIDERS.items():
         api_key = _get_api_key(pid, config)
-        configured = bool(api_key) or pid == "ollama"
+        configured = bool(api_key) or pid in ("ollama", "lmstudio")
         models = list(prov["models"])
 
-        # Ollama: discover models dynamically
+        # Ollama: discover models dynamically via /api/tags
         if pid == "ollama":
             ollama_url = getattr(config, "ollama_url", "http://localhost:11434")
             try:
@@ -577,6 +589,18 @@ async def get_providers(request: Request) -> JSONResponse:
                     if resp.status_code == 200:
                         ollama_models = resp.json().get("models", [])
                         models = [{"id": m["name"], "name": m["name"]} for m in ollama_models]
+                        configured = True
+            except Exception:
+
+        # LM Studio: discover models dynamically via /v1/models (OpenAI-standard)
+        if pid == "lmstudio":
+            lmstudio_url = getattr(config, "lmstudio_url", "http://localhost:1234")
+            try:
+                async with httpx.AsyncClient(timeout=3.0) as client:
+                    resp = await client.get(f"{lmstudio_url}/v1/models")
+                    if resp.status_code == 200:
+                        lms_models = resp.json().get("data", [])
+                        models = [{"id": m["id"], "name": m.get("id", m.get("object", "unknown"))} for m in lms_models]
                         configured = True
             except Exception:
                 configured = False
@@ -661,6 +685,9 @@ async def validate_key(request: Request) -> JSONResponse:
             elif provider == "ollama":
                 ollama_url = body.get("ollama_url", "http://localhost:11434")
                 resp = await client.get(f"{ollama_url}/api/tags")
+            elif provider == "lmstudio":
+                lmstudio_url = body.get("lmstudio_url", "http://localhost:1234")
+                resp = await client.get(f"{lmstudio_url}/v1/models")
             else:
                 # Use cheapest model per provider for validation
                 cheap_models = {
@@ -684,6 +711,8 @@ async def validate_key(request: Request) -> JSONResponse:
     except httpx.ConnectError:
         if provider == "ollama":
             return JSONResponse({"valid": False, "error": "Ollama is not running. Start it with: ollama serve"})
+        if provider == "lmstudio":
+            return JSONResponse({"valid": False, "error": "LM Studio is not running. Start it and enable the local server."})
         return JSONResponse({"valid": False, "error": "Connection failed"})
     except Exception as e:
         return JSONResponse({"valid": False, "error": str(e)[:200]})
