@@ -3,7 +3,7 @@
  * Renders conversation list, handles new/select/delete.
  */
 
-import { get, set, on, deleteMessages, loadMessages } from './state.js';
+import { get, set, on, deleteMessages, loadMessages, saveMessages } from './state.js';
 import * as api from './api.js';
 import { t } from './i18n.js';
 
@@ -69,11 +69,22 @@ export async function newChat() {
   }
 }
 
-function selectConversation(id) {
+async function selectConversation(id) {
   set('currentConversationId', id);
   set('currentView', 'chat');
   set('messages', loadMessages(id));
   if (window.innerWidth <= 768) set('sidebarOpen', false);
+
+  if (!get('messages').length) {
+    try {
+      const { messages } = await api.getConversation(id);
+      if (messages?.length && get('currentConversationId') === id) {
+        const mapped = messages.map(m => ({ role: m.role, content: m.content, meta: null }));
+        set('messages', mapped);
+        saveMessages(id, mapped);
+      }
+    } catch { /* offline fallback */ }
+  }
 }
 
 async function removeConversation(id) {

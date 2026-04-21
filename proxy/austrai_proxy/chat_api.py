@@ -267,6 +267,7 @@ async def chat_message(request: Request) -> Response:
     model = body.get("model", "")
     system_prompt = body.get("system_prompt", "")
     history = body.get("history", [])  # Previous messages [{role, content}]
+    conversation_id = body.get("conversation_id")
 
     if not message:
         return JSONResponse({"error": "Empty message"}, status_code=400)
@@ -397,6 +398,17 @@ async def chat_message(request: Request) -> Response:
         del _debug_log[:-_DEBUG_LOG_MAX]
     logger.info("Debug: %d PII entities anonymized for %s/%s", entity_count, provider, model)
 
+    # Save user message to persistent storage
+    if conversation_id:
+        try:
+            store = _get_conv_store()
+            store.add_message(conversation_id, "user", message,
+                              anonymized=anonymized_message,
+                              mappings=mappings,
+                              entity_count=entity_count)
+        except Exception as e:
+            logger.error("Failed to save user message: %s", e)
+
     # Send SSE-streamed response
     async def generate():
         # Send meta event first
@@ -444,6 +456,11 @@ async def chat_message(request: Request) -> Response:
                         # Extract text delta
                         delta_text = None
                         if api_format == "anthropic":
+                            if data.get("type") == "error":
+                                error_info = data.get("error", {})
+                                error_msg = error_info.get("message", "Unknown API error")
+                                yield f"event: error\ndata: {json.dumps({'error': f'Anthropic: {error_msg}'})}\n\n"
+                                return
                             if data.get("type") == "content_block_delta":
                                 delta = data.get("delta", {})
                                 if delta.get("type") == "text_delta":
@@ -487,6 +504,15 @@ async def chat_message(request: Request) -> Response:
             if raw_response and restored_count > 0:
                 done_data['raw_response'] = ''.join(raw_response)
             yield f"event: done\ndata: {json.dumps(done_data)}\n\n"
+
+            # Save assistant message to persistent storage
+            if conversation_id and full_response:
+                try:
+                    store = _get_conv_store()
+                    store.add_message(conversation_id, "assistant",
+                                      ''.join(full_response))
+                except Exception as e:
+                    logger.error("Failed to save assistant message: %s", e)
 
         except httpx.ConnectError as e:
             yield f"event: error\ndata: {json.dumps({'error': f'Connection failed: {e}. Is the provider running?'})}\n\n"

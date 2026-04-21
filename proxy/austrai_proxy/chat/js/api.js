@@ -72,13 +72,13 @@ export async function redactImage(file) {
 
 /* ---- Chat (SSE Streaming) ---- */
 
-export function streamMessage({ message, provider, model, history, system_prompt }, callbacks) {
+export function streamMessage({ message, provider, model, history, system_prompt, conversation_id }, callbacks) {
   const controller = new AbortController();
 
   fetch(`${BASE}/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, provider, model, history, system_prompt }),
+    body: JSON.stringify({ message, provider, model, history, system_prompt, conversation_id }),
     signal: controller.signal,
   }).then(async (res) => {
     if (!res.ok) {

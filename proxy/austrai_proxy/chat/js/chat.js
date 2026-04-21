@@ -330,7 +330,7 @@ async function sendConfirmed(text) {
   set('messages', [...messages, { role: 'assistant', content: '', meta: null }]);
 
   abortHandle = api.streamMessage(
-    { message: fullMessage, provider, model, history, system_prompt: '' },
+    { message: fullMessage, provider, model, history, system_prompt: '', conversation_id: convId },
     {
       onMeta(data) {
         meta = data;
