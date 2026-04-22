@@ -1,12 +1,12 @@
 """AUSTR.AI CLI — lokaler KI-Assistent mit eingebautem Datenschutz.
 
 Usage:
-  aai chat              Chat starten (Hauptbefehl)
-  aai anon "Text"       Text anonymisieren
-  aai anon datei.pdf    Datei anonymisieren
-  aai deanon "Text"     KI-Antwort wiederherstellen
-  aai redact bild.png   Bild/PDF schwärzen
-  aai audio datei.mp3   Audio transkribieren + anonymisieren
+  aai chat              Chat-UI starten (Hauptbefehl, macht alles)
+  aai --help            Hilfe anzeigen
+
+Alle weiteren Einstellungen (API-Keys, Deny-/Allow-Listen, Providers,
+Datei-Anonymisierung, Bildschwärzung, Audio-Transkription) werden direkt
+in der Web-UI unter http://localhost:8282/chat vorgenommen.
 """
 
 import os
@@ -16,14 +16,12 @@ import time
 
 import click
 
-from .config import ProxyConfig, DEFAULT_PORT, CONFIG_DIR
+from .config import ProxyConfig, CONFIG_DIR
 from ._platform import (
-    copy_to_clipboard,
     ensure_utf8_stdio,
     is_process_alive,
     kill_processes_on_port,
     start_detached_process,
-    terminate_process,
 )
 
 # Windows-CMD defaults to cp1252 which cannot render the emoji and German
@@ -38,13 +36,18 @@ PROXY_PID_FILE = CONFIG_DIR / "proxy.pid"
 @click.group(invoke_without_command=True)
 @click.pass_context
 def main(ctx):
-    """AUSTR.AI — Lokaler KI-Assistent mit Datenschutz."""
+    """AUSTR.AI — Lokaler KI-Assistent mit Datenschutz.
+
+    Starte die Chat-UI mit `aai chat`. Alle Einstellungen (Modelle,
+    API-Keys, Datenschutz-Regeln, Datei-Anonymisierung) sind direkt
+    in der Web-UI verfügbar.
+    """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
 
 # -----------------------------------------------------------------------
-# aai chat — THE main command. Does everything.
+# aai chat — THE main command.
 # -----------------------------------------------------------------------
 
 @main.command()
@@ -59,7 +62,7 @@ def chat(port, no_browser):
 
     click.echo("\n🛡  AUSTR.AI\n")
 
-    # ── Auto-Setup: alles prüfen und installieren ──────────────
+    # ── Auto-Setup: Sprachmodell + Erkennungsmodell pruefen ────
     first_run = not (CONFIG_DIR / "proxy.yaml").exists()
     needs_setup = first_run
 
@@ -99,180 +102,17 @@ def chat(port, no_browser):
 
 
 # -----------------------------------------------------------------------
-# aai anon — Anonymize text or file
-# -----------------------------------------------------------------------
-
-@main.command(name="anon")
-@click.argument("text", nargs=-1, required=True)
-@click.option("--deny", "-d", multiple=True, help="Zusaetzliche Begriffe anonymisieren")
-@click.option("--output", "-o", default=None, help="Anonymisierten Text in Datei speichern")
-def anonymize(text, deny, output):
-    """Text oder Datei anonymisieren (lokal, kein Server noetig)."""
-    full_text = " ".join(text)
-    if not full_text.strip():
-        click.echo("Kein Text angegeben.")
-        raise SystemExit(1)
-
-    if os.path.isfile(full_text):
-        click.echo(f"📄 Datei: {full_text}")
-        try:
-            from .core.extractor import extract_from_file
-            result = extract_from_file(full_text)
-            click.echo(f"   {result.format}, {result.pages} Seiten, {len(result.text)} Zeichen")
-            full_text = result.text
-        except Exception as e:
-            click.echo(f"✗ {e}")
-            raise SystemExit(1)
-
-    click.echo("⏳ Analysiere...")
-
-    from .core import get_engine
-    engine = get_engine()
-    result = engine.anonymize(full_text, deny_list=list(deny) if deny else None)
-
-    if not result.mappings:
-        click.echo("ℹ️  Keine sensiblen Daten erkannt.")
-        click.echo(full_text)
-        return
-
-    click.echo(f"\n✅ {len(result.mappings)} Begriffe anonymisiert:\n")
-    for codename in result.mappings:
-        click.echo(f"  {codename}")
-    click.echo(f"\n{result.anonymized_text}\n")
-
-    if result.mappings:
-        _save_last_session(result.mappings, result.session_id)
-
-    if output:
-        with open(output, "w", encoding="utf-8") as f:
-            f.write(result.anonymized_text)
-        click.echo(f"💾 Gespeichert: {output}")
-    else:
-        if copy_to_clipboard(result.anonymized_text):
-            click.echo("📋 In Zwischenablage kopiert!")
-
-
-# -----------------------------------------------------------------------
-# aai deanon — Rehydrate LLM response
-# -----------------------------------------------------------------------
-
-@main.command(name="deanon")
-@click.argument("text", nargs=-1, required=True)
-def rehydrate(text):
-    """KI-Antwort de-anonymisieren (Codenames durch Originale ersetzen)."""
-    full_text = " ".join(text)
-    if not full_text.strip():
-        click.echo("Kein Text angegeben.")
-        raise SystemExit(1)
-
-    from .core import get_engine
-    engine = get_engine()
-
-    mappings = engine.get_latest_mappings()
-    if not mappings:
-        mappings = _load_last_session()
-    if not mappings:
-        click.echo("Keine gespeicherte Session. Zuerst aai anon ausfuehren.")
-        raise SystemExit(1)
-
-    restored = engine.rehydrate(full_text, mappings)
-    count = sum(1 for k in mappings if k in full_text)
-    click.echo(f"\n✅ {count} Begriffe wiederhergestellt:\n")
-    click.echo(restored)
-
-    if copy_to_clipboard(restored):
-        click.echo("\n📋 In Zwischenablage kopiert!")
-
-
-# -----------------------------------------------------------------------
-# aai redact — Redact image or PDF
-# -----------------------------------------------------------------------
-
-@main.command(name="redact")
-@click.argument("file_path", required=True)
-@click.option("--output", "-o", default=None, help="Ausgabepfad")
-@click.option("--deny", "-d", multiple=True, help="Zusaetzliche Begriffe")
-def redact(file_path, output, deny):
-    """Bild oder PDF schwaerzen (sensible Daten ueberdecken)."""
-    if not os.path.isfile(file_path):
-        click.echo(f"Datei nicht gefunden: {file_path}")
-        raise SystemExit(1)
-
-    ext = os.path.splitext(file_path)[1].lower()
-    click.echo(f"⏳ Schwärze {os.path.basename(file_path)}...")
-
-    try:
-        if ext == ".pdf":
-            from .core.image_redactor import redact_pdf_pages
-            result = redact_pdf_pages(file_path, output_path=output, deny_list=list(deny) if deny else None)
-        elif ext in (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".webp"):
-            from .core.image_redactor import redact_image
-            result = redact_image(file_path, output_path=output, deny_list=list(deny) if deny else None)
-        else:
-            click.echo(f"Format '{ext}' nicht unterstuetzt. Nutze Bilder oder PDFs.")
-            raise SystemExit(1)
-
-        click.echo(f"\n✅ {result['entities_redacted']} Bereiche geschwärzt")
-        click.echo(f"Gespeichert: {result['output_path']}")
-    except ImportError as e:
-        click.echo(f"✗ {e}")
-        raise SystemExit(1)
-    except Exception as e:
-        click.echo(f"✗ {e}")
-        raise SystemExit(1)
-
-
-# -----------------------------------------------------------------------
-# aai audio — Transcribe + anonymize audio
-# -----------------------------------------------------------------------
-
-@main.command(name="audio")
-@click.argument("file_path", required=True)
-@click.option("--model", "-m", default="base", help="Whisper-Modell (tiny/base/small/medium/large)")
-@click.option("--lang", "-l", default="de", help="Sprache (de/en/...)")
-@click.option("--deny", "-d", multiple=True, help="Zusaetzliche Begriffe")
-def audio(file_path, model, lang, deny):
-    """Audiodatei transkribieren und anonymisieren (lokal)."""
-    if not os.path.isfile(file_path):
-        click.echo(f"Datei nicht gefunden: {file_path}")
-        raise SystemExit(1)
-
-    click.echo(f"⏳ Transkribiere {os.path.basename(file_path)}...")
-
-    try:
-        from .core.audio_pipeline import transcribe_and_anonymize
-        result = transcribe_and_anonymize(file_path, model_size=model, language=lang,
-                                          deny_list=list(deny) if deny else None)
-
-        click.echo(f"\n📝 Transkript ({result['duration_seconds']:.1f}s):")
-        click.echo(result["transcript"][:500])
-
-        if result["entity_count"] > 0:
-            click.echo(f"\n✅ {result['entity_count']} Begriffe anonymisiert:")
-            click.echo(result["anonymized_text"][:500])
-        else:
-            click.echo("\nℹ️  Keine sensiblen Daten erkannt.")
-
-        text = result["anonymized_text"] or result["transcript"]
-        if copy_to_clipboard(text):
-            click.echo("\n📋 In Zwischenablage kopiert!")
-    except ImportError as e:
-        click.echo(f"✗ {e}")
-        raise SystemExit(1)
-    except Exception as e:
-        click.echo(f"✗ {e}")
-        raise SystemExit(1)
-
-
-# -----------------------------------------------------------------------
-# Hidden: aai start (for advanced users / server deployment)
+# Hidden: aai start — used internally by `aai chat` to spawn the detached
+# server process. Not meant for direct end-user use, but kept as a stable
+# entry point so the detached subprocess can re-enter python with the same
+# interpreter / environment.
 # -----------------------------------------------------------------------
 
 @main.command(hidden=True)
 @click.option("--port", "-p", default=None, type=int)
 @click.option("--host", "-h", default="127.0.0.1")
 def start(port, host):
-    """Server starten (fuer Entwickler / Server-Deployment)."""
+    """Server starten (intern; von `aai chat` aufgerufen)."""
     config = ProxyConfig.load()
     if port:
         config.port = port
@@ -348,7 +188,7 @@ def _start_proxy_foreground(config, host="127.0.0.1"):
 
     app = create_app(config)
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    PROXY_PID_FILE.write_text(str(os.getpid()))
+    PROXY_PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
 
     port = config.port
     anth = "✓" if config.anthropic_api_key else "✗"
@@ -384,14 +224,14 @@ def _start_proxy_background(config):
     proc = start_detached_process(cmd)
 
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    PROXY_PID_FILE.write_text(str(proc.pid))
+    PROXY_PID_FILE.write_text(str(proc.pid), encoding="utf-8")
 
 
 def _is_proxy_running() -> bool:
     if not PROXY_PID_FILE.exists():
         return False
     try:
-        pid = int(PROXY_PID_FILE.read_text().strip())
+        pid = int(PROXY_PID_FILE.read_text(encoding="utf-8").strip())
     except (ValueError, OSError):
         PROXY_PID_FILE.unlink(missing_ok=True)
         return False
@@ -403,44 +243,6 @@ def _is_proxy_running() -> bool:
 
 def _kill_port(port: int) -> None:
     kill_processes_on_port(port)
-
-
-def _save_last_session(mappings: dict, session_id: str) -> None:
-    """Save session_id only — mappings are in the encrypted MappingStore."""
-    import json
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "last_session.json").write_text(
-        json.dumps({"session_id": session_id}, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
-
-def _load_last_session() -> dict | None:
-    """Load mappings from the encrypted MappingStore via session_id."""
-    import json
-    f = CONFIG_DIR / "last_session.json"
-    if not f.exists():
-        return None
-    try:
-        data = json.loads(f.read_text(encoding="utf-8"))
-        session_id = data.get("session_id")
-        # Legacy: if mappings are still in the file, use them but don't persist
-        if data.get("mappings"):
-            return data["mappings"]
-        # New: look up from encrypted store
-        if session_id:
-            from .core import get_engine
-            engine = get_engine()
-            return engine.get_latest_mappings()
-        return None
-    except Exception:
-        return None
-
-
-def _mask(key: str) -> str:
-    if not key or len(key) < 12:
-        return ""
-    return key[:8] + "..." + key[-4:]
 
 
 if __name__ == "__main__":
