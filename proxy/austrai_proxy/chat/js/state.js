@@ -1,75 +1,102 @@
 /**
- * AUSTR.AI — Reactive State Store
- * Central state management with pub/sub notifications.
- * All modules import from here to share state.
+ * AUSTR.AI — Reactive State Store (Preact Signals)
+ *
+ * During the Preact migration this module exposes two APIs on the same store:
+ *  - Signal API (`signals.*`, `useSignalValue`): for new Preact components
+ *  - Legacy API (`get` / `set` / `on` / `batch`): for non-migrated Vanilla-JS modules
+ *
+ * Both views observe the same underlying Preact signals, so setters from either
+ * side automatically notify subscribers of the other side.
  */
 
-const _state = {
-  // Auth & Config
-  onboardingDone: false,
-  settings: {},
-  providers: {},
-  systemInfo: {},
+import { signal, batch as signalsBatch } from '@preact/signals';
 
-  // Navigation
-  currentView: 'welcome',        // 'welcome' | 'chat'
-  currentConversationId: null,
-  conversations: [],
-  messages: [],
+function makeSignals() {
+  return {
+    // Auth & Config
+    onboardingDone: signal(false),
+    settings: signal({}),
+    providers: signal({}),
+    systemInfo: signal({}),
 
-  // Chat
-  provider: '',
-  model: '',
-  isStreaming: false,
+    // Navigation
+    currentView: signal('welcome'),
+    currentConversationId: signal(null),
+    conversations: signal([]),
+    messages: signal([]),
 
-  // Privacy (last message stats)
-  lastMeta: null,
-  sessionStats: { anonymized: 0, restored: 0 },
+    // Chat
+    provider: signal(''),
+    model: signal(''),
+    isStreaming: signal(false),
 
-  // UI
-  language: (navigator.language || 'de').startsWith('de') ? 'de' : 'en',
-  sidebarOpen: window.innerWidth > 768,
-  settingsOpen: false,
-  privacyPanelOpen: false,
+    // Privacy (last message stats)
+    lastMeta: signal(null),
+    sessionStats: signal({ anonymized: 0, restored: 0 }),
 
-  // Uploads
-  pendingAttachments: [],
-};
+    // UI
+    language: signal((navigator.language || 'de').startsWith('de') ? 'de' : 'en'),
+    sidebarOpen: signal(window.innerWidth > 768),
+    settingsOpen: signal(false),
+    privacyPanelOpen: signal(false),
 
-const _listeners = new Map();
+    // Uploads
+    pendingAttachments: signal([]),
+
+    // Chat input preview (anonymization check before sending)
+    // null = hidden, { text, result } = shown (result null = loading)
+    pendingPreview: signal(null),
+  };
+}
+
+export const signals = makeSignals();
+
+/* ---- Legacy pub/sub API (backward compatibility) ----
+ * Non-migrated modules continue to use get/set/on/batch as before.
+ * Internally these are proxied onto the same Preact signals so that
+ * migrated Preact components and legacy modules stay in sync.
+ */
 
 export function get(key) {
-  return _state[key];
+  const s = signals[key];
+  return s ? s.value : undefined;
 }
 
 export function set(key, value) {
-  _state[key] = value;
-  if (_listeners.has(key)) {
-    for (const fn of _listeners.get(key)) fn(value);
-  }
+  const s = signals[key];
+  if (s) s.value = value;
 }
 
 export function on(key, fn) {
-  if (!_listeners.has(key)) _listeners.set(key, new Set());
-  _listeners.get(key).add(fn);
-  return () => _listeners.get(key).delete(fn);
+  const s = signals[key];
+  if (!s) return () => {};
+  let first = true;
+  return s.subscribe((v) => {
+    if (first) { first = false; return; } // skip initial replay — match legacy on() semantics
+    fn(v);
+  });
 }
 
 export function batch(updates) {
-  for (const [k, v] of Object.entries(updates)) _state[k] = v;
-  for (const k of Object.keys(updates)) {
-    if (_listeners.has(k)) {
-      for (const fn of _listeners.get(k)) fn(_state[k]);
+  signalsBatch(() => {
+    for (const [k, v] of Object.entries(updates)) {
+      const s = signals[k];
+      if (s) s.value = v;
     }
-  }
+  });
 }
 
-/* ---- Local persistence for messages (backend has no save-message endpoint yet) ---- */
+/* ---- Local persistence for messages ----
+ * Backend v2.2.2 persists messages in encrypted SQLite. localStorage is a
+ * per-browser cache that preserves rich metadata (rawResponse, meta, doneData)
+ * which the backend does not store. Sidebar falls back to the backend API
+ * when localStorage has no entry for a conversation.
+ */
 
 export function saveMessages(convId, messages) {
   try {
     localStorage.setItem(`aai_msg_${convId}`, JSON.stringify(messages));
-  } catch { /* quota exceeded — ignore */ }
+  } catch { /* quota exceeded — ignore, backend is source of truth */ }
 }
 
 export function loadMessages(convId) {
@@ -83,7 +110,10 @@ export function deleteMessages(convId) {
   localStorage.removeItem(`aai_msg_${convId}`);
 }
 
-/* ---- Toast notifications ---- */
+/* ---- Toast notifications ----
+ * Imperative DOM insertion for now; will become a Preact <ToastContainer>
+ * in Phase 11 when the app root is migrated.
+ */
 
 export function toast(text, type = 'info', duration = 3000) {
   const container = document.getElementById('toast-container');

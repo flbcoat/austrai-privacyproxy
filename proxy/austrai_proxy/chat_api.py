@@ -9,6 +9,7 @@ Mounted at /chat/* on the proxy server. Provides:
   GET  /chat/api/system-info   — RAM, OS for Ollama model recommendation
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -466,6 +467,16 @@ async def chat_message(request: Request) -> Response:
                                 if delta.get("type") == "text_delta":
                                     delta_text = delta.get("text", "")
                         else:
+                            # OpenAI-compatible: mid-stream errors come as {"error": {...}}
+                            # or (occasionally) as a top-level "error" string.
+                            err = data.get("error")
+                            if err:
+                                if isinstance(err, dict):
+                                    error_msg = err.get("message") or err.get("type") or "Unknown API error"
+                                else:
+                                    error_msg = str(err)
+                                yield f"event: error\ndata: {json.dumps({'error': f'{provider}: {error_msg}'})}\n\n"
+                                return
                             choices = data.get("choices", [])
                             if choices:
                                 delta_text = choices[0].get("delta", {}).get("content")
@@ -617,6 +628,7 @@ async def get_providers(request: Request) -> JSONResponse:
                         models = [{"id": m["name"], "name": m["name"]} for m in ollama_models]
                         configured = True
             except Exception:
+                configured = False
 
         # LM Studio: discover models dynamically via /v1/models (OpenAI-standard)
         if pid == "lmstudio":
@@ -1073,7 +1085,12 @@ async def debug_test(request: Request) -> JSONResponse:
     engine = _get_engine()
 
     try:
-        result = engine.anonymize(
+        # Off-load the sync, CPU-bound detection work to a worker thread so the
+        # event loop stays free for parallel requests (dropdowns, conversation
+        # listing, validate-key). Without this, the first call does a lazy
+        # GLiNER + spaCy load (~60s) and blocks every other endpoint.
+        result = await asyncio.to_thread(
+            engine.anonymize,
             text,
             deny_list=config.deny_list or None,
             allow_list=config.allow_list or None,
@@ -1149,6 +1166,25 @@ async def debug_clear(request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok", "cleared": True})
 
 
+async def _warmup_engine() -> None:
+    """Pre-load the anonymization engine in a background task.
+
+    GLiNER + spaCy together take ~60s on first call. Triggering the load at
+    startup (fire-and-forget) means the server is ready for `/api/settings`
+    and `/api/providers` immediately, while the heavy models are warming
+    behind the scenes. By the time the user types the first message, the
+    engine is usually ready.
+    """
+    async def _load() -> None:
+        try:
+            await asyncio.to_thread(_get_engine)
+            logger.info("Engine warmup complete")
+        except Exception as e:
+            logger.warning("Engine warmup failed (will retry on first call): %s", e)
+
+    asyncio.create_task(_load())
+
+
 def create_chat_app() -> Starlette:
     routes = [
         Route("/", serve_chat, methods=["GET"]),
@@ -1173,4 +1209,4 @@ def create_chat_app() -> Starlette:
         Mount("/css", StaticFiles(directory=str(CHAT_DIR / "css")), name="chat-css"),
         Mount("/js", StaticFiles(directory=str(CHAT_DIR / "js")), name="chat-js"),
     ]
-    return Starlette(routes=routes)
+    return Starlette(routes=routes, on_startup=[_warmup_engine])

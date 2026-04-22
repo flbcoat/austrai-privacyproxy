@@ -1,16 +1,25 @@
 /**
- * AUSTR.AI — Anonymization Tool (5-Step Pipeline)
- * Features:
- * - 5 steps: Original → Erkennung → Anonymisiert → LLM → Re-hydriert
- * - Click-to-anonymize: select text in Original view → add to deny-list
+ * AUSTR.AI — Anonymization Tool (Preact, 5-Step Pipeline)
+ *
+ * 5 steps: Original → Erkennung → Anonymisiert → LLM → Re-hydriert
+ * - Click-to-anonymize: select text in Original/Detection view → add to deny-list
  * - Click-to-dismiss: click highlighted entity to remove it
  * - Example texts for quick testing
+ *
+ * The previous Vanilla-JS version registered mouseup/mousedown on document
+ * without ever cleaning them up (listener leak). The Preact version does
+ * the same registration inside useEffect with a cleanup closure.
  */
 
-import { get, set, on, toast } from './state.js';
+import { h, render, Fragment } from 'preact';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import htm from 'htm';
+import { signals, toast } from './state.js';
 import * as api from './api.js';
-import { t, getLang } from './i18n.js';
+import { getLang } from './i18n.js';
 import { renderMarkdown } from './markdown.js';
+
+const html = htm.bind(h);
 
 const EXAMPLES = {
   email: {
@@ -51,412 +60,13 @@ const STEPS = [
   { id: 'rehydrated', de: 'Re-hydriert', en: 'Rehydrated' },
 ];
 
-let container;
-let state = {
-  step: 0,
-  inputText: '',
-  result: null,
-  llmResponse: '',
-  rehydrated: '',
-  isProcessing: false,
-  isStreaming: false,
-  dismissedEntities: new Set(),
-};
+const LEVEL_NAMES_DE = { 1: 'Oeffentlich', 2: 'Intern', 3: 'Vertraulich', 4: 'Streng Vertraulich' };
+const LEVEL_NAMES_EN = { 1: 'Public', 2: 'Internal', 3: 'Confidential', 4: 'Restricted' };
 
-export function init() {
-  container = document.getElementById('tool-view');
-  if (!container) return;
-  render();
-}
+/* ---- Helpers ---- */
 
-function render() {
-  const isDE = getLang() === 'de';
-
-  container.innerHTML = `
-    <div class="aai-tool">
-      <div class="aai-tool-input-section">
-        <div class="aai-tool-header">
-          <h2>${isDE ? 'Anonymisierungs-Werkzeug' : 'Anonymization Tool'}</h2>
-          <p>${isDE ? 'Text einfügen, Anonymisierung prüfen, optional an LLM senden.' : 'Paste text, check anonymization, optionally send to LLM.'}</p>
-        </div>
-
-        <div class="aai-tool-examples">
-          ${Object.entries(EXAMPLES).map(([key, ex]) =>
-            `<button class="aai-chip" data-example="${key}">${ex.de}</button>`
-          ).join('')}
-        </div>
-
-        <div class="aai-tool-textarea-wrap">
-          <textarea class="aai-input aai-tool-textarea" id="tool-text" rows="6" placeholder="${isDE ? 'Text mit personenbezogenen Daten eingeben…' : 'Enter text with personal data…'}">${esc(state.inputText)}</textarea>
-          <div class="aai-tool-textarea-footer">
-            <span class="aai-tool-char-count" id="tool-char-count">${state.inputText.length} / 5000</span>
-            <div class="aai-tool-textarea-actions">
-              <button class="aai-btn aai-btn--ghost aai-btn--sm" id="tool-clear">${isDE ? 'Leeren' : 'Clear'}</button>
-              <button class="aai-btn aai-btn--primary" id="tool-analyze" ${state.isProcessing ? 'disabled' : ''}>
-                ${state.isProcessing ? (isDE ? 'Wird analysiert…' : 'Analyzing…') : (isDE ? 'Analyse starten' : 'Start Analysis')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="aai-tool-results" id="tool-results" ${state.result ? '' : 'hidden'}>
-        <div class="aai-tool-steps">
-          ${STEPS.map((s, i) => `
-            <button class="aai-tool-step ${i === state.step ? 'active' : ''} ${i <= getMaxStep() ? '' : 'disabled'}" data-step="${i}">
-              <span class="aai-tool-step-num">${i + 1}</span>
-              <span class="aai-tool-step-label">${isDE ? s.de : s.en}</span>
-            </button>
-          `).join('')}
-        </div>
-        <div class="aai-tool-step-content" id="tool-step-content">
-          ${renderStepContent()}
-        </div>
-      </div>
-    </div>
-
-    <!-- Floating action popup for text selection -->
-    <div id="text-select-popup" class="aai-select-popup" hidden>
-      <button class="aai-btn aai-btn--primary aai-btn--sm" id="btn-add-deny">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Anonymisieren
-      </button>
-    </div>
-  `;
-
-  wireEvents();
-}
-
-function getMaxStep() {
-  if (state.rehydrated) return 4;
-  if (state.llmResponse) return 3;
-  if (state.result) return 2;
-  return 0;
-}
-
-function renderStepContent() {
-  const r = state.result;
-  const isDE = getLang() === 'de';
-  if (!r) return '';
-
-  switch (state.step) {
-    case 0: // Original — with click-to-anonymize
-      return `
-        <div class="aai-tool-pane">
-          <div class="aai-tool-pane-header">
-            ${isDE
-              ? 'Originaltext — <strong>markiere einen Begriff</strong> um ihn zur Deny-List hinzuzufügen'
-              : 'Original text — <strong>select a term</strong> to add it to the deny list'}
-          </div>
-          <div class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable" id="tool-original-text">${esc(r.original)}</div>
-        </div>`;
-
-    case 1: // Detection — click to dismiss, with protection level badges
-      return `
-        <div class="aai-tool-pane">
-          <div class="aai-tool-pane-header">
-            ${isDE
-              ? `${r.entity_count - state.dismissedEntities.size} Entität(en) erkannt — klicke auf eine Markierung um sie zu entfernen`
-              : `${r.entity_count - state.dismissedEntities.size} entity/entities detected — click a highlight to remove it`}
-            ${r.doc_type && r.doc_type !== 'general' ? `<span class="aai-doc-type-badge aai-doc-type-${r.doc_type}">${r.doc_type === 'medical' ? (isDE ? 'Medizinisch' : 'Medical') : (isDE ? 'Rechtlich' : 'Legal')}</span>` : ''}
-          </div>
-          <div class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable" id="tool-detect-text">${highlightEntities(r.original, r.entities)}</div>
-          <div class="aai-tool-entity-legend">
-            ${r.entities.filter(e => !state.dismissedEntities.has(e.original)).map(e => `
-              <span class="aai-tool-entity-tag" data-dismiss="${escAttr(e.original)}">
-                <span class="aai-plevel aai-plevel-${e.protection_level || 2}" title="${esc(e.protection_label || 'Intern')}">${e.protection_level || 2}</span>
-                <span class="aai-entity-type">${esc(e.type)}</span>
-                ${esc(e.original)}
-                <span class="aai-tool-entity-x">&times;</span>
-              </span>
-            `).join('')}
-            ${state.dismissedEntities.size ? `<span style="font-size:11px;color:var(--text-muted);padding:4px">${state.dismissedEntities.size} entfernt</span>` : ''}
-          </div>
-          ${r.session_info ? renderVaultInfo(r.session_info, isDE) : ''}
-        </div>`;
-
-    case 2: // Anonymized
-      return `
-        <div class="aai-tool-pane">
-          <div class="aai-tool-pane-header" style="color:var(--accent)">
-            ${isDE ? 'Nur dieser Text wird an das LLM gesendet' : 'Only this text is sent to the LLM'}
-          </div>
-          <div class="aai-tool-pane-body aai-tool-text-display">${highlightCodenames(esc(r.anonymized))}</div>
-          ${r.entities.length ? `
-            <div class="aai-tool-mapping-table">
-              <table class="aai-table">
-                <thead><tr><th>${isDE ? 'Stufe' : 'Level'}</th><th>Original</th><th></th><th>Codename</th></tr></thead>
-                <tbody>
-                  ${r.entities.filter(e => !state.dismissedEntities.has(e.original)).map(e => `
-                    <tr>
-                      <td><span class="aai-plevel aai-plevel-${e.protection_level || 2}">${e.protection_level || 2}</span></td>
-                      <td style="color:var(--danger)">${esc(e.original)}</td>
-                      <td style="color:var(--text-muted)">→</td>
-                      <td style="color:var(--accent);font-family:var(--mono)">${esc(e.codename)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          ` : ''}
-          <div style="padding:12px 16px;display:flex;gap:8px">
-            <button class="aai-btn aai-btn--primary" id="tool-send-llm" ${state.isStreaming ? 'disabled' : ''}>
-              ${state.isStreaming ? (isDE ? 'KI verarbeitet…' : 'AI processing…') : (isDE ? 'An LLM senden' : 'Send to LLM')}
-            </button>
-          </div>
-        </div>`;
-
-    case 3: // LLM Response
-      return `
-        <div class="aai-tool-pane">
-          <div class="aai-tool-pane-header">${isDE ? 'Antwort der KI' : 'AI response'}</div>
-          <div class="aai-tool-pane-body">
-            ${state.isStreaming
-              ? `<div class="aai-typing"><div class="aai-typing-dot"></div><div class="aai-typing-dot"></div><div class="aai-typing-dot"></div></div>`
-              : `<div class="aai-msg-text">${renderMarkdown(state.llmResponse)}</div>`}
-          </div>
-        </div>`;
-
-    case 4: // Rehydrated
-      return `
-        <div class="aai-tool-pane">
-          <div class="aai-tool-pane-header" style="color:var(--success)">
-            ${isDE
-              ? 'Fertig — Originaldaten lokal wiederhergestellt'
-              : 'Done — original data restored locally'}
-          </div>
-          <div class="aai-tool-pane-body">
-            <div class="aai-msg-text">${renderMarkdown(state.rehydrated)}</div>
-          </div>
-        </div>`;
-
-    default: return '';
-  }
-}
-
-function wireEvents() {
-  // Examples
-  container.querySelectorAll('[data-example]').forEach(btn => {
-    btn.onclick = () => {
-      const ex = EXAMPLES[btn.dataset.example];
-      if (ex) {
-        state.inputText = ex.text;
-        const textarea = container.querySelector('#tool-text');
-        if (textarea) textarea.value = ex.text;
-        updateCharCount();
-      }
-    };
-  });
-
-  // Textarea
-  const textarea = container.querySelector('#tool-text');
-  if (textarea) {
-    textarea.oninput = () => { state.inputText = textarea.value; updateCharCount(); };
-  }
-
-  // Clear
-  container.querySelector('#tool-clear')?.addEventListener('click', () => {
-    state = { step: 0, inputText: '', result: null, llmResponse: '', rehydrated: '', isProcessing: false, isStreaming: false, dismissedEntities: new Set() };
-    render();
-  });
-
-  // Analyze
-  container.querySelector('#tool-analyze')?.addEventListener('click', analyze);
-
-  // Steps
-  container.querySelectorAll('.aai-tool-step:not(.disabled)').forEach(btn => {
-    btn.onclick = () => { state.step = parseInt(btn.dataset.step); updateStepContent(); };
-  });
-
-  // Dismiss entities
-  container.querySelectorAll('[data-dismiss]').forEach(btn => {
-    btn.onclick = () => { state.dismissedEntities.add(btn.dataset.dismiss); updateStepContent(); };
-  });
-
-  // Send to LLM
-  container.querySelector('#tool-send-llm')?.addEventListener('click', sendToLLM);
-
-  // ---- Click-to-Anonymize (text selection) ----
-  setupTextSelection();
-}
-
-/* ---- Click-to-Anonymize: floating popup on text selection ---- */
-
-function setupTextSelection() {
-  const popup = document.getElementById('text-select-popup');
-  if (!popup) return;
-
-  // Listen for mouseup on selectable text areas
-  document.addEventListener('mouseup', (e) => {
-    const selectable = e.target.closest('.aai-tool-selectable');
-    if (!selectable) { popup.hidden = true; return; }
-
-    const selection = window.getSelection();
-    const selectedText = selection.toString().trim();
-
-    if (selectedText.length < 2 || selectedText.length > 200) {
-      popup.hidden = true;
-      return;
-    }
-
-    // Position popup near the selection
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    popup.style.position = 'fixed';
-    popup.style.left = `${rect.left + rect.width / 2}px`;
-    popup.style.top = `${rect.top - 40}px`;
-    popup.style.transform = 'translateX(-50%)';
-    popup.hidden = false;
-
-    // Wire the "Anonymisieren" button
-    const addBtn = popup.querySelector('#btn-add-deny');
-    addBtn.onclick = async () => {
-      popup.hidden = true;
-      try {
-        // Add to deny-list via settings API
-        const settings = get('settings');
-        const denyList = [...(settings.deny_list || [])];
-        if (!denyList.includes(selectedText)) {
-          denyList.push(selectedText);
-          await api.putSettings({ deny_list: denyList });
-          settings.deny_list = denyList;
-          set('settings', { ...settings });
-        }
-        toast(`"${selectedText}" → Deny-List hinzugefügt`, 'success');
-
-        // Re-run analysis with updated deny-list
-        window.getSelection().removeAllRanges();
-        await analyze();
-      } catch (err) {
-        toast(err.message, 'error');
-      }
-    };
-  });
-
-  // Hide popup on click elsewhere
-  document.addEventListener('mousedown', (e) => {
-    if (!e.target.closest('.aai-select-popup')) {
-      popup.hidden = true;
-    }
-  });
-}
-
-function updateCharCount() {
-  const el = container.querySelector('#tool-char-count');
-  if (el) el.textContent = `${state.inputText.length} / 5000`;
-}
-
-function updateStepContent() {
-  const contentEl = container.querySelector('#tool-step-content');
-  if (contentEl) contentEl.innerHTML = renderStepContent();
-
-  container.querySelectorAll('.aai-tool-step').forEach((btn, i) => {
-    btn.classList.toggle('active', i === state.step);
-    btn.classList.toggle('disabled', i > getMaxStep());
-  });
-
-  // Re-wire content-specific events
-  container.querySelectorAll('[data-dismiss]').forEach(btn => {
-    btn.onclick = () => { state.dismissedEntities.add(btn.dataset.dismiss); updateStepContent(); };
-  });
-  container.querySelector('#tool-send-llm')?.addEventListener('click', sendToLLM);
-}
-
-async function analyze() {
-  const text = state.inputText.trim();
-  if (!text) return;
-
-  state.isProcessing = true;
-  state.result = null;
-  state.llmResponse = '';
-  state.rehydrated = '';
-  state.dismissedEntities = new Set();
-  render();
-
-  try {
-    const result = await api.debugTest(text);
-    state.result = result;
-    state.isProcessing = false;
-    state.step = 1;
-    const resultsEl = container.querySelector('#tool-results');
-    if (resultsEl) resultsEl.hidden = false;
-    render();
-  } catch (err) {
-    state.isProcessing = false;
-    toast(err.message, 'error');
-    render();
-  }
-}
-
-async function sendToLLM() {
-  if (state.isStreaming || !state.result) return;
-
-  const provider = get('provider');
-  const model = get('model');
-  if (!provider || !model) {
-    toast('Bitte zuerst einen KI-Anbieter konfigurieren (Einstellungen)', 'error');
-    return;
-  }
-
-  state.isStreaming = true;
-  state.llmResponse = '';
-  state.rehydrated = '';
-  state.step = 3;
-  updateStepContent();
-
-  api.streamMessage(
-    { message: state.inputText, provider, model, history: [], system_prompt: '' },
-    {
-      onMeta() {},
-      onToken(content) {
-        if (content) {
-          state.llmResponse += content;
-          if (state.step === 3) {
-            const body = container.querySelector('.aai-tool-pane-body');
-            if (body) body.innerHTML = `<div class="aai-msg-text">${renderMarkdown(state.llmResponse)}</div>`;
-          }
-        }
-      },
-      onDone(data) {
-        if (data.full_response) {
-          state.rehydrated = data.full_response;
-          state.llmResponse = data.full_response;
-        }
-        state.isStreaming = false;
-        state.step = 4;
-        render();
-      },
-      onError(error) {
-        state.isStreaming = false;
-        toast(error, 'error');
-        updateStepContent();
-      },
-      onComplete() { state.isStreaming = false; },
-    }
-  );
-}
-
-/* ---- Highlighting ---- */
-
-function highlightEntities(text, entities) {
-  let html = esc(text);
-  const sorted = [...entities]
-    .filter(e => !state.dismissedEntities.has(e.original))
-    .sort((a, b) => b.original.length - a.original.length);
-
-  for (const e of sorted) {
-    const escaped = esc(e.original);
-    const typeClass = getTypeColor(e.type);
-    html = html.replaceAll(escaped,
-      `<mark class="aai-tool-highlight ${typeClass}" data-dismiss="${escAttr(e.original)}" title="Klicken zum Entfernen: ${esc(e.type)}">${escaped}</mark>`
-    );
-  }
-  return html;
-}
-
-function highlightCodenames(html) {
-  return html.replace(/\[([A-Z_]+_\d+)\]/g, '<span class="aai-anon-highlight">[$1]</span>');
-}
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
 
 function getTypeColor(type) {
   if (type.includes('PERSON')) return 'hl-person';
@@ -467,34 +77,452 @@ function getTypeColor(type) {
   return 'hl-other';
 }
 
-/* ---- Vault Info / TTL Display ---- */
-
-const LEVEL_NAMES_DE = { 1: 'Oeffentlich', 2: 'Intern', 3: 'Vertraulich', 4: 'Streng Vertraulich' };
-const LEVEL_NAMES_EN = { 1: 'Public', 2: 'Internal', 3: 'Confidential', 4: 'Restricted' };
-
-function renderVaultInfo(info, isDE) {
-  if (!info || !info.levels) return '';
-  const names = isDE ? LEVEL_NAMES_DE : LEVEL_NAMES_EN;
-  const rows = Object.values(info.levels).map(lv => {
-    const remaining = lv.remaining_seconds;
-    const mins = Math.floor(remaining / 60);
-    const secs = remaining % 60;
-    const timeStr = remaining > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : (isDE ? 'Abgelaufen' : 'Expired');
-    const cls = lv.expired ? 'aai-vault-expired' : (remaining < 120 ? 'aai-vault-warning' : '');
-    return `
-      <div class="aai-vault-row ${cls}">
-        <span class="aai-plevel aai-plevel-${lv.protection_level}">${lv.protection_level}</span>
-        <span class="aai-vault-label">${names[lv.protection_level] || '?'}</span>
-        <span class="aai-vault-timer">${timeStr}</span>
-      </div>`;
-  }).join('');
-
-  return `
-    <div class="aai-vault-info">
-      <div class="aai-vault-header">${isDE ? 'Vault-Status' : 'Vault Status'}</div>
-      ${rows}
-    </div>`;
+function highlightEntitiesHtml(text, entities, dismissedSet) {
+  // Sort by length desc so longer matches don't get clobbered by shorter ones
+  let outHtml = esc(text);
+  const active = entities.filter((e) => !dismissedSet.has(e.original))
+    .sort((a, b) => b.original.length - a.original.length);
+  for (const e of active) {
+    const escaped = esc(e.original);
+    const typeClass = getTypeColor(e.type);
+    outHtml = outHtml.replaceAll(
+      escaped,
+      `<mark class="aai-tool-highlight ${typeClass}" data-dismiss="${escAttr(e.original)}" title="Klicken zum Entfernen: ${esc(e.type)}">${escaped}</mark>`,
+    );
+  }
+  return outHtml;
 }
 
-function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+function highlightCodenamesHtml(htmlText) {
+  return htmlText.replace(/\[([A-Z_]+_\d+)\]/g, '<span class="aai-anon-highlight">[$1]</span>');
+}
+
+/* ---- Vault TTL info ---- */
+
+function VaultInfo({ info, isDE }) {
+  if (!info || !info.levels) return null;
+  const names = isDE ? LEVEL_NAMES_DE : LEVEL_NAMES_EN;
+  return html`
+    <div class="aai-vault-info">
+      <div class="aai-vault-header">${isDE ? 'Vault-Status' : 'Vault Status'}</div>
+      ${Object.values(info.levels).map((lv, i) => {
+        const remaining = lv.remaining_seconds;
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        const timeStr = remaining > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : (isDE ? 'Abgelaufen' : 'Expired');
+        const cls = lv.expired ? 'aai-vault-expired' : (remaining < 120 ? 'aai-vault-warning' : '');
+        return html`
+          <div key=${i} class=${`aai-vault-row ${cls}`}>
+            <span class=${`aai-plevel aai-plevel-${lv.protection_level}`}>${lv.protection_level}</span>
+            <span class="aai-vault-label">${names[lv.protection_level] || '?'}</span>
+            <span class="aai-vault-timer">${timeStr}</span>
+          </div>
+        `;
+      })}
+    </div>
+  `;
+}
+
+/* ---- Step panes ---- */
+
+function OriginalPane({ result, isDE }) {
+  return html`
+    <div class="aai-tool-pane">
+      <div
+        class="aai-tool-pane-header"
+        dangerouslySetInnerHTML=${{ __html: isDE
+          ? 'Originaltext — <strong>markiere einen Begriff</strong> um ihn zur Deny-List hinzuzufügen'
+          : 'Original text — <strong>select a term</strong> to add it to the deny list' }}
+      />
+      <div class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable">${result.original}</div>
+    </div>
+  `;
+}
+
+function DetectionPane({ result, dismissed, onDismiss, isDE }) {
+  const remaining = result.entity_count - dismissed.size;
+  const activeEntities = result.entities.filter((e) => !dismissed.has(e.original));
+
+  const headerText = isDE
+    ? `${remaining} Entität(en) erkannt — klicke auf eine Markierung um sie zu entfernen`
+    : `${remaining} entity/entities detected — click a highlight to remove it`;
+
+  function handlePaneClick(e) {
+    const markEl = e.target.closest('mark[data-dismiss]');
+    if (markEl) onDismiss(markEl.dataset.dismiss);
+  }
+
+  return html`
+    <div class="aai-tool-pane">
+      <div class="aai-tool-pane-header">
+        ${headerText}
+        ${result.doc_type && result.doc_type !== 'general' ? html`
+          <span class=${`aai-doc-type-badge aai-doc-type-${result.doc_type}`}>
+            ${result.doc_type === 'medical' ? (isDE ? 'Medizinisch' : 'Medical') : (isDE ? 'Rechtlich' : 'Legal')}
+          </span>
+        ` : null}
+      </div>
+      <div
+        class="aai-tool-pane-body aai-tool-text-display aai-tool-selectable"
+        onClick=${handlePaneClick}
+        dangerouslySetInnerHTML=${{ __html: highlightEntitiesHtml(result.original, result.entities, dismissed) }}
+      />
+      <div class="aai-tool-entity-legend">
+        ${activeEntities.map((e, i) => html`
+          <span key=${i} class="aai-tool-entity-tag" onClick=${() => onDismiss(e.original)}>
+            <span class=${`aai-plevel aai-plevel-${e.protection_level || 2}`} title=${e.protection_label || 'Intern'}>${e.protection_level || 2}</span>
+            <span class="aai-entity-type">${e.type}</span>
+            ${e.original}
+            <span class="aai-tool-entity-x">×</span>
+          </span>
+        `)}
+        ${dismissed.size ? html`
+          <span style="font-size:11px;color:var(--text-muted);padding:4px">${dismissed.size} entfernt</span>
+        ` : null}
+      </div>
+      ${result.session_info ? html`<${VaultInfo} info=${result.session_info} isDE=${isDE} />` : null}
+    </div>
+  `;
+}
+
+function AnonymizedPane({ result, dismissed, onSendToLLM, isStreaming, isDE }) {
+  const activeEntities = result.entities.filter((e) => !dismissed.has(e.original));
+
+  return html`
+    <div class="aai-tool-pane">
+      <div class="aai-tool-pane-header" style="color:var(--accent)">
+        ${isDE ? 'Nur dieser Text wird an das LLM gesendet' : 'Only this text is sent to the LLM'}
+      </div>
+      <div
+        class="aai-tool-pane-body aai-tool-text-display"
+        dangerouslySetInnerHTML=${{ __html: highlightCodenamesHtml(esc(result.anonymized)) }}
+      />
+      ${activeEntities.length ? html`
+        <div class="aai-tool-mapping-table">
+          <table class="aai-table">
+            <thead>
+              <tr>
+                <th>${isDE ? 'Stufe' : 'Level'}</th>
+                <th>Original</th>
+                <th></th>
+                <th>Codename</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activeEntities.map((e, i) => html`
+                <tr key=${i}>
+                  <td><span class=${`aai-plevel aai-plevel-${e.protection_level || 2}`}>${e.protection_level || 2}</span></td>
+                  <td style="color:var(--danger)">${e.original}</td>
+                  <td style="color:var(--text-muted)">→</td>
+                  <td style="color:var(--accent);font-family:var(--mono)">${e.codename}</td>
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        </div>
+      ` : null}
+      <div style="padding:12px 16px;display:flex;gap:8px">
+        <button class="aai-btn aai-btn--primary" onClick=${onSendToLLM} disabled=${isStreaming}>
+          ${isStreaming ? (isDE ? 'KI verarbeitet…' : 'AI processing…') : (isDE ? 'An LLM senden' : 'Send to LLM')}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function LlmPane({ response, isStreaming, isDE }) {
+  return html`
+    <div class="aai-tool-pane">
+      <div class="aai-tool-pane-header">${isDE ? 'Antwort der KI' : 'AI response'}</div>
+      <div class="aai-tool-pane-body">
+        ${isStreaming && !response ? html`
+          <div class="aai-typing">
+            <div class="aai-typing-dot"></div>
+            <div class="aai-typing-dot"></div>
+            <div class="aai-typing-dot"></div>
+          </div>
+        ` : html`
+          <div class="aai-msg-text" dangerouslySetInnerHTML=${{ __html: renderMarkdown(response) }} />
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function RehydratedPane({ text, isDE }) {
+  return html`
+    <div class="aai-tool-pane">
+      <div class="aai-tool-pane-header" style="color:var(--success)">
+        ${isDE ? 'Fertig — Originaldaten lokal wiederhergestellt' : 'Done — original data restored locally'}
+      </div>
+      <div class="aai-tool-pane-body">
+        <div class="aai-msg-text" dangerouslySetInnerHTML=${{ __html: renderMarkdown(text) }} />
+      </div>
+    </div>
+  `;
+}
+
+/* ---- Text-selection floating popup ---- */
+
+function SelectionPopup({ onAnonymize }) {
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ left: 0, top: 0 });
+  const [selectedText, setSelectedText] = useState('');
+
+  useEffect(() => {
+    function onMouseUp(e) {
+      const selectable = e.target.closest('.aai-tool-selectable');
+      if (!selectable) { setVisible(false); return; }
+
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+
+      if (text.length < 2 || text.length > 200) { setVisible(false); return; }
+
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setPos({
+        left: rect.left + rect.width / 2,
+        top: rect.top - 40,
+      });
+      setSelectedText(text);
+      setVisible(true);
+    }
+
+    function onMouseDown(e) {
+      if (!e.target.closest('.aai-select-popup')) {
+        setVisible(false);
+      }
+    }
+
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('mousedown', onMouseDown);
+    return () => {
+      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('mousedown', onMouseDown);
+    };
+  }, []);
+
+  async function handleClick() {
+    const text = selectedText;
+    setVisible(false);
+    window.getSelection().removeAllRanges();
+    onAnonymize(text);
+  }
+
+  if (!visible) return null;
+
+  return html`
+    <div
+      class="aai-select-popup"
+      style=${`position:fixed;left:${pos.left}px;top:${pos.top}px;transform:translateX(-50%);z-index:9999`}
+    >
+      <button class="aai-btn aai-btn--primary aai-btn--sm" onClick=${handleClick}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Anonymisieren
+      </button>
+    </div>
+  `;
+}
+
+/* ---- Main View ---- */
+
+function AnonymizeView() {
+  const [step, setStep] = useState(0);
+  const [inputText, setInputText] = useState('');
+  const [result, setResult] = useState(null);
+  const [llmResponse, setLlmResponse] = useState('');
+  const [rehydrated, setRehydrated] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [dismissed, setDismissed] = useState(new Set());
+
+  // Mutable ref for the streaming callbacks — they need to read/write latest
+  // state without stale closures.
+  const stateRef = useRef({});
+  stateRef.current = { step, inputText, llmResponse, rehydrated };
+
+  const isDE = getLang() === 'de';
+
+  function getMaxStep() {
+    if (rehydrated) return 4;
+    if (llmResponse) return 3;
+    if (result) return 2;
+    return 0;
+  }
+
+  function handleExample(key) {
+    const ex = EXAMPLES[key];
+    if (ex) setInputText(ex.text);
+  }
+
+  function handleClear() {
+    setStep(0);
+    setInputText('');
+    setResult(null);
+    setLlmResponse('');
+    setRehydrated('');
+    setIsProcessing(false);
+    setIsStreaming(false);
+    setDismissed(new Set());
+  }
+
+  function handleDismiss(term) {
+    const next = new Set(dismissed);
+    next.add(term);
+    setDismissed(next);
+  }
+
+  async function runAnalysis(overrideText) {
+    const text = (overrideText ?? inputText).trim();
+    if (!text) return;
+
+    setIsProcessing(true);
+    setResult(null);
+    setLlmResponse('');
+    setRehydrated('');
+    setDismissed(new Set());
+
+    try {
+      const r = await api.debugTest(text);
+      setResult(r);
+      setStep(1);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+    setIsProcessing(false);
+  }
+
+  async function handleAnonymizeSelection(selectedText) {
+    try {
+      const settings = signals.settings.value;
+      const denyList = [...(settings.deny_list || [])];
+      if (!denyList.includes(selectedText)) {
+        denyList.push(selectedText);
+        await api.putSettings({ deny_list: denyList });
+        signals.settings.value = { ...settings, deny_list: denyList };
+      }
+      toast(`"${selectedText}" → Deny-List hinzugefügt`, 'success');
+      await runAnalysis();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function sendToLLM() {
+    if (isStreaming || !result) return;
+
+    const provider = signals.provider.value;
+    const model = signals.model.value;
+    if (!provider || !model) {
+      toast('Bitte zuerst einen KI-Anbieter konfigurieren (Einstellungen)', 'error');
+      return;
+    }
+
+    setIsStreaming(true);
+    setLlmResponse('');
+    setRehydrated('');
+    setStep(3);
+
+    let accumulated = '';
+    api.streamMessage(
+      { message: inputText, provider, model, history: [], system_prompt: '' },
+      {
+        onMeta() {},
+        onToken(content) {
+          if (content) {
+            accumulated += content;
+            setLlmResponse(accumulated);
+          }
+        },
+        onDone(data) {
+          if (data.full_response) {
+            setRehydrated(data.full_response);
+            setLlmResponse(data.full_response);
+          }
+          setIsStreaming(false);
+          setStep(4);
+        },
+        onError(err) {
+          setIsStreaming(false);
+          toast(err, 'error');
+        },
+        onComplete() { setIsStreaming(false); },
+      },
+    );
+  }
+
+  const maxStep = getMaxStep();
+
+  return html`
+    <${Fragment}>
+      <div class="aai-tool">
+        <div class="aai-tool-input-section">
+          <div class="aai-tool-header">
+            <h2>${isDE ? 'Anonymisierungs-Werkzeug' : 'Anonymization Tool'}</h2>
+            <p>${isDE ? 'Text einfügen, Anonymisierung prüfen, optional an LLM senden.' : 'Paste text, check anonymization, optionally send to LLM.'}</p>
+          </div>
+
+          <div class="aai-tool-examples">
+            ${Object.entries(EXAMPLES).map(([key, ex]) => html`
+              <button key=${key} class="aai-chip" onClick=${() => handleExample(key)}>${ex.de}</button>
+            `)}
+          </div>
+
+          <div class="aai-tool-textarea-wrap">
+            <textarea
+              class="aai-input aai-tool-textarea"
+              rows="6"
+              placeholder=${isDE ? 'Text mit personenbezogenen Daten eingeben…' : 'Enter text with personal data…'}
+              value=${inputText}
+              onInput=${(e) => setInputText(e.target.value)}
+            ></textarea>
+            <div class="aai-tool-textarea-footer">
+              <span class="aai-tool-char-count">${inputText.length} / 5000</span>
+              <div class="aai-tool-textarea-actions">
+                <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${handleClear}>${isDE ? 'Leeren' : 'Clear'}</button>
+                <button class="aai-btn aai-btn--primary" onClick=${() => runAnalysis()} disabled=${isProcessing}>
+                  ${isProcessing ? (isDE ? 'Wird analysiert…' : 'Analyzing…') : (isDE ? 'Analyse starten' : 'Start Analysis')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="aai-tool-results" hidden=${!result}>
+          <div class="aai-tool-steps">
+            ${STEPS.map((s, i) => html`
+              <button
+                key=${s.id}
+                class=${`aai-tool-step${i === step ? ' active' : ''}${i > maxStep ? ' disabled' : ''}`}
+                onClick=${() => { if (i <= maxStep) setStep(i); }}
+              >
+                <span class="aai-tool-step-num">${i + 1}</span>
+                <span class="aai-tool-step-label">${isDE ? s.de : s.en}</span>
+              </button>
+            `)}
+          </div>
+          <div class="aai-tool-step-content">
+            ${result && step === 0 ? html`<${OriginalPane} result=${result} isDE=${isDE} />` : null}
+            ${result && step === 1 ? html`<${DetectionPane} result=${result} dismissed=${dismissed} onDismiss=${handleDismiss} isDE=${isDE} />` : null}
+            ${result && step === 2 ? html`<${AnonymizedPane} result=${result} dismissed=${dismissed} onSendToLLM=${sendToLLM} isStreaming=${isStreaming} isDE=${isDE} />` : null}
+            ${step === 3 ? html`<${LlmPane} response=${llmResponse} isStreaming=${isStreaming} isDE=${isDE} />` : null}
+            ${step === 4 ? html`<${RehydratedPane} text=${rehydrated} isDE=${isDE} />` : null}
+          </div>
+        </div>
+      </div>
+
+      <${SelectionPopup} onAnonymize=${handleAnonymizeSelection} />
+    <//>
+  `;
+}
+
+/* ---- Exports ---- */
+
+let container;
+
+export function init() {
+  container = document.getElementById('tool-view');
+  if (!container) return;
+  render(html`<${AnonymizeView} />`, container);
+}

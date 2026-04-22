@@ -1,65 +1,72 @@
 /**
- * AUSTR.AI — Sidebar Component
+ * AUSTR.AI — Sidebar (Preact)
  * Renders conversation list, handles new/select/delete.
+ *
+ * Backend persistence (v2.2.2): messages are encrypted in SQLite on the server.
+ * On conversation-select, we first show any cached messages from localStorage
+ * (instant), then fall back to the backend API when the cache is empty.
  */
 
-import { get, set, on, deleteMessages, loadMessages, saveMessages } from './state.js';
+import { h, render, Fragment } from 'preact';
+import htm from 'htm';
+import { signals, batch, deleteMessages, loadMessages, saveMessages } from './state.js';
 import * as api from './api.js';
 import { t } from './i18n.js';
 
-const ICONS = {
-  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
-};
+const html = htm.bind(h);
 
-let listEl;
+const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
 
-export function init() {
-  listEl = document.getElementById('conversation-list');
-
-  document.getElementById('btn-new-chat').addEventListener('click', newChat);
-
-  on('conversations', render);
-  on('currentConversationId', render);
-  render();
+function ConvIcon() {
+  return html`<span class="aai-conv-icon" dangerouslySetInnerHTML=${{ __html: ICON_CHAT }} />`;
 }
 
-function render() {
-  const convs = get('conversations');
-  const activeId = get('currentConversationId');
+function ConversationItem({ conv, active, onSelect, onDelete }) {
+  const lang = signals.language.value === 'de' ? 'de-AT' : 'en-US';
+  const date = new Date(conv.updated_at * 1000).toLocaleDateString(lang, { day: 'numeric', month: 'short' });
+
+  return html`
+    <div class=${`aai-conv-item${active ? ' active' : ''}`} onClick=${() => onSelect(conv.id)}>
+      <${ConvIcon} />
+      <span class="aai-conv-title">${conv.title}</span>
+      <span class="aai-conv-meta">${date}</span>
+      <button
+        class="aai-conv-delete"
+        title=${t('deleteConv')}
+        onClick=${(e) => { e.stopPropagation(); onDelete(conv.id); }}
+      >×</button>
+    </div>
+  `;
+}
+
+function ConversationList() {
+  const convs = signals.conversations.value;
+  const activeId = signals.currentConversationId.value;
 
   if (!convs.length) {
-    listEl.innerHTML = `<div class="aai-conv-empty">${t('noConversations')}</div>`;
-    return;
+    return html`<div class="aai-conv-empty">${t('noConversations')}</div>`;
   }
 
-  listEl.innerHTML = convs.map(c => {
-    const active = c.id === activeId ? ' active' : '';
-    const count = c.message_count || 0;
-    const date = new Date(c.updated_at * 1000).toLocaleDateString(get('language') === 'de' ? 'de-AT' : 'en-US', { day: 'numeric', month: 'short' });
-    return `<div class="aai-conv-item${active}" data-id="${c.id}">
-      <span class="aai-conv-icon">${ICONS.chat}</span>
-      <span class="aai-conv-title">${escHtml(c.title)}</span>
-      <span class="aai-conv-meta">${date}</span>
-      <button class="aai-conv-delete" data-delete="${c.id}" title="${t('deleteConv')}">&times;</button>
-    </div>`;
-  }).join('');
-
-  // Event delegation
-  listEl.onclick = (e) => {
-    const delBtn = e.target.closest('[data-delete]');
-    if (delBtn) {
-      e.stopPropagation();
-      removeConversation(delBtn.dataset.delete);
-      return;
-    }
-    const item = e.target.closest('.aai-conv-item');
-    if (item) selectConversation(item.dataset.id);
-  };
+  return html`
+    <${Fragment}>
+      ${convs.map((c) => html`
+        <${ConversationItem}
+          key=${c.id}
+          conv=${c}
+          active=${c.id === activeId}
+          onSelect=${selectConversation}
+          onDelete=${removeConversation}
+        />
+      `)}
+    <//>
+  `;
 }
 
+/* ---- Actions ---- */
+
 export async function newChat() {
-  const provider = get('provider');
-  const model = get('model');
+  const provider = signals.provider.value;
+  const model = signals.model.value;
   try {
     const { id } = await api.createConversation({ provider, model });
     await refreshList();
@@ -70,20 +77,25 @@ export async function newChat() {
 }
 
 async function selectConversation(id) {
-  set('currentConversationId', id);
-  set('currentView', 'chat');
-  set('messages', loadMessages(id));
-  if (window.innerWidth <= 768) set('sidebarOpen', false);
+  batch({
+    currentConversationId: id,
+    currentView: 'chat',
+    messages: loadMessages(id),
+  });
+  if (window.innerWidth <= 768) signals.sidebarOpen.value = false;
 
-  if (!get('messages').length) {
+  // Backend fallback: when localStorage is empty, fetch from SQLite store.
+  // This handles first-time load on a new browser, quota-exceeded writes,
+  // and users returning after cache clears.
+  if (!signals.messages.value.length) {
     try {
       const { messages } = await api.getConversation(id);
-      if (messages?.length && get('currentConversationId') === id) {
-        const mapped = messages.map(m => ({ role: m.role, content: m.content, meta: null }));
-        set('messages', mapped);
+      if (messages?.length && signals.currentConversationId.value === id) {
+        const mapped = messages.map((m) => ({ role: m.role, content: m.content, meta: null }));
+        signals.messages.value = mapped;
         saveMessages(id, mapped);
       }
-    } catch { /* offline fallback */ }
+    } catch { /* offline fallback: keep whatever localStorage had */ }
   }
 }
 
@@ -91,10 +103,12 @@ async function removeConversation(id) {
   try {
     await api.deleteConversation(id);
     deleteMessages(id);
-    if (get('currentConversationId') === id) {
-      set('currentConversationId', null);
-      set('messages', []);
-      set('currentView', 'welcome');
+    if (signals.currentConversationId.value === id) {
+      batch({
+        currentConversationId: null,
+        messages: [],
+        currentView: 'welcome',
+      });
     }
     await refreshList();
   } catch (err) {
@@ -105,10 +119,18 @@ async function removeConversation(id) {
 export async function refreshList() {
   try {
     const convs = await api.listConversations();
-    set('conversations', convs);
+    signals.conversations.value = convs;
   } catch { /* offline */ }
 }
 
-function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/* ---- Init ---- */
+
+export function init() {
+  const listEl = document.getElementById('conversation-list');
+  if (!listEl) return;
+
+  render(html`<${ConversationList} />`, listEl);
+
+  const newBtn = document.getElementById('btn-new-chat');
+  if (newBtn) newBtn.addEventListener('click', newChat);
 }

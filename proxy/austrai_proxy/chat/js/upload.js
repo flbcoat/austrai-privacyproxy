@@ -1,65 +1,76 @@
 /**
- * AUSTR.AI — File Upload & Drag-Drop
- * Handles file selection, drag-drop, processing.
+ * AUSTR.AI — File Upload & Drag-Drop (Preact)
  * - "attach" mode → adds file as chat attachment
  * - "anonymize" mode → shows anonymization result in chat
  * - "redact" mode → shows redacted image for download
+ *
+ * Drag-drop is a singleton Preact overlay rendered into document.body.
+ * The circular import with chat.js (renderAttachments) will be removed
+ * in Phase 10 when chat.js switches to reactive <AttachmentList>.
  */
 
-import { get, set, toast } from './state.js';
+import { h, render } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
+import htm from 'htm';
+import { signals, toast } from './state.js';
 import * as api from './api.js';
 import { t } from './i18n.js';
 import { renderAttachments } from './chat.js';
 
-let fileInput, dropOverlay;
+const html = htm.bind(h);
 
-export function init() {
-  fileInput = document.getElementById('file-input');
-  if (!fileInput) {
-    console.error('[AUSTR.AI] file-input element not found!');
-    return;
-  }
-  console.log('[AUSTR.AI] Upload module initialized');
+/* ---- Drop Overlay Component ---- */
 
-  document.getElementById('btn-upload')?.addEventListener('click', () => {
-    fileInput.dataset.mode = 'attach';
-    fileInput.accept = '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
-    fileInput.click();
-  });
+function DropOverlay() {
+  const [active, setActive] = useState(false);
 
-  fileInput.addEventListener('change', handleFiles);
+  useEffect(() => {
+    const app = document.getElementById('app');
+    if (!app) return;
 
-  // Drag & Drop
-  const app = document.getElementById('app');
-  if (!app) return;
+    let dragCounter = 0;
 
-  dropOverlay = document.createElement('div');
-  dropOverlay.className = 'aai-drop-overlay';
-  dropOverlay.innerHTML = `<div class="aai-drop-label">${t('uploadHint')}</div>`;
-  document.body.appendChild(dropOverlay);
+    function onDragEnter(e) {
+      e.preventDefault();
+      dragCounter++;
+      setActive(true);
+    }
+    function onDragLeave(e) {
+      e.preventDefault();
+      dragCounter--;
+      if (dragCounter <= 0) { dragCounter = 0; setActive(false); }
+    }
+    function onDragOver(e) { e.preventDefault(); }
+    function onDrop(e) {
+      e.preventDefault();
+      dragCounter = 0;
+      setActive(false);
+      if (e.dataTransfer.files.length) {
+        processFiles([...e.dataTransfer.files], 'attach');
+      }
+    }
 
-  let dragCounter = 0;
+    app.addEventListener('dragenter', onDragEnter);
+    app.addEventListener('dragleave', onDragLeave);
+    app.addEventListener('dragover', onDragOver);
+    app.addEventListener('drop', onDrop);
 
-  app.addEventListener('dragenter', (e) => { e.preventDefault(); dragCounter++; dropOverlay.classList.add('active'); });
-  app.addEventListener('dragleave', (e) => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dropOverlay.classList.remove('active'); } });
-  app.addEventListener('dragover', (e) => e.preventDefault());
-  app.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dragCounter = 0;
-    dropOverlay.classList.remove('active');
-    if (e.dataTransfer.files.length) processFiles([...e.dataTransfer.files], 'attach');
-  });
+    return () => {
+      app.removeEventListener('dragenter', onDragEnter);
+      app.removeEventListener('dragleave', onDragLeave);
+      app.removeEventListener('dragover', onDragOver);
+      app.removeEventListener('drop', onDrop);
+    };
+  }, []);
+
+  return html`
+    <div class=${`aai-drop-overlay${active ? ' active' : ''}`}>
+      <div class="aai-drop-label">${t('uploadHint')}</div>
+    </div>
+  `;
 }
 
-function handleFiles() {
-  console.log('[AUSTR.AI] File input changed, files:', fileInput.files.length);
-  if (!fileInput.files.length) return;
-  const mode = fileInput.dataset.mode || 'attach';
-  const files = [...fileInput.files];
-  fileInput.value = '';
-  console.log('[AUSTR.AI] Processing', files.length, 'file(s) in mode:', mode);
-  processFiles(files, mode);
-}
+/* ---- File processing ---- */
 
 async function processFiles(files, mode) {
   for (const file of files) {
@@ -68,24 +79,20 @@ async function processFiles(files, mode) {
       if (mode === 'redact') {
         const result = await api.redactImage(file);
         showResultInChat(renderRedactResult(result));
-        // Also add redacted image info as attachment so user can chat about it
         const attachInfo = {
           filename: result.filename,
           extracted_text: `[Geschwärztes Bild: ${result.filename}, ${result.entities_redacted || 0} Bereiche geschwärzt]`,
           anonymized_text: null,
           entity_count: result.entities_redacted || 0,
         };
-        const attachments = [...get('pendingAttachments'), attachInfo];
-        set('pendingAttachments', attachments);
+        signals.pendingAttachments.value = [...signals.pendingAttachments.value, attachInfo];
         renderAttachments();
       } else if (mode === 'anonymize') {
         const result = await api.uploadFile(file);
         showResultInChat(renderUploadResult(result));
       } else {
-        // attach mode — add to pending attachments for next chat message
         const result = await api.uploadFile(file);
-        const attachments = [...get('pendingAttachments'), result];
-        set('pendingAttachments', attachments);
+        signals.pendingAttachments.value = [...signals.pendingAttachments.value, result];
         renderAttachments();
         toast(`${file.name} — ${result.entity_count || 0} Entitäten anonymisiert`, 'success');
       }
@@ -96,29 +103,37 @@ async function processFiles(files, mode) {
   }
 }
 
-/* ---- Show result as a card in chat view ---- */
-
-function showResultInChat(html) {
-  // Switch to chat mode + chat view
+/* ---- Show result card in chat view ----
+ * Imperative DOM insertion. Will move into a reactive <MessageList>
+ * (Phase 10) once chat.js is migrated.
+ */
+function showResultInChat(cardHtml) {
   const chatBtn = document.querySelector('.aai-sidebar-nav-btn[data-mode="chat"]');
   if (chatBtn && !chatBtn.classList.contains('active')) chatBtn.click();
 
-  set('currentView', 'chat');
+  signals.currentView.value = 'chat';
 
-  // Make sure chat-view and messages are visible
   const chatView = document.getElementById('chat-view');
   const messagesEl = document.getElementById('messages');
+  const welcomeView = document.getElementById('welcome-view');
+  const inputArea = document.getElementById('input-area');
   if (chatView) chatView.hidden = false;
-  document.getElementById('welcome-view').hidden = true;
-  document.getElementById('input-area').hidden = false;
+  if (welcomeView) welcomeView.hidden = true;
+  if (inputArea) inputArea.hidden = false;
 
   if (messagesEl) {
-    messagesEl.insertAdjacentHTML('beforeend', html);
+    messagesEl.insertAdjacentHTML('beforeend', cardHtml);
     chatView.scrollTop = chatView.scrollHeight;
   }
 }
 
-/* ---- Render upload result card ---- */
+/* ---- Card HTML renderers (still string templates; will become Preact in Phase 10) ---- */
+
+function highlightAnon(text) {
+  return text.replace(/\[([A-Z_]+_\d+)\]/g, '<span class="aai-anon-highlight">[$1]</span>');
+}
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
 
 function renderUploadResult(result) {
   return `
@@ -177,9 +192,32 @@ function renderRedactResult(result) {
   `;
 }
 
-function highlightAnon(text) {
-  return text.replace(/\[([A-Z_]+_\d+)\]/g, '<span class="aai-anon-highlight">[$1]</span>');
-}
+/* ---- Init ---- */
 
-function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+export function init() {
+  const fileInput = document.getElementById('file-input');
+  if (!fileInput) {
+    console.error('[AUSTR.AI] file-input element not found!');
+    return;
+  }
+
+  document.getElementById('btn-upload')?.addEventListener('click', () => {
+    fileInput.dataset.mode = 'attach';
+    fileInput.accept = '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (!fileInput.files.length) return;
+    const mode = fileInput.dataset.mode || 'attach';
+    const files = [...fileInput.files];
+    fileInput.value = '';
+    processFiles(files, mode);
+  });
+
+  // Mount drop-overlay into document.body
+  const overlayHost = document.createElement('div');
+  overlayHost.id = 'aai-drop-overlay-host';
+  document.body.appendChild(overlayHost);
+  render(html`<${DropOverlay} />`, overlayHost);
+}

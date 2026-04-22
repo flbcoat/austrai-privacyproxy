@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "austrai"
-version = "2.2.2"
+version = "2.2.3"
 description = "AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz. Chat, Anonymisierung, Bildschwärzung."
 requires-python = ">=3.10"
 dependencies = [
@@ -40,3 +40,12 @@ aai = "austrai_proxy.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["austrai_proxy*"]
+
+[tool.setuptools.package-data]
+austrai_proxy = [
+    "chat/index.html",
+    "chat/favicon.svg",
+    "chat/css/*.css",
+    "chat/js/*.js",
+    "chat/js/vendor/*.js",
+]
