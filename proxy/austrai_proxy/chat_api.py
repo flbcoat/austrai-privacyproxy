@@ -253,6 +253,13 @@ async def serve_chat(request: Request) -> FileResponse:
     return FileResponse(CHAT_DIR / "index.html", media_type="text/html")
 
 
+async def serve_favicon(request: Request) -> FileResponse:
+    # index.html references <link rel="icon" href="favicon.svg"> relative to
+    # /chat/, so the browser requests /chat/favicon.svg. Without this route
+    # that lookup 404s and the tab icon falls back to the browser default.
+    return FileResponse(CHAT_DIR / "favicon.svg", media_type="image/svg+xml")
+
+
 # ---------------------------------------------------------------------------
 # POST /chat/api/message — Send message, get SSE-streamed response
 # ---------------------------------------------------------------------------
@@ -657,24 +664,8 @@ async def get_providers(request: Request) -> JSONResponse:
 # ---------------------------------------------------------------------------
 
 async def get_system_info(request: Request) -> JSONResponse:
-    ram_gb = 0
-    try:
-        import psutil
-        ram_gb = round(psutil.virtual_memory().total / (1024 ** 3), 1)
-    except ImportError:
-        try:
-            if platform.system() == "Darwin":
-                import subprocess
-                result = subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, timeout=5)
-                ram_gb = round(int(result.stdout.strip()) / (1024 ** 3), 1)
-            elif platform.system() == "Linux":
-                with open("/proc/meminfo") as f:
-                    for line in f:
-                        if line.startswith("MemTotal"):
-                            ram_gb = round(int(line.split()[1]) / (1024 ** 2), 1)
-                            break
-        except Exception:
-            pass
+    from ._platform import get_total_ram_gb
+    ram_gb = get_total_ram_gb()
 
     # Model recommendation based on RAM
     if ram_gb >= 16:
@@ -1188,6 +1179,7 @@ async def _warmup_engine() -> None:
 def create_chat_app() -> Starlette:
     routes = [
         Route("/", serve_chat, methods=["GET"]),
+        Route("/favicon.svg", serve_favicon, methods=["GET"]),
         Route("/api/message", chat_message, methods=["POST"]),
         Route("/api/settings", get_settings, methods=["GET"]),
         Route("/api/settings", update_settings, methods=["PUT"]),

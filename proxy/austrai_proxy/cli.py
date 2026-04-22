@@ -10,7 +10,6 @@ Usage:
 """
 
 import os
-import signal
 import subprocess
 import sys
 import time
@@ -18,6 +17,19 @@ import time
 import click
 
 from .config import ProxyConfig, DEFAULT_PORT, CONFIG_DIR
+from ._platform import (
+    copy_to_clipboard,
+    ensure_utf8_stdio,
+    is_process_alive,
+    kill_processes_on_port,
+    start_detached_process,
+    terminate_process,
+)
+
+# Windows-CMD defaults to cp1252 which cannot render the emoji and German
+# umlauts the CLI prints. Reconfigure stdio to UTF-8 as early as possible —
+# before the first click.echo — so we never hit UnicodeEncodeError.
+ensure_utf8_stdio()
 
 
 PROXY_PID_FILE = CONFIG_DIR / "proxy.pid"
@@ -136,11 +148,8 @@ def anonymize(text, deny, output):
             f.write(result.anonymized_text)
         click.echo(f"💾 Gespeichert: {output}")
     else:
-        try:
-            subprocess.run(["pbcopy"], input=result.anonymized_text.encode(), check=True, timeout=5)
+        if copy_to_clipboard(result.anonymized_text):
             click.echo("📋 In Zwischenablage kopiert!")
-        except Exception:
-            pass
 
 
 # -----------------------------------------------------------------------
@@ -171,11 +180,8 @@ def rehydrate(text):
     click.echo(f"\n✅ {count} Begriffe wiederhergestellt:\n")
     click.echo(restored)
 
-    try:
-        subprocess.run(["pbcopy"], input=restored.encode(), check=True, timeout=5)
+    if copy_to_clipboard(restored):
         click.echo("\n📋 In Zwischenablage kopiert!")
-    except Exception:
-        pass
 
 
 # -----------------------------------------------------------------------
@@ -247,12 +253,9 @@ def audio(file_path, model, lang, deny):
         else:
             click.echo("\nℹ️  Keine sensiblen Daten erkannt.")
 
-        try:
-            text = result["anonymized_text"] or result["transcript"]
-            subprocess.run(["pbcopy"], input=text.encode(), check=True, timeout=5)
+        text = result["anonymized_text"] or result["transcript"]
+        if copy_to_clipboard(text):
             click.echo("\n📋 In Zwischenablage kopiert!")
-        except Exception:
-            pass
     except ImportError as e:
         click.echo(f"✗ {e}")
         raise SystemExit(1)
@@ -378,7 +381,7 @@ def _start_proxy_background(config):
     _kill_port(config.port)
 
     cmd = [sys.executable, "-m", "austrai_proxy", "start", "--port", str(config.port)]
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    proc = start_detached_process(cmd)
 
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     PROXY_PID_FILE.write_text(str(proc.pid))
@@ -389,25 +392,17 @@ def _is_proxy_running() -> bool:
         return False
     try:
         pid = int(PROXY_PID_FILE.read_text().strip())
-        os.kill(pid, 0)
-        return True
-    except (ProcessLookupError, ValueError, PermissionError):
+    except (ValueError, OSError):
         PROXY_PID_FILE.unlink(missing_ok=True)
         return False
+    if is_process_alive(pid):
+        return True
+    PROXY_PID_FILE.unlink(missing_ok=True)
+    return False
 
 
 def _kill_port(port: int) -> None:
-    try:
-        result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True, timeout=5)
-        if result.stdout.strip():
-            for pid in result.stdout.strip().split("\n"):
-                try:
-                    os.kill(int(pid), signal.SIGTERM)
-                except (ProcessLookupError, ValueError):
-                    pass
-            time.sleep(1)
-    except Exception:
-        pass
+    kill_processes_on_port(port)
 
 
 def _save_last_session(mappings: dict, session_id: str) -> None:
@@ -415,7 +410,8 @@ def _save_last_session(mappings: dict, session_id: str) -> None:
     import json
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "last_session.json").write_text(
-        json.dumps({"session_id": session_id}, ensure_ascii=False)
+        json.dumps({"session_id": session_id}, ensure_ascii=False),
+        encoding="utf-8",
     )
 
 
@@ -426,7 +422,7 @@ def _load_last_session() -> dict | None:
     if not f.exists():
         return None
     try:
-        data = json.loads(f.read_text())
+        data = json.loads(f.read_text(encoding="utf-8"))
         session_id = data.get("session_id")
         # Legacy: if mappings are still in the file, use them but don't persist
         if data.get("mappings"):

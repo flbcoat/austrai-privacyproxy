@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "austrai"
-version = "2.2.3"
+version = "2.2.4"
 description = "AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz. Chat, Anonymisierung, Bildschwärzung."
 requires-python = ">=3.10"
 dependencies = [

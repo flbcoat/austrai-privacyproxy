@@ -15,8 +15,6 @@ Commands:
 """
 
 import os
-import signal
-import subprocess
 import sys
 import time
 
@@ -26,6 +24,16 @@ from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.styles import Style
 
 from .config import ProxyConfig, CONFIG_DIR
+from ._platform import (
+    copy_to_clipboard,
+    ensure_utf8_stdio,
+    is_process_alive,
+    kill_processes_on_port,
+    start_detached_process,
+    terminate_process,
+)
+
+ensure_utf8_stdio()
 
 COMMANDS = [
     "/settings", "/denylist", "/allowlist", "/proxy",
@@ -340,7 +348,7 @@ def _cmd_proxy(config, arg):
             return
         _kill_port(config.port)
         cmd = [sys.executable, "-m", "austrai_proxy", "start", "--port", str(config.port)]
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        proc = start_detached_process(cmd)
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         PROXY_PID_FILE.write_text(str(proc.pid))
         time.sleep(2)
@@ -352,18 +360,22 @@ def _cmd_proxy(config, arg):
         if PROXY_PID_FILE.exists():
             try:
                 pid = int(PROXY_PID_FILE.read_text().strip())
-                os.kill(pid, signal.SIGTERM)
-                PROXY_PID_FILE.unlink(missing_ok=True)
-                print(f"  ✅ Proxy gestoppt.")
-            except (ProcessLookupError, ValueError):
+            except (ValueError, OSError):
                 PROXY_PID_FILE.unlink(missing_ok=True)
                 print("  Proxy war bereits gestoppt.")
+            else:
+                if terminate_process(pid):
+                    PROXY_PID_FILE.unlink(missing_ok=True)
+                    print("  ✅ Proxy gestoppt.")
+                else:
+                    PROXY_PID_FILE.unlink(missing_ok=True)
+                    print("  Proxy war bereits gestoppt.")
         else:
             print("  Kein laufender Proxy gefunden.")
     elif action == "log":
         log_file = CONFIG_DIR / "proxy.log"
         if log_file.exists():
-            lines = log_file.read_text().strip().split("\n")
+            lines = log_file.read_text(encoding="utf-8", errors="replace").strip().split("\n")
             last = lines[-20:] if len(lines) > 20 else lines
             print(f"\n  Letzte {len(last)} Log-Eintraege:\n")
             for line in last:
@@ -429,11 +441,8 @@ def _cmd_anonymize(config, text):
             print(f"    {original:30s} → {codename}")
         print(f"\n  Anonymisiert:\n  {result.anonymized_text}\n")
 
-        try:
-            subprocess.run(["pbcopy"], input=result.anonymized_text.encode(), check=True, timeout=5)
+        if copy_to_clipboard(result.anonymized_text):
             print("  📋 In Zwischenablage kopiert!")
-        except Exception:
-            pass
 
     except Exception as e:
         print(f"  ✗ Fehler: {e}")
@@ -448,25 +457,17 @@ def _is_proxy_running():
         return False
     try:
         pid = int(PROXY_PID_FILE.read_text().strip())
-        os.kill(pid, 0)
-        return True
-    except (ProcessLookupError, ValueError, PermissionError):
+    except (ValueError, OSError):
         PROXY_PID_FILE.unlink(missing_ok=True)
         return False
+    if is_process_alive(pid):
+        return True
+    PROXY_PID_FILE.unlink(missing_ok=True)
+    return False
 
 
 def _kill_port(port):
-    try:
-        result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True, timeout=5)
-        for pid in result.stdout.strip().split("\n"):
-            if pid:
-                try:
-                    os.kill(int(pid), signal.SIGTERM)
-                except (ProcessLookupError, ValueError):
-                    pass
-        time.sleep(1)
-    except Exception:
-        pass
+    kill_processes_on_port(port)
 
 
 def _mask(key):

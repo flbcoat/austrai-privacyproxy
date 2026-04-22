@@ -33,7 +33,12 @@ class ConversationStore:
         else:
             key = Fernet.generate_key()
             KEY_PATH.write_bytes(key)
-            KEY_PATH.chmod(0o600)
+            try:
+                KEY_PATH.chmod(0o600)
+            except (OSError, NotImplementedError):
+                # Windows / non-POSIX filesystems ignore chmod — don't crash
+                # the first-run chat setup over a cosmetic perm change.
+                pass
         return Fernet(key)
 
     def _init_db(self):

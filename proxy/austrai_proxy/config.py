@@ -34,7 +34,7 @@ class ProxyConfig:
 
         if CONFIG_FILE.exists():
             try:
-                data = yaml.safe_load(CONFIG_FILE.read_text()) or {}
+                data = yaml.safe_load(CONFIG_FILE.read_text(encoding="utf-8")) or {}
                 config.anthropic_api_key = data.get("anthropic_api_key", "")
                 config.openai_api_key = data.get("openai_api_key", "")
                 config.mistral_api_key = data.get("mistral_api_key", "")
@@ -83,5 +83,14 @@ class ProxyConfig:
             "ollama_url": self.ollama_url,
             "lmstudio_url": self.lmstudio_url,
         }
-        CONFIG_FILE.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True))
-        CONFIG_FILE.chmod(0o600)
+        CONFIG_FILE.write_text(
+            yaml.dump(data, default_flow_style=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+        # POSIX-Permissions: Windows silently accepts chmod but doesn't enforce
+        # the mode. If chmod raises (some networked filesystems), swallow it —
+        # the write succeeded, which is what matters.
+        try:
+            CONFIG_FILE.chmod(0o600)
+        except (OSError, NotImplementedError):
+            pass

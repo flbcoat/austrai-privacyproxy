@@ -342,6 +342,7 @@ class PrivacyEngine:
 
     def get_latest_mappings(self) -> dict[str, str] | None:
         """Get mappings from the most recent session (for CLI deanon)."""
+        self._ensure_initialized()
         if not self._mapping_store:
             return None
         result = self._mapping_store.get_latest_session()

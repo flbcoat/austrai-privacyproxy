@@ -53,7 +53,12 @@ class MappingStore:
         """Load encryption key from file, or create a new one."""
         import os as _os
         DB_DIR.mkdir(parents=True, exist_ok=True)
-        DB_DIR.chmod(0o700)
+        try:
+            DB_DIR.chmod(0o700)
+        except (OSError, NotImplementedError):
+            # Windows / exotic filesystems ignore POSIX perms — do not fail
+            # the whole init over the belt-and-braces mode change.
+            pass
         if KEY_FILE.exists():
             return KEY_FILE.read_bytes()
         key = Fernet.generate_key()
@@ -69,7 +74,12 @@ class MappingStore:
     def _init_db(self):
         """Create the database tables if they don't exist."""
         DB_DIR.mkdir(parents=True, exist_ok=True)
-        DB_DIR.chmod(0o700)
+        try:
+            DB_DIR.chmod(0o700)
+        except (OSError, NotImplementedError):
+            # Windows / exotic filesystems ignore POSIX perms — do not fail
+            # the whole init over the belt-and-braces mode change.
+            pass
         with self._connect() as conn:
             # v1 table (kept for backward compatibility during migration)
             conn.execute("""
