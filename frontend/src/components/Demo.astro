@@ -1,18 +1,43 @@
 ---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
 ---
+<!-- Mobile: Floating CTA button (visible on small screens) -->
+<button class="demo-fab" id="demo-fab" type="button" aria-label={isEn ? 'Try demo' : 'Demo testen'}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <span>{isEn ? 'Try demo' : 'Demo testen'}</span>
+</button>
+
+<!-- Fullscreen overlay for mobile -->
+<div class="demo-overlay" id="demo-overlay" hidden>
+  <div class="demo-overlay-header">
+    <span class="demo-overlay-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      AUSTR.AI Demo
+    </span>
+    <button class="demo-overlay-close" id="demo-overlay-close" type="button">&times;</button>
+  </div>
+  <div class="demo-overlay-body" id="demo-overlay-body">
+    <!-- Chat gets moved here on mobile -->
+  </div>
+</div>
+
 <section class="section demo-section" id="demo">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Ausprobieren</span>
-      <h2>Live-Demo</h2>
-      <p>Teste AUSTR.AI direkt hier — schreibe eine Nachricht mit sensiblen Daten und sieh, wie die Anonymisierung funktioniert.</p>
+      <span class="section-label">{isEn ? 'Try it' : 'Ausprobieren'}</span>
+      <h2>{isEn ? 'Live Demo' : 'Live-Demo'}</h2>
+      <p>{isEn ? 'Try AUSTR.AI right here — write a message with sensitive data and see how anonymization works.' : 'Teste AUSTR.AI direkt hier — schreibe eine Nachricht mit sensiblen Daten und sieh, wie die Anonymisierung funktioniert.'}</p>
     </div>
 
-    <div class="demo-chat-wrapper">
+    <div class="demo-chat-wrapper" id="demo-chat-wrapper">
       <!-- Privacy Notice -->
       <div class="demo-notice">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <p>Demo nutzt <strong>Mistral AI</strong> (EU-gehostet). Dein Text wird anonymisiert, bevor er die Seite verlässt. Max. 5 Nachrichten pro Session. Verwende fiktive Daten oder die Beispiele.</p>
+        <p>{isEn
+          ? 'Demo uses <strong>Mistral AI</strong> (EU-hosted). Your text is anonymized before it leaves the page. Max. 3 messages per session. Use fictitious data or the examples.'
+          : 'Demo nutzt <strong>Mistral AI</strong> (EU-gehostet). Dein Text wird anonymisiert, bevor er die Seite verlässt. Max. 3 Nachrichten pro Session. Verwende fiktive Daten oder die Beispiele.'}</p>
       </div>
 
       <!-- Chat Container -->
@@ -23,7 +48,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div class="demo-msg-body">
-            <div class="demo-msg-text">Schreib mir eine Nachricht mit personenbezogenen Daten — ich zeige dir, wie AUSTR.AI sie automatisch anonymisiert, bevor die KI sie sieht.</div>
+            <div class="demo-msg-text">{isEn
+              ? 'Write me a message with personal data — I\'ll show you how AUSTR.AI automatically anonymizes it before the AI sees it.'
+              : 'Schreib mir eine Nachricht mit personenbezogenen Daten — ich zeige dir, wie AUSTR.AI sie automatisch anonymisiert, bevor die KI sie sieht.'}</div>
           </div>
         </div>
       </div>
@@ -32,46 +59,46 @@
       <div class="demo-preview" id="demo-preview" hidden>
         <div class="demo-preview-header">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span id="demo-preview-count">0 Begriffe anonymisiert</span>
+          <span id="demo-preview-count">{isEn ? '0 terms anonymized' : '0 Begriffe anonymisiert'}</span>
           <button class="demo-preview-close" id="demo-preview-close" type="button">&times;</button>
         </div>
         <div class="demo-preview-diff">
           <div class="demo-preview-col">
-            <div class="demo-preview-label">Dein Text</div>
+            <div class="demo-preview-label">{isEn ? 'Your text' : 'Dein Text'}</div>
             <div class="demo-preview-text" id="demo-preview-original"></div>
           </div>
           <div class="demo-preview-arrow">→</div>
           <div class="demo-preview-col demo-preview-col--anon">
-            <div class="demo-preview-label">Was die KI sieht</div>
+            <div class="demo-preview-label">{isEn ? 'What the AI sees' : 'Was die KI sieht'}</div>
             <div class="demo-preview-text" id="demo-preview-anon"></div>
           </div>
         </div>
         <div class="demo-preview-entities" id="demo-preview-entities"></div>
         <div class="demo-preview-actions">
-          <button class="btn btn-secondary btn-sm" id="demo-preview-cancel">Abbrechen</button>
-          <button class="btn btn-primary btn-sm" id="demo-preview-send">Absenden <span class="key-hint">Enter</span></button>
+          <button class="btn btn-secondary btn-sm" id="demo-preview-cancel">{isEn ? 'Cancel' : 'Abbrechen'}</button>
+          <button class="btn btn-primary btn-sm" id="demo-preview-send">{isEn ? 'Send' : 'Absenden'} <span class="key-hint">Enter</span></button>
         </div>
       </div>
 
       <!-- Input Area -->
       <div class="demo-input-area" id="demo-input-area">
         <div class="demo-examples" id="demo-examples">
-          <button class="demo-chip" data-example="0">Geschäfts-E-Mail</button>
-          <button class="demo-chip" data-example="1">Arzt-Befund</button>
-          <button class="demo-chip" data-example="2">Vertragsklausel</button>
+          <button class="demo-chip" data-example="0">{isEn ? 'Business email' : 'Geschäfts-E-Mail'}</button>
+          <button class="demo-chip" data-example="1">{isEn ? 'Medical report' : 'Arzt-Befund'}</button>
+          <button class="demo-chip" data-example="2">{isEn ? 'Contract clause' : 'Vertragsklausel'}</button>
         </div>
         <div class="demo-input-row">
-          <textarea id="demo-input" class="demo-input" placeholder="Nachricht mit sensiblen Daten eingeben..." rows="1" maxlength="2000"></textarea>
+          <textarea id="demo-input" class="demo-input" placeholder={isEn ? 'Enter a message with sensitive data...' : 'Nachricht mit sensiblen Daten eingeben...'} rows="1" maxlength="2000"></textarea>
           <button class="demo-send-btn" id="demo-send" type="button" title="Prüfen & Senden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </button>
         </div>
-        <div class="demo-input-hint" id="demo-input-hint">Enter = Prüfen — dann nochmal Enter = Absenden</div>
+        <div class="demo-input-hint" id="demo-input-hint">{isEn ? 'Enter = Check — then Enter again = Send' : 'Enter = Prüfen — dann nochmal Enter = Absenden'}</div>
       </div>
 
       <!-- Session limit reached -->
       <div class="demo-limit" id="demo-limit" hidden>
-        <p>Demo-Limit erreicht (5 Nachrichten). Für unbegrenzten Zugang:</p>
+        <p>{isEn ? 'Demo limit reached (3 messages). For unlimited access:' : 'Demo-Limit erreicht (3 Nachrichten). Für unbegrenzten Zugang:'}</p>
         <code>pip install austrai && aai chat</code>
       </div>
     </div>
@@ -80,38 +107,82 @@
     <div class="demo-features">
       <div class="demo-feature">
         <div class="demo-feature-icon">🔍</div>
-        <div class="demo-feature-title">3-Schichten-Erkennung</div>
-        <div class="demo-feature-desc">GLiNER + Presidio + optionales lokales LLM erkennen Namen, IBANs, Diagnosen, Adressen und mehr.</div>
+        <div class="demo-feature-title">{isEn ? '3-Layer Detection' : '3-Schichten-Erkennung'}</div>
+        <div class="demo-feature-desc">{isEn ? 'GLiNER + Presidio + optional local LLM detect names, IBANs, diagnoses, addresses and more.' : 'GLiNER + Presidio + optionales lokales LLM erkennen Namen, IBANs, Diagnosen, Adressen und mehr.'}</div>
       </div>
       <div class="demo-feature">
         <div class="demo-feature-icon">🏷</div>
-        <div class="demo-feature-title">Semantische Codes</div>
-        <div class="demo-feature-desc">[DATE_OF_BIRTH_1], [AT_SVNR_1] — das LLM versteht den Datentyp und verwechselt nichts.</div>
+        <div class="demo-feature-title">{isEn ? 'Semantic Codes' : 'Semantische Codes'}</div>
+        <div class="demo-feature-desc">{isEn ? '[DATE_OF_BIRTH_1], [AT_SVNR_1] — the AI understands the data type and never confuses them.' : '[DATE_OF_BIRTH_1], [AT_SVNR_1] — das LLM versteht den Datentyp und verwechselt nichts.'}</div>
       </div>
       <div class="demo-feature">
         <div class="demo-feature-icon">🔒</div>
-        <div class="demo-feature-title">4 Schutzklassen</div>
-        <div class="demo-feature-desc">Jeder Datenpunkt wird klassifiziert: Intern (1h), Vertraulich (30min), Streng Vertraulich (5min Vault-TTL).</div>
+        <div class="demo-feature-title">{isEn ? '4 Protection Levels' : '4 Schutzklassen'}</div>
+        <div class="demo-feature-desc">{isEn ? 'Every data point is classified: Internal (1h), Confidential (30min), Restricted (5min vault TTL).' : 'Jeder Datenpunkt wird klassifiziert: Intern (1h), Vertraulich (30min), Streng Vertraulich (5min Vault-TTL).'}</div>
       </div>
       <div class="demo-feature">
         <div class="demo-feature-icon">↩</div>
-        <div class="demo-feature-title">Lokale Wiederherstellung</div>
-        <div class="demo-feature-desc">Codenames werden in der Antwort automatisch durch deine echten Daten ersetzt — lokal, nie beim LLM.</div>
+        <div class="demo-feature-title">{isEn ? 'Local Restoration' : 'Lokale Wiederherstellung'}</div>
+        <div class="demo-feature-desc">{isEn ? 'Codenames in the response are automatically replaced with your real data — locally, never at the AI.' : 'Codenames werden in der Antwort automatisch durch deine echten Daten ersetzt — lokal, nie beim LLM.'}</div>
       </div>
     </div>
   </div>
 </section>
 
 <style is:global>
+  /* ---- Floating Action Button (mobile only) ---- */
+  .demo-fab {
+    display: none; /* hidden on desktop */
+    position: fixed; bottom: 20px; right: 20px; z-index: 90;
+    padding: 12px 20px; border: none; border-radius: 28px;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-purple));
+    color: #fff; font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(13, 148, 136, 0.3);
+    align-items: center; gap: 8px;
+    animation: fabPulse 3s ease-in-out infinite;
+  }
+  .demo-fab svg { width: 20px; height: 20px; }
+  @keyframes fabPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(13, 148, 136, 0.3); }
+    50% { box-shadow: 0 4px 32px rgba(13, 148, 136, 0.5); }
+  }
+
+  /* ---- Fullscreen Overlay (mobile) ---- */
+  .demo-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--color-bg); display: flex; flex-direction: column;
+    animation: overlayIn 200ms ease;
+  }
+  .demo-overlay[hidden] { display: none; }
+  @keyframes overlayIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .demo-overlay-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+  }
+  .demo-overlay-title {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 0.9375rem; color: var(--color-accent);
+  }
+  .demo-overlay-close {
+    border: none; background: none; font-size: 1.5rem; color: var(--color-text-dim);
+    cursor: pointer; padding: 4px 8px; line-height: 1;
+  }
+  .demo-overlay-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
   /* ---- Chat Demo Layout ---- */
   .demo-chat-wrapper {
     max-width: 720px;
     margin: 0 auto;
     background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
+    border: 1px solid rgba(13, 148, 136, 0.2);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+    transition: box-shadow var(--transition-slow);
+  }
+  .demo-chat-wrapper:hover {
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(13, 148, 136, 0.12);
   }
 
   .demo-notice {
@@ -274,6 +345,38 @@
     border-radius: 3px;
   }
 
+  /* Editable preview: text selection */
+  .demo-preview-selectable {
+    cursor: text; user-select: text;
+  }
+  .demo-preview-selectable::selection {
+    background: rgba(13, 148, 136, 0.25); color: var(--color-accent-dark);
+  }
+
+  /* Remove button on entities */
+  .demo-entity-remove {
+    border: none; background: none; cursor: pointer; color: var(--color-text-dim);
+    font-size: 0.875rem; line-height: 1; padding: 0 2px; margin-left: 2px;
+    transition: color var(--transition-fast);
+  }
+  .demo-entity-remove:hover { color: var(--color-error); }
+
+  /* Custom deny-list terms */
+  .demo-custom-terms {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+  }
+  .demo-custom-term {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    background: rgba(13, 148, 136, 0.1); color: var(--color-accent);
+    font-size: 0.6875rem; font-weight: 500;
+  }
+
+  /* Edit hint */
+  .demo-edit-hint {
+    width: 100%; margin-top: 6px; font-size: 0.6875rem;
+    color: var(--color-text-dim); font-style: italic;
+  }
+
   /* Protection level badges */
   .demo-plevel {
     display: inline-flex; align-items: center; justify-content: center;
@@ -355,21 +458,60 @@
   .demo-feature-title { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.25rem; }
   .demo-feature-desc { font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; }
 
-  @media (max-width: 640px) {
+  /* ---- Responsive: Mobile ---- */
+  @media (max-width: 768px) {
+    .demo-fab { display: flex; }
+
+    /* Hide inline chat on mobile — it moves to the overlay */
+    .demo-chat-wrapper { display: none; }
+
+    /* When overlay is open, the chat wrapper is inside it */
+    .demo-overlay-body .demo-chat-wrapper {
+      display: flex; flex-direction: column; flex: 1;
+      border: none; border-radius: 0; box-shadow: none;
+      max-width: 100%; height: 100%;
+    }
+    .demo-overlay-body .demo-chat {
+      flex: 1; max-height: none; min-height: 0;
+    }
+    .demo-overlay-body .demo-input-area {
+      border-top: 1px solid var(--color-border-light);
+      padding: 10px 12px;
+    }
+    .demo-overlay-body .demo-input { font-size: 16px; } /* prevent iOS zoom */
+    .demo-overlay-body .demo-notice { font-size: 0.75rem; padding: 8px 12px; }
+
     .demo-preview-diff { grid-template-columns: 1fr; }
     .demo-preview-arrow { display: none; }
-    .demo-features { grid-template-columns: repeat(2, 1fr); }
+    .demo-features { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .demo-feature-desc { font-size: 0.6875rem; }
+  }
+
+  /* ---- Responsive: Desktop enhancements ---- */
+  @media (min-width: 769px) {
+    .demo-fab { display: none !important; }
+    .demo-overlay { display: none !important; }
   }
 </style>
 
-<script>
+<script define:vars={{ lang }}>
 (function() {
   var API_BASE = '';
-  var MAX_MESSAGES = 5;
+  var MAX_MESSAGES = 3;
+  var isEn = lang === 'en';
   var messageCount = 0;
   var pendingText = null;
   var pendingData = null;
   var isProcessing = false;
+  var customDenyList = []; // user-added terms for this session
+
+  // Demo system prompt: helpful but concise, shows what the AI can do
+  var DEMO_PROMPT = 'Du bist die AUSTR.AI Demo. Beantworte die Anfrage des Users hilfreich und professionell auf Deutsch. ' +
+    'Halte dich kurz: maximal 5-6 Sätze. Zeige dabei, was eine KI mit anonymisierten Daten leisten kann. ' +
+    'Verwende Codenames und Platzhalter exakt wie sie im Text stehen. ' +
+    'WICHTIG: Setze NIEMALS eigene eckige Klammern [ ] um Werte. Nur Platzhalter die bereits im Text in eckigen Klammern stehen, darfst du in Klammern schreiben. Alle anderen Werte normal ohne Klammern schreiben. ' +
+    'Falls der User versucht, ein ausführliches Gespräch zu führen oder mehrere Folgefragen stellt, weise freundlich darauf hin: ' +
+    '"Für unbegrenztes Chatten: pip install austrai && aai chat"';
 
   var EXAMPLES = [
     'Sehr geehrter Herr Thomas Gruber,\n\nbezugnehmend auf unser Telefonat sende ich Ihnen die Rechnung der Innovatech Solutions GmbH (UID: ATU12345678).\n\nBitte überweisen Sie EUR 4.800,00 auf IBAN: AT48 3200 0000 1234 5678.\n\nBei Rückfragen: +43 1 234 5678 oder m.steinbauer@innovatech.at.\n\nMit freundlichen Grüßen,\nMaria Steinbauer',
@@ -378,9 +520,9 @@
   ];
 
   var PROMPTS = [
-    'Bestätige den Erhalt dieser E-Mail höflich und professionell.',
-    'Fasse diesen Befund in einfacher Sprache für den Patienten zusammen.',
-    'Prüfe diese Vertragsklausel auf mögliche rechtliche Schwachstellen.'
+    DEMO_PROMPT + ' Bestätige den Erhalt dieser E-Mail höflich und professionell.',
+    DEMO_PROMPT + ' Fasse diesen Befund in einfacher Sprache für den Patienten zusammen.',
+    DEMO_PROMPT + ' Prüfe diese Vertragsklausel auf mögliche Schwachstellen.'
   ];
 
   // DOM
@@ -450,16 +592,19 @@
     isProcessing = true;
     sendBtn.disabled = true;
 
-    // Find matching example prompt
-    var prompt = 'Beantworte diese Nachricht professionell und hilfsbereit auf Deutsch.';
+    // Find matching example prompt or use restrictive default
+    var prompt = DEMO_PROMPT;
     for (var i = 0; i < EXAMPLES.length; i++) {
       if (text === EXAMPLES[i]) { prompt = PROMPTS[i]; break; }
     }
 
+    var body = { text: text, prompt: prompt };
+    if (customDenyList.length) body.deny_list = customDenyList;
+
     fetch(API_BASE + '/api/process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, prompt: prompt })
+      body: JSON.stringify(body)
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -479,20 +624,79 @@
     var entities = data.entities || [];
     var count = entities.length;
     previewCount.textContent = count + ' Begriff' + (count !== 1 ? 'e' : '') + ' anonymisiert';
-    previewOriginal.textContent = data.original_text || pendingText;
     previewAnon.innerHTML = hlAnon(data.anonymized_text || pendingText);
 
-    previewEntities.innerHTML = entities.map(function(e) {
+    // Editable original text: user can select text to add to deny-list
+    previewOriginal.innerHTML = '<span class="demo-preview-selectable">' + esc(data.original_text || pendingText) + '</span>';
+
+    // Entity list with remove buttons
+    previewEntities.innerHTML = entities.map(function(e, i) {
       var plevel = e.protection_level || 2;
-      return '<span class="demo-preview-entity">' +
+      return '<span class="demo-preview-entity" data-entity-idx="' + i + '">' +
         '<span class="demo-plevel demo-plevel-' + plevel + '">' + plevel + '</span>' +
         '<span class="demo-preview-entity-type">' + esc(e.entity_type) + '</span> ' +
-        '<span class="demo-preview-entity-old">' + esc(e.text) + '</span> → ' +
-        '<span class="demo-preview-entity-new">' + esc(e.entity_type.startsWith('[') ? e.entity_type : 'Codename') + '</span>' +
+        '<span class="demo-preview-entity-old">' + esc(e.text) + '</span>' +
+        '<button class="demo-entity-remove" data-remove-text="' + esc(e.text).replace(/"/g, '&quot;') + '" title="Erkennung entfernen">&times;</button>' +
         '</span>';
-    }).join('');
+    }).join('') +
+    (customDenyList.length ? '<div class="demo-custom-terms">' + customDenyList.map(function(t) {
+      return '<span class="demo-custom-term">+ ' + esc(t) + '</span>';
+    }).join('') + '</div>' : '') +
+    '<div class="demo-edit-hint">Tipp: Im linken Text einen Begriff markieren, um ihn zusaetzlich zu anonymisieren</div>';
 
     preview.hidden = false;
+
+    // Wire: text selection in original → add to deny-list
+    var selectable = preview.querySelector('.demo-preview-selectable');
+    if (selectable) {
+      selectable.addEventListener('mouseup', function() {
+        var sel = window.getSelection();
+        var selected = sel.toString().trim();
+        if (selected.length < 2 || selected.length > 200) return;
+        if (customDenyList.indexOf(selected) === -1) {
+          customDenyList.push(selected);
+        }
+        sel.removeAllRanges();
+        // Re-run analysis with updated deny-list
+        reAnalyze();
+      });
+    }
+
+    // Wire: remove entity buttons
+    preview.querySelectorAll('.demo-entity-remove').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // For now, just visually hide — full remove would need allow-list support
+        var entity = btn.closest('.demo-preview-entity');
+        if (entity) entity.style.display = 'none';
+      });
+    });
+  }
+
+  function reAnalyze() {
+    if (!pendingText || isProcessing) return;
+    isProcessing = true;
+
+    var prompt = 'Beantworte diese Nachricht professionell und hilfsbereit auf Deutsch.';
+    for (var i = 0; i < EXAMPLES.length; i++) {
+      if (pendingText === EXAMPLES[i]) { prompt = PROMPTS[i]; break; }
+    }
+
+    var body = { text: pendingText, prompt: prompt };
+    if (customDenyList.length) body.deny_list = customDenyList;
+
+    fetch(API_BASE + '/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      pendingData = data;
+      showPreview(data);
+      isProcessing = false;
+    })
+    .catch(function() { isProcessing = false; });
   }
 
   function closePreview() {
@@ -625,6 +829,37 @@
     return esc(text)
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
+  }
+  // ---- Mobile: FAB + Overlay ----
+  var fab = document.getElementById('demo-fab');
+  var overlay = document.getElementById('demo-overlay');
+  var overlayBody = document.getElementById('demo-overlay-body');
+  var overlayClose = document.getElementById('demo-overlay-close');
+  var chatWrapper = document.getElementById('demo-chat-wrapper');
+  var originalParent = chatWrapper ? chatWrapper.parentElement : null;
+
+  if (fab && overlay && overlayBody && chatWrapper) {
+    fab.addEventListener('click', function() {
+      // Move the chat wrapper into the overlay
+      overlayBody.appendChild(chatWrapper);
+      chatWrapper.style.display = 'flex';
+      overlay.hidden = false;
+      fab.style.display = 'none';
+      document.body.style.overflow = 'hidden';
+      // Focus input
+      var inp = chatWrapper.querySelector('#demo-input');
+      if (inp) setTimeout(function() { inp.focus(); }, 200);
+    });
+
+    overlayClose.addEventListener('click', function() {
+      overlay.hidden = true;
+      fab.style.display = 'flex';
+      document.body.style.overflow = '';
+      // Move chat wrapper back to inline position
+      if (originalParent) {
+        originalParent.insertBefore(chatWrapper, originalParent.querySelector('.demo-features')?.parentElement || null);
+      }
+    });
   }
 })();
 </script>
