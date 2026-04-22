@@ -29,6 +29,11 @@ ENTITY_COLORS: dict[str, str] = {
     "NRP": "#84cc16",               # lime
     "CREDIT_CARD": "#f43f5e",       # rose
     "DOC_METADATA": "#d946ef",      # fuchsia
+    # Semantic types (split from former monolithic EU_PII)
+    "DATE_OF_BIRTH": "#f59e0b",     # amber (date-related)
+    "IP_ADDRESS": "#0ea5e9",        # sky (technical network data)
+    "LICENSE_PLATE": "#8b5cf6",     # violet
+    "PASSPORT_NUMBER": "#10b981",   # emerald
 }
 
 DEFAULT_COLOR = "#9ca3af"  # gray fallback
@@ -39,6 +44,8 @@ ALLOWED_ENTITY_TYPES = {
     "PERSON", "AT_IBAN", "IBAN_CODE", "PHONE_NUMBER", "AT_UID_NR",
     "AT_SVNR", "AT_FIRMENBUCH_NR", "EMAIL_ADDRESS", "DOC_METADATA",
     "ORGANIZATION", "ORG", "CREDIT_CARD", "CUSTOM", "CREDENTIAL",
+    # Semantic types (split from former monolithic EU_PII)
+    "DATE_OF_BIRTH", "IP_ADDRESS", "LICENSE_PLATE", "PASSPORT_NUMBER",
     "EU_PII", "SENSITIVE_DATA",
 }
 
