@@ -1,0 +1,191 @@
+---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
+---
+<section class="section roadmap-section" id="roadmap">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">{isEn ? 'Version 3.0' : 'Version 3.0'}</span>
+      <h2>{isEn ? 'What the new version can do' : 'Was die neue Version kann'}</h2>
+      <p>
+        {isEn ? 'AUSTR.AI 3.0 brings free browser choice, real Ctrl+C control, automatic update checks, and cross-platform stability on Windows, macOS and Linux — on top of all the privacy features from 2.x.' : 'AUSTR.AI 3.0 bringt freie Browserwahl, echte Ctrl+C-Kontrolle, automatischen Update-Check und stabile Ausführung auf Windows, macOS und Linux — zusätzlich zu allen Datenschutz-Features aus 2.x.'}
+      </p>
+    </div>
+
+    <div class="roadmap-grid">
+      <div class="roadmap-card roadmap-card-new">
+        <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
+        <div class="roadmap-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>{isEn ? '4 Protection Levels' : '4 Schutzklassen'}</h3>
+        <p>{isEn ? 'Every data point is classified: Public, Internal, Confidential, Restricted. Restricted data auto-expires after 5 minutes in the encrypted vault.' : 'Jeder Datenpunkt wird klassifiziert: Intern, Vertraulich, Streng Vertraulich. Streng vertrauliche Daten verfallen nach 5 Minuten automatisch im verschlüsselten Vault.'}</p>
+      </div>
+
+      <div class="roadmap-card roadmap-card-new">
+        <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
+        <div class="roadmap-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+            <line x1="14" y1="4" x2="10" y2="20"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Semantic Codes' : 'Semantische Codes'}</h3>
+        <p>{isEn ? '[DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1], [AT_SVNR_1] — the AI understands the data type and never confuses a birth date with a bank account.' : '[DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1], [AT_SVNR_1] — die KI versteht den Datentyp und verwechselt kein Geburtsdatum mit einer Kontonummer.'}</p>
+      </div>
+
+      <div class="roadmap-card roadmap-card-new">
+        <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
+        <div class="roadmap-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Security Hardening' : 'Maximale Sicherheit'}</h3>
+        <p>{isEn ? 'All chat history is re-anonymized before every send. Fail-closed on errors. No PII in logs. CORS protection. Encrypted vault with audit trail.' : 'Gesamte Chat-History wird vor jedem Senden re-anonymisiert. Fail-Closed bei Fehlern. Keine PII in Logs. CORS-Schutz. Verschlüsselter Vault mit Audit-Trail.'}</p>
+      </div>
+    </div>
+
+    <!-- Future vision -->
+    <div class="roadmap-future">
+      <span class="roadmap-future-label">{isEn ? 'In planning' : 'In Planung'}</span>
+      <span class="roadmap-future-text">{isEn ? 'Browser Extension — anonymize directly in ChatGPT, Claude, Gemini.' : 'Browser-Extension — direkt in ChatGPT, Claude, Gemini anonymisieren.'}</span>
+      <span class="roadmap-future-divider">|</span>
+      <span class="roadmap-future-text">{isEn ? 'iOS App — AUSTR.AI on your phone.' : 'iOS-App — AUSTR.AI auf deinem Handy.'}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .roadmap-section {
+    position: relative;
+    background: var(--color-bg-alt);
+  }
+
+  .roadmap-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border), transparent);
+  }
+
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .roadmap-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: all var(--transition-base);
+    position: relative;
+  }
+
+  .roadmap-card:hover {
+    border-color: var(--color-border-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .roadmap-card-experimental {
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+
+  .roadmap-card-planned {
+    border-color: rgba(124, 58, 237, 0.2);
+  }
+
+  .roadmap-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .roadmap-card-new {
+    border-color: rgba(13, 148, 136, 0.3);
+  }
+
+  .roadmap-card-new .roadmap-badge {
+    color: var(--color-accent);
+    background: rgba(13, 148, 136, 0.1);
+  }
+
+  .roadmap-card-new .roadmap-icon {
+    color: var(--color-accent);
+  }
+
+  .roadmap-card-experimental .roadmap-badge {
+    color: #F59E0B;
+    background: rgba(245, 158, 11, 0.1);
+  }
+
+  .roadmap-card-planned .roadmap-badge {
+    color: var(--color-accent-purple);
+    background: rgba(124, 58, 237, 0.1);
+  }
+
+  .roadmap-icon {
+    color: var(--color-text-dim);
+    margin-bottom: 1rem;
+  }
+
+  .roadmap-card-experimental .roadmap-icon {
+    color: #F59E0B;
+  }
+
+  .roadmap-card-planned .roadmap-icon {
+    color: var(--color-accent-purple);
+  }
+
+  .roadmap-card h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .roadmap-card p {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .roadmap-future {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap;
+    margin-top: 2rem; padding: 1rem 1.5rem;
+    background: var(--color-bg-card);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem; color: var(--color-text-muted);
+  }
+  .roadmap-future-label {
+    font-weight: 600; color: var(--color-accent-purple);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .roadmap-future-divider { color: var(--color-border); }
+
+  @media (max-width: 900px) {
+    .roadmap-grid {
+      grid-template-columns: 1fr;
+    }
+    .roadmap-future { flex-direction: column; text-align: center; }
+    .roadmap-future-divider { display: none; }
+  }
+</style>
