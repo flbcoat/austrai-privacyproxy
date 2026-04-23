@@ -9,4 +9,4 @@ logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 """AUSTR.AI Privacy Proxy — transparent anonymization layer for LLM APIs."""
 
-__version__ = "3.0.1"
+__version__ = "3.1.0"

@@ -208,13 +208,31 @@ const T = {
   },
 };
 
-let _lang = (navigator.language || 'de').startsWith('de') ? 'de' : 'en';
+// Language is driven by signals.language so every component that reads
+// signals.language.value re-renders automatically when the user switches
+// languages. A persisted preference in localStorage wins over the browser
+// default on the next start-up.
+import { signals } from './state.js';
 
-export function setLang(lang) { _lang = lang; }
-export function getLang() { return _lang; }
+const STORED = (() => {
+  try { return localStorage.getItem('aai_lang'); } catch { return null; }
+})();
+const BROWSER = (typeof navigator !== 'undefined' && (navigator.language || '').startsWith('de')) ? 'de' : 'en';
+const INITIAL = STORED === 'de' || STORED === 'en' ? STORED : BROWSER;
+// Seed the shared signal so state.js defaults are overridden with the
+// persisted/browser preference on first access.
+signals.language.value = INITIAL;
+
+export function setLang(lang) {
+  if (lang !== 'de' && lang !== 'en') return;
+  signals.language.value = lang;
+  try { localStorage.setItem('aai_lang', lang); } catch { /* ignore */ }
+}
+export function getLang() { return signals.language.value; }
 
 export function t(key, params = {}) {
-  let text = T[_lang]?.[key] || T.en[key] || key;
+  const lang = signals.language.value;
+  let text = T[lang]?.[key] || T.en[key] || key;
   for (const [k, v] of Object.entries(params)) {
     text = text.replace(`{${k}}`, v);
   }

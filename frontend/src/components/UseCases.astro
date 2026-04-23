@@ -9,7 +9,7 @@ const isEn = lang === 'en';
       <span class="section-label">{isEn ? 'Use cases' : 'Einsatzgebiete'}</span>
       <h2>{isEn ? 'Wherever sensitive data meets AI' : 'Überall dort, wo sensible Daten auf KI treffen'}</h2>
       <p>
-        {isEn ? 'HR, legal, healthcare, or private use — AUSTR.AI protects your data.' : 'HR, Recht, Medizin oder privat — AUSTR.AI schützt deine Daten.'}
+        {isEn ? 'Whether in HR, legal work, medical practice or for private purposes — AUSTR.AI protects your data reliably across every use case that involves personal or business-critical information.' : 'Ob im Personalwesen, in der Rechtsabteilung, in der Arztpraxis oder für ganz private Anliegen — AUSTR.AI schützt deine Daten zuverlässig in allen Situationen, in denen personenbezogene oder geschäftskritische Informationen im Spiel sind.'}
       </p>
     </div>
 
@@ -24,11 +24,11 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? 'HR department' : 'HR-Abteilung'}</h3>
         <p class="uc-desc">
-          {isEn ? 'Analyze applications, compare candidates, draft rejection letters — without personal details reaching the AI.' : 'Bewerbungen analysieren, Kandidaten vergleichen, Absagen formulieren — ohne dass persönliche Daten beim KI-Anbieter landen.'}
+          {isEn ? 'You can analyse applications, compare candidates and draft rejection letters without any personal details ever reaching the AI provider.' : 'Du kannst Bewerbungen analysieren lassen, Kandidatinnen und Kandidaten vergleichen und Absageschreiben formulieren, ohne dass personenbezogene Details jemals bei einem KI-Anbieter landen.'}
         </p>
         <div class="uc-example">
           <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
-          {isEn ? 'The AI compares three applications. Names and dates of birth become codenames — the AI evaluates qualifications, not people.' : 'Die KI vergleicht drei Bewerbungen. Namen und Geburtsdaten werden zu Codenames — die KI bewertet Qualifikationen, nicht Personen.'}
+          {isEn ? 'The AI compares three applications: all names and dates of birth are replaced by codenames beforehand, so the evaluation focuses on the qualifications rather than on the people behind them.' : 'Die KI vergleicht drei Bewerbungen: Namen und Geburtsdaten werden zuvor durch Codenamen ersetzt, sodass die Bewertung sich auf die Qualifikationen konzentriert und nicht auf die Personen dahinter.'}
         </div>
       </div>
 
@@ -44,11 +44,11 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? 'Legal department' : 'Rechtsabteilung'}</h3>
         <p class="uc-desc">
-          {isEn ? 'Summarize contracts, check clauses, draft briefs — client names and financial details stay protected.' : 'Verträge zusammenfassen, Klauseln prüfen, Schriftsätze entwerfen — Mandantennamen und Finanzdaten bleiben geschützt.'}
+          {isEn ? 'You can summarise contracts, have clauses checked or draft briefs — while client names, financial figures and other confidential details remain fully protected throughout.' : 'Du kannst Verträge zusammenfassen lassen, Klauseln prüfen oder Schriftsätze entwerfen — Mandantennamen, Finanzzahlen und andere vertrauliche Details bleiben dabei durchgehend geschützt.'}
         </p>
         <div class="uc-example">
           <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
-          {isEn ? 'A lawyer checks a contract clause. Party names and figures become codenames before the AI sees them.' : 'Ein Anwalt prüft eine Vertragsklausel. Parteiennamen und Geschäftszahlen werden zu Codenames, bevor die KI sie sieht.'}
+          {isEn ? 'An attorney reviews a specific contract clause. Before the AI sees the text, the names of the contracting parties and the relevant figures have already been replaced by codenames.' : 'Ein Anwalt prüft eine bestimmte Vertragsklausel. Bevor die KI den Text erhält, wurden die Namen der Vertragsparteien und die enthaltenen Geschäftszahlen bereits durch Codenamen ersetzt.'}
         </div>
       </div>
 
@@ -61,11 +61,11 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? 'Medical practice' : 'Arztpraxis'}</h3>
         <p class="uc-desc">
-          {isEn ? 'Translate findings into plain language, draft reports — patient names, SSNs, and diagnoses are anonymized automatically.' : 'Befunde in Laiensprache übersetzen, Berichte entwerfen — Patientennamen, SVNr und Diagnosen werden automatisch anonymisiert.'}
+          {isEn ? 'You can translate medical reports into plain language or draft patient communications, while patient names, social security numbers and diagnoses are anonymised automatically in the background.' : 'Du kannst Arztbefunde in verständliche Sprache übersetzen lassen oder Patientenbriefe entwerfen, während Patientennamen, Sozialversicherungsnummern und Diagnosen im Hintergrund automatisch anonymisiert werden.'}
         </p>
         <div class="uc-example">
           <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
-          {isEn ? 'A doctor translates a report into patient-friendly language. The AI only sees "Arion, born [DATE_1]".' : 'Eine Ärztin übersetzt einen Befund in Patientensprache. Die KI sieht nur "Arion, geb. [DATUM_1]".'}
+          {isEn ? 'A doctor translates a report into patient-friendly language. The AI only sees "Arion, born [DATE_OF_BIRTH_1]" — real identifiers never reach the provider.' : 'Eine Ärztin übersetzt einen Befund in verständliche Patientensprache. Die KI erhält dabei nur „Arion, geboren [DATE_OF_BIRTH_1]" — die echten Identifikatoren erreichen den Anbieter nie.'}
         </div>
       </div>
 
@@ -79,11 +79,11 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? 'Private use' : 'Privatperson'}</h3>
         <p class="uc-desc">
-          {isEn ? 'Tax returns, insurance claims, rental agreements — AI help without exposing your personal data.' : 'Steuererklärung, Versicherung, Mietvertrag — KI-Hilfe, ohne deine Daten preiszugeben.'}
+          {isEn ? 'Whether for a tax return, an insurance claim or a rental agreement, you can get proper AI support for your personal matters without having to expose your private data.' : 'Ob bei der Steuererklärung, bei Versicherungsangelegenheiten oder beim Mietvertrag: Du kannst dir bei persönlichen Anliegen fundiert von der KI helfen lassen, ohne deine privaten Daten dafür preiszugeben.'}
         </p>
         <div class="uc-example">
           <span class="uc-example-label">{isEn ? 'Example:' : 'Beispiel:'}</span>
-          {isEn ? 'You get AI help with your tax return. Name, tax ID, and income are anonymized. Useful advice, protected finances.' : 'Du lässt dir bei der Steuererklärung helfen. Name, Steuernummer und Einkommen werden anonymisiert. Nützliche Beratung, geschützte Finanzen.'}
+          {isEn ? 'You ask the AI for help with your tax return. Your name, tax identification number and income figures are anonymised automatically — you receive useful guidance without compromising your financial privacy.' : 'Du bittest die KI um Hilfe bei deiner Steuererklärung. Name, Steuernummer und Einkommenszahlen werden automatisch anonymisiert — du erhältst fundierte Hinweise, ohne dabei deine finanzielle Privatsphäre offenzulegen.'}
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ const isEn = lang === 'en';
           </svg>
         </div>
         <h3>{isEn ? '4 Protection Levels' : '4 Schutzklassen'}</h3>
-        <p>{isEn ? 'Every data point is classified: Public, Internal, Confidential, Restricted. Restricted data auto-expires after 5 minutes in the encrypted vault.' : 'Jeder Datenpunkt wird klassifiziert: Intern, Vertraulich, Streng Vertraulich. Streng vertrauliche Daten verfallen nach 5 Minuten automatisch im verschlüsselten Vault.'}</p>
+        <p>{isEn ? 'Every recognised piece of data is automatically classified into one of four protection tiers — Public, Internal, Confidential and Restricted. Restricted entries additionally expire after only five minutes inside the encrypted vault, so that highly sensitive mappings cannot persist longer than necessary.' : 'Jeder erkannte Datenpunkt wird automatisch in eine von vier Schutzklassen eingeordnet — öffentlich, intern, vertraulich und streng vertraulich. Streng vertrauliche Einträge verfallen zusätzlich bereits nach fünf Minuten im verschlüsselten Vault, damit besonders sensible Zuordnungen nicht länger als nötig vorgehalten werden.'}</p>
       </div>
 
       <div class="roadmap-card roadmap-card-new">
@@ -36,7 +36,7 @@ const isEn = lang === 'en';
           </svg>
         </div>
         <h3>{isEn ? 'Semantic Codes' : 'Semantische Codes'}</h3>
-        <p>{isEn ? '[DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1], [AT_SVNR_1] — the AI understands the data type and never confuses a birth date with a bank account.' : '[DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1], [AT_SVNR_1] — die KI versteht den Datentyp und verwechselt kein Geburtsdatum mit einer Kontonummer.'}</p>
+        <p>{isEn ? 'Instead of generic placeholders, anonymised entities are labelled by their actual type — for example [DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1] or [AT_SVNR_1]. The AI model therefore understands what kind of information is being referenced and never confuses a birth date with a bank account.' : 'Statt generischer Platzhalter werden anonymisierte Begriffe nach ihrem tatsächlichen Typ benannt — zum Beispiel [DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1] oder [AT_SVNR_1]. Das KI-Modell erkennt dadurch, um welche Art von Information es sich handelt, und verwechselt ein Geburtsdatum nicht mit einer Kontonummer.'}</p>
       </div>
 
       <div class="roadmap-card roadmap-card-new">
@@ -48,16 +48,16 @@ const isEn = lang === 'en';
           </svg>
         </div>
         <h3>{isEn ? 'Security Hardening' : 'Maximale Sicherheit'}</h3>
-        <p>{isEn ? 'All chat history is re-anonymized before every send. Fail-closed on errors. No PII in logs. CORS protection. Encrypted vault with audit trail.' : 'Gesamte Chat-History wird vor jedem Senden re-anonymisiert. Fail-Closed bei Fehlern. Keine PII in Logs. CORS-Schutz. Verschlüsselter Vault mit Audit-Trail.'}</p>
+        <p>{isEn ? 'The entire conversation history is re-anonymised before each message is sent to an AI provider. If an error occurs during processing, the request is blocked rather than silently forwarded. Logs never contain personal data, cross-origin requests are restricted and the encrypted vault keeps a full audit trail of every access.' : 'Der gesamte Gesprächsverlauf wird vor jedem einzelnen Senden an einen KI-Anbieter erneut anonymisiert. Sollte bei der Verarbeitung ein Fehler auftreten, wird die Anfrage blockiert statt stillschweigend weitergereicht. Protokolle enthalten zu keinem Zeitpunkt personenbezogene Daten, Cross-Origin-Zugriffe sind beschränkt, und der verschlüsselte Vault protokolliert jeden Zugriff lückenlos.'}</p>
       </div>
     </div>
 
     <!-- Future vision -->
     <div class="roadmap-future">
       <span class="roadmap-future-label">{isEn ? 'In planning' : 'In Planung'}</span>
-      <span class="roadmap-future-text">{isEn ? 'Browser Extension — anonymize directly in ChatGPT, Claude, Gemini.' : 'Browser-Extension — direkt in ChatGPT, Claude, Gemini anonymisieren.'}</span>
+      <span class="roadmap-future-text">{isEn ? 'A browser extension that anonymises data directly inside ChatGPT, Claude and Gemini.' : 'Eine Browser-Erweiterung, die Daten direkt in ChatGPT, Claude und Gemini anonymisiert.'}</span>
       <span class="roadmap-future-divider">|</span>
-      <span class="roadmap-future-text">{isEn ? 'iOS App — AUSTR.AI on your phone.' : 'iOS-App — AUSTR.AI auf deinem Handy.'}</span>
+      <span class="roadmap-future-text">{isEn ? 'A dedicated iOS app to use AUSTR.AI comfortably on your phone.' : 'Eine eigene iOS-App, um AUSTR.AI bequem am Handy zu nutzen.'}</span>
     </div>
   </div>
 </section>

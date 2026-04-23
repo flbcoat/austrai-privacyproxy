@@ -9,7 +9,7 @@ const isEn = lang === 'en';
       <span class="section-label">{isEn ? 'Install' : 'Installieren'}</span>
       <h2>{isEn ? 'Two commands.' : 'Zwei Befehle.'} <span class="text-gradient">{isEn ? "That's it." : 'Mehr nicht.'}</span></h2>
       <p>
-        {isEn ? 'Works on your laptop, your company server, or in Docker. The rest happens automatically.' : 'Funktioniert auf deinem Laptop, Firmenserver oder in Docker. Den Rest erledigt AUSTR.AI automatisch.'}
+        {isEn ? 'The installation runs on your own laptop, on a company server or inside a Docker container — everything else is set up for you automatically when you start the tool for the first time.' : 'Die Installation funktioniert auf deinem eigenen Laptop, auf einem Firmenserver oder in einem Docker-Container — alles Weitere richtet AUSTR.AI beim ersten Start automatisch für dich ein.'}
       </p>
     </div>
 
@@ -28,8 +28,8 @@ const isEn = lang === 'en';
         </div>
         <p class="download-desc" style="margin-top: 1rem;">
           {isEn
-            ? 'That\'s all. AUSTR.AI downloads all required models automatically on first start, opens your browser, and guides you through the setup.'
-            : 'Das ist alles. AUSTR.AI lädt beim ersten Start alle Modelle automatisch herunter, öffnet deinen Browser und führt dich durch die Einrichtung.'}
+            ? 'That is all you need. Upon first launch, AUSTR.AI downloads every required AI model automatically, prepares the local environment and guides you through a short setup so that you can start chatting safely right away.'
+            : 'Mehr brauchst du nicht. Beim ersten Start lädt AUSTR.AI alle benötigten KI-Modelle automatisch herunter, richtet die lokale Umgebung ein und führt dich durch eine kurze Einrichtung, damit du direkt sicher chatten kannst.'}
         </p>
         <div class="download-what-happens">
           <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.5rem;"><strong>{isEn ? 'What happens:' : 'Was passiert:'}</strong></p>
@@ -57,9 +57,9 @@ const isEn = lang === 'en';
           </svg>
         </div>
         <h3>{isEn ? 'On your server' : 'Auf deinem Server'}</h3>
-        <p class="download-desc">{isEn ? 'Same installation, but accessible from anywhere. Your team opens the URL in the browser — including on mobile.' : 'Gleiche Installation, aber von überall erreichbar. Dein Team öffnet die URL im Browser — auch am Handy.'}</p>
+        <p class="download-desc">{isEn ? 'The installation is identical, but the chat becomes accessible from anywhere in your network. Your team members simply open the URL in their browser — on the desktop, on a tablet or on their mobile phone.' : 'Die Installation ist identisch, der Chat ist damit jedoch aus deinem gesamten Netzwerk erreichbar. Dein Team öffnet die Adresse einfach im Browser — am Desktop, am Tablet oder am Handy.'}</p>
         <div class="download-code">
-          <code>pip install austrai && aai chat --no-browser</code>
+          <code>pip install austrai && aai chat</code>
         </div>
         <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 0.75rem;">
           {isEn ? 'Or with Docker:' : 'Oder mit Docker:'}
@@ -81,9 +81,9 @@ const isEn = lang === 'en';
           </svg>
         </div>
         <h3>{isEn ? 'License' : 'Lizenz'}</h3>
-        <p class="download-desc">{isEn ? 'Free for personal use. Commercial license available on request.' : 'Für Privatanwender kostenlos. Kommerzielle Lizenz auf Anfrage.'}</p>
+        <p class="download-desc">{isEn ? 'The tool is free of charge for private use. For commercial use in a business context, a separate licence is available upon request.' : 'Für den privaten Einsatz ist das Tool kostenfrei. Für eine kommerzielle Nutzung im unternehmerischen Umfeld bieten wir auf Anfrage eine passende Lizenz an.'}</p>
         <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 0.75rem; line-height: 1.6;">
-          {isEn ? 'No registration, no user limits, no telemetry. For business use, contact:' : 'Keine Registrierung, keine Nutzerlimits, keine Telemetrie. Für geschaeftliche Nutzung:'}
+          {isEn ? 'There is no registration required, no user limits are enforced and no telemetry is collected. For a business licence, please contact us at:' : 'Eine Registrierung ist nicht erforderlich, es gibt keine Nutzerlimits und es wird keine Telemetrie erhoben. Für eine geschäftliche Lizenz melde dich gerne unter:'}
         </p>
         <a href="mailto:info@austr.ai" class="btn btn-secondary btn-lg" style="margin-top: 1rem;">
           info@austr.ai

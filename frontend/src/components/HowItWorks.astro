@@ -9,7 +9,7 @@ const isEn = lang === 'en';
       <span class="section-label">{isEn ? 'How it works' : 'So funktioniert es'}</span>
       <h2>{isEn ? 'Five steps between you and the AI' : 'Fünf Schritte zwischen dir und der KI'}</h2>
       <p>
-        {isEn ? 'Nothing leaves your device without your approval.' : 'Nichts verlässt dein Gerät ohne deine Freigabe.'}
+        {isEn ? 'Every step of the process runs on your own device, and nothing is sent to an AI provider without your explicit approval.' : 'Jeder einzelne Schritt läuft auf deinem eigenen Rechner, und kein Datenfragment verlässt dein Gerät, ohne dass du es vorher freigibst.'}
       </p>
     </div>
 
@@ -25,7 +25,7 @@ const isEn = lang === 'en';
             </svg>
           </div>
           <h3>{isEn ? 'You write' : 'Du schreibst'}</h3>
-          <p>{isEn ? 'Type your message — just like in ChatGPT or Claude.' : 'Schreib deine Nachricht — wie in ChatGPT oder Claude.'}</p>
+          <p>{isEn ? 'You write your message in the chat exactly as you would in ChatGPT or Claude. Your familiar way of working stays completely the same.' : 'Du schreibst deine Nachricht wie gewohnt in den Chat — genauso wie du es bei ChatGPT oder Claude tun würdest. An deiner Arbeitsweise ändert sich nichts.'}</p>
           <div class="hiw-example">
             <code>"Bitte erstellen Sie ein Schreiben an <span class="hl-person">Herrn Thomas Gruber</span>, IBAN <span class="hl-uid">AT483200000012345864</span>..."</code>
           </div>
@@ -50,7 +50,7 @@ const isEn = lang === 'en';
             </svg>
           </div>
           <h3>{isEn ? 'AUSTR.AI detects PII' : 'AUSTR.AI erkennt sensible Daten'}</h3>
-          <p>{isEn ? 'Three-layer detection (GLiNER + Presidio + 2,200 first names) finds names, IBANs, addresses, emails, phone numbers and more — and classifies them into 4 protection tiers (Public, Internal, Confidential, Restricted).' : 'Drei-Schichten-Erkennung (GLiNER + Presidio + 2.200 Vornamen) findet Namen, IBANs, Adressen, E-Mails, Telefonnummern und mehr — und klassifiziert sie in 4 Schutzklassen (Public, Internal, Confidential, Restricted).'}</p>
+          <p>{isEn ? 'Three detection layers work together to find names, IBANs, addresses, email addresses, phone numbers and other personal information in your text. Every recognised entity is automatically classified into one of four protection tiers, so that more sensitive data receives correspondingly stronger handling.' : 'Drei aufeinander abgestimmte Erkennungsschichten durchsuchen deinen Text nach Namen, IBANs, Adressen, E-Mail-Adressen, Telefonnummern und weiteren personenbezogenen Daten. Jeder Fund wird automatisch in eine von vier Schutzklassen eingeordnet, damit sensiblere Informationen auch entsprechend strenger behandelt werden.'}</p>
           <div class="hiw-example">
             <code>"...an <mark class="entity-mark entity-PERSON">Herrn Thomas Gruber</mark>, IBAN <mark class="entity-mark entity-AT_UID_NR">AT483200000012345864</mark>..."</code>
           </div>
@@ -75,7 +75,7 @@ const isEn = lang === 'en';
             </svg>
           </div>
           <h3>{isEn ? 'You check & confirm' : 'Du prüfst & bestätigst'}</h3>
-          <p>{isEn ? 'The preview highlights what gets anonymized. You decide: send, edit, or cancel.' : 'Die Vorschau zeigt farblich, was anonymisiert wird. Du entscheidest: senden, bearbeiten oder abbrechen.'}</p>
+          <p>{isEn ? 'Before anything is sent, AUSTR.AI shows you a colour-coded preview of exactly what will be anonymised and what stays unchanged. You decide with one click, whether to send, adjust the message, or cancel the request entirely.' : 'Bevor eine Anfrage versandt wird, zeigt dir AUSTR.AI eine farblich hervorgehobene Vorschau. Du siehst genau, welche Stellen anonymisiert werden und welche unverändert bleiben — und entscheidest dann selbst, ob du die Nachricht so absenden, anpassen oder ganz abbrechen möchtest.'}</p>
           <div class="hiw-example hiw-example-confirm">
             <code>"...an <span class="hl-placeholder">Arion</span>, IBAN <span class="hl-placeholder">[AT_IBAN_1]</span>..."<br /><span class="hl-confirm-btn">{isEn ? '[ Confirm & send ]' : '[ Bestätigen & senden ]'}</span></code>
           </div>
@@ -99,7 +99,7 @@ const isEn = lang === 'en';
             </svg>
           </div>
           <h3>{isEn ? 'Anonymized to AI' : 'Anonymisiert an KI'}</h3>
-          <p>{isEn ? 'Names become codenames, IBANs become reference codes. The AI never sees your real data.' : 'Namen werden zu Codenames, IBANs zu Referenz-Codes. Die KI sieht nie deine echten Daten.'}</p>
+          <p>{isEn ? 'Personal names are replaced with neutral codenames, while structured data such as IBANs become typed reference codes. The AI only ever sees the anonymised version — realistic enough to produce useful responses, but stripped of anything that could identify you.' : 'Personennamen werden durch neutrale Codenamen ersetzt, strukturierte Daten wie IBANs durch typisierte Referenzcodes. Die KI bekommt ausschließlich die anonymisierte Fassung zu sehen — realistisch genug, um sinnvoll zu antworten, und gleichzeitig frei von identifizierenden Informationen.'}</p>
           <div class="hiw-example">
             <code>"...an <span class="hl-placeholder">Arion</span>, IBAN <span class="hl-placeholder">[AT_IBAN_1]</span>..."</code>
           </div>
@@ -127,7 +127,7 @@ const isEn = lang === 'en';
             </svg>
           </div>
           <h3>{isEn ? 'Response restored' : 'Antwort wiederhergestellt'}</h3>
-          <p>{isEn ? 'AUSTR.AI replaces codenames with your real data locally. You see the complete, correct answer.' : 'AUSTR.AI ersetzt die Codenames lokal mit deinen echten Daten. Du siehst die vollständige, korrekte Antwort.'}</p>
+          <p>{isEn ? 'As soon as the AI response arrives, AUSTR.AI replaces every codename and reference code with your real data, right there on your device. You end up reading the full, correct answer as if no anonymisation had happened at all.' : 'Sobald die Antwort der KI eintrifft, setzt AUSTR.AI die Codenamen und Referenzcodes wieder durch deine Originaldaten zurück — direkt auf deinem Rechner. Du liest die vollständige, korrekte Antwort so, als hätte die Anonymisierung nie stattgefunden.'}</p>
           <div class="hiw-example hiw-example-success">
             <code>"...Sehr geehrter <span class="hl-person">Herr Thomas Gruber</span>, Ihre IBAN <span class="hl-uid">AT483200000012345864</span> wurde erfolgreich..."</code>
           </div>

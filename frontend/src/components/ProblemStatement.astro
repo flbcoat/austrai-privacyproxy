@@ -7,9 +7,9 @@ const isEn = lang === 'en';
   <div class="container">
     <div class="section-header">
       <span class="section-label">{isEn ? 'The problem' : 'Das Problem'}</span>
-      <h2>{isEn ? 'Your data is already out there.' : 'Deine Daten sind schon draußen.'}</h2>
+      <h2>{isEn ? 'Your data is already out there.' : 'Deine Daten sind längst unterwegs.'}</h2>
       <p>
-        {isEn ? 'Every day, people paste names, IBANs, contracts, and medical reports into AI tools. The providers see everything.' : 'Jeden Tag kopieren Menschen Namen, IBANs, Verträge und Arztbefunde in KI-Tools. Die Anbieter sehen alles.'}
+        {isEn ? 'Every single day, thousands of names, IBANs, contracts and medical reports are copied into public AI tools — and the providers receive every piece of it.' : 'Tag für Tag landen Namen, IBANs, Verträge und Arztbefunde in öffentlichen KI-Tools. Die Anbieter erhalten dabei alles, was du hineinkopierst — ohne Filter, ohne Rückweg.'}
       </p>
     </div>
 
@@ -23,7 +23,7 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? '"Summarize this contract"' : '"Fasse diesen Vertrag zusammen"'}</h3>
         <p class="problem-desc">
-          {isEn ? 'A sales rep pastes a full customer contract into ChatGPT — names, IBANs, amounts included. All of it now sits on OpenAI servers.' : 'Ein Vertriebsmitarbeiter kopiert einen Kundenvertrag in ChatGPT — mit Namen, IBANs, Beträgen. All das liegt jetzt auf OpenAI-Servern.'}
+          {isEn ? 'A sales representative pastes a full customer contract into ChatGPT in order to get a summary. Names, IBANs and transaction amounts are part of the text — and all of it is now stored on OpenAI infrastructure.' : 'Ein Vertriebsmitarbeiter kopiert einen vollständigen Kundenvertrag in ChatGPT, um eine schnelle Zusammenfassung zu erhalten. Mit im Text enthalten sind Namen, IBANs und Beträge, die damit dauerhaft auf den Servern von OpenAI liegen.'}
         </p>
         <div class="problem-stat">
           <span class="problem-stat-number">82%</span>
@@ -39,7 +39,7 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? '"Translate this medical report"' : '"Übersetze diesen Befund"'}</h3>
         <p class="problem-desc">
-          {isEn ? 'A doctor has a patient report translated by AI. Patient name, social security number, diagnosis — stored by the provider for up to 30 days.' : 'Eine Ärztin lässt einen Befund von der KI übersetzen. Patientenname, Sozialversicherungsnummer, Diagnose — der Anbieter speichert alles, teils bis zu 30 Tage.'}
+          {isEn ? 'A doctor uses an AI tool to translate a patient report into plain language. The patient name, social security number and full diagnosis are passed along — and stored by the provider for up to 30 days.' : 'Eine Ärztin lässt einen Arztbrief von der KI in verständliche Sprache übersetzen. Patientenname, Sozialversicherungsnummer und vollständige Diagnose werden dabei mitübergeben und vom Anbieter bis zu 30 Tage lang gespeichert.'}
         </p>
         <div class="problem-stat">
           <span class="problem-stat-number">Art. 9</span>
@@ -58,7 +58,7 @@ const isEn = lang === 'en';
         </div>
         <h3>{isEn ? '"Help me with my tax return"' : '"Hilf mir bei der Steuererklärung"'}</h3>
         <p class="problem-desc">
-          {isEn ? 'A freelancer pastes income details, tax ID, and address into the chat. Google, OpenAI, or Anthropic now have that data.' : 'Ein Freiberufler kopiert Einkommensdaten, Steuernummer und Adresse in den Chat. Google, OpenAI oder Anthropic haben diese Daten jetzt.'}
+          {isEn ? 'A freelancer copies income figures, tax identification and home address into the chat to get help preparing a tax return. From that moment on, Google, OpenAI or Anthropic hold that information.' : 'Ein Freiberufler kopiert Einkommenszahlen, Steuernummer und Wohnadresse in den Chat, um Hilfe bei der Steuererklärung zu bekommen. Ab diesem Moment liegen diese Informationen bei Google, OpenAI oder Anthropic.'}
         </p>
         <div class="problem-stat">
           <span class="problem-stat-number">{isEn ? 'GDPR' : 'DSGVO'}</span>

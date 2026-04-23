@@ -282,11 +282,23 @@ class CredentialsRecognizer(EntityRecognizer):
 
 
 class DateOfBirthRecognizer(PatternRecognizer):
-    """Erkennt Geburtsdaten in verschiedenen Formaten."""
+    """Erkennt Geburtsdaten in verschiedenen Formaten.
+
+    Unterstützt europäische (DD.MM.YYYY / DD/MM/YYYY), ISO (YYYY-MM-DD) und
+    US-Formate (MM/DD/YYYY). Die US- und europäischen Slash-Varianten
+    überlappen sich strukturell — der Recognizer markiert sie gleich, die
+    Interpretation (Monat vs. Tag zuerst) klärt die spätere Anonymisierung
+    über den Typ-Code [DATE_OF_BIRTH_N].
+    """
 
     def __init__(self) -> None:
         patterns = [
-            Pattern("birthdate_de", r"\b(?:0[1-9]|[12]\d|3[01])\.(?:0[1-9]|1[0-2])\.\d{4}\b", 0.65),
+            # European D.M.Y
+            Pattern("birthdate_eu_dot", r"\b(?:0[1-9]|[12]\d|3[01])\.(?:0[1-9]|1[0-2])\.\d{4}\b", 0.65),
+            # European / international D/M/Y or M/D/Y (US) — same shape
+            Pattern("birthdate_slash", r"\b(?:0[1-9]|1[0-2])/(?:0[1-9]|[12]\d|3[01])/\d{4}\b", 0.55),
+            Pattern("birthdate_slash_eu", r"\b(?:0[1-9]|[12]\d|3[01])/(?:0[1-9]|1[0-2])/\d{4}\b", 0.55),
+            # ISO
             Pattern("birthdate_iso", r"\b\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b", 0.65),
         ]
         super().__init__(
@@ -294,7 +306,7 @@ class DateOfBirthRecognizer(PatternRecognizer):
             patterns=patterns,
             name="Date of Birth Recognizer",
             supported_language="de",
-            context=["Geburtsdatum", "geboren", "geb.", "birth", "DOB"],
+            context=["Geburtsdatum", "geboren", "geb.", "date of birth", "birth date", "birthday", "DOB", "born"],
         )
 
 

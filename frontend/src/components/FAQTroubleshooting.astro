@@ -8,7 +8,7 @@ const isEn = lang === 'en';
   <div class="container">
     <div class="section-header">
       <span class="section-label">{isEn ? 'Troubleshooting' : 'Hilfe'}</span>
-      <h2>{isEn ? 'Installation &amp; browser questions' : 'Installation &amp; Browser-Fragen'}</h2>
+      <h2>{isEn ? 'Installation und Browser' : 'Installation und Browser'}</h2>
       <p class="section-desc">
         {isEn
           ? 'The common pitfalls after installing AUSTR.AI — browser choice, updates, your data, stopping the server.'
@@ -77,7 +77,7 @@ const isEn = lang === 'en';
             ? 'If pip shows the right version but `aai` still runs the old one, clear the pip cache:'
             : 'Wenn pip die richtige Version anzeigt, `aai` aber trotzdem die alte benutzt, pip-Cache leeren:'}
         </p>
-        <p><code>pip uninstall -y austrai &amp;&amp; pip install --no-cache-dir austrai</code></p>
+        <p><code>pip uninstall -y austrai && pip install --no-cache-dir austrai</code></p>
         <p>
           {isEn
             ? 'AUSTR.AI also checks for updates itself on start-up (once per 24 hours, no telemetry) and shows a hint in the terminal when a new version is available.'
@@ -141,7 +141,7 @@ const isEn = lang === 'en';
             ? 'If something on Windows looks broken after an upgrade, pip did not pick up the new version properly. Force clean install:'
             : 'Wenn auf Windows nach einem Upgrade etwas kaputt aussieht, hat pip die neue Version nicht sauber übernommen. Saubere Neuinstallation erzwingen:'}
         </p>
-        <p><code>pip uninstall -y austrai &amp;&amp; pip install --no-cache-dir austrai</code></p>
+        <p><code>pip uninstall -y austrai && pip install --no-cache-dir austrai</code></p>
       </details>
 
       <details class="faq-item">
@@ -150,6 +150,25 @@ const isEn = lang === 'en';
           {isEn
             ? 'That is the browser-cache issue — your browser is serving an old JavaScript module together with newly-downloaded files. Clear the browser cache (see "chat window frozen" above) and restart the browser. Version 3.0 prevents the problem by sending no-cache headers on every asset.'
             : 'Das ist der Browser-Cache-Bug — dein Browser serviert ein altes JavaScript-Modul zusammen mit neuen Dateien. Browser-Cache leeren (siehe "Chat-Fenster gefreezet" oben) und Browser neu starten. Version 3.0 verhindert das Problem durch no-cache Header auf allen Assets.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'Does the detection also work for English or international data?' : 'Funktioniert die Erkennung auch für englische oder internationale Daten?'}</summary>
+        <p>
+          {isEn
+            ? 'The primary detection layer (GLiNER) works multilingually and recognises English names, companies and locations reliably. Structured data such as IP addresses, credit card numbers, email addresses and IBANs is format-based and therefore language-independent.'
+            : 'Die Haupt-Erkennungsschicht (GLiNER) arbeitet mehrsprachig und erkennt englische Namen, Firmen und Orte zuverlässig. Strukturierte Daten wie IP-Adressen, Kreditkartennummern, E-Mail-Adressen und IBANs werden formatbasiert erkannt und sind damit sprachunabhängig.'}
+        </p>
+        <p>
+          {isEn
+            ? 'Currently optimised for Austrian and German contexts are the specialised recognisers for Austrian UID, SVNr, Firmenbuch-Nr, Austrian phone numbers, as well as AT and DE licence plates. US-specific identifiers (SSN, EIN) and the UK NHS number are not yet covered, but are planned for an upcoming release.'
+            : 'Primär auf österreichische und deutsche Kontexte ausgelegt sind die spezialisierten Recognizer für UID, SVNr, Firmenbuch-Nr, österreichische Telefonnummern sowie AT- und DE-Kennzeichen. US-spezifische Kennungen (SSN, EIN) und die britische NHS-Nummer werden noch nicht erkannt, sind aber für eine kommende Version geplant.'}
+        </p>
+        <p>
+          {isEn
+            ? 'Birth dates are detected in European (DD.MM.YYYY), ISO (YYYY-MM-DD) and US-American (MM/DD/YYYY) formats.'
+            : 'Geburtsdaten werden in europäischer (DD.MM.JJJJ), ISO- (JJJJ-MM-TT) und US-amerikanischer (MM/DD/YYYY) Schreibweise erkannt.'}
         </p>
       </details>
 

@@ -1,0 +1,156 @@
+---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
+---
+
+<section class="section why-austrai" id="why-austrai">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">{isEn ? 'Features' : 'Features'}</span>
+      <h2>{isEn ? 'Like ChatGPT — but your data stays with you.' : 'Wie ChatGPT — nur dass deine Daten bei dir bleiben.'}</h2>
+      <p>
+        {isEn
+          ? 'AUSTR.AI is a full-featured AI chat client with privacy protection built into every layer. You can chat with the leading AI models, upload documents for analysis, redact images and transcribe audio — and every step of this processing happens locally on your own device.'
+          : 'AUSTR.AI ist ein vollständig ausgestatteter KI-Chat-Client, dessen Datenschutz auf allen Ebenen integriert ist. Du kannst mit den führenden KI-Modellen chatten, Dokumente hochladen und analysieren lassen, Bilder schwärzen und Audiodateien transkribieren — wobei die gesamte Verarbeitung lokal auf deinem eigenen Rechner stattfindet.'}
+      </p>
+    </div>
+
+    <div class="grid grid-2 why-grid">
+      <!-- Card 1: Local -->
+      <div class="card card-glow animate-slide-up animate-delay-1">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Runs locally' : 'Läuft lokal'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'The entire anonymisation step is carried out on your own device, long before any data could reach an external service. A tiered vault stores the mappings securely and automatically deletes highly sensitive entries after only five minutes. If you additionally run Ollama on your machine, no data leaves your computer at all.'
+            : 'Die gesamte Anonymisierung findet auf deinem eigenen Rechner statt, lange bevor überhaupt Daten ein externes System erreichen könnten. Ein gestufter Vault speichert die Zuordnungen sicher und löscht besonders sensible Einträge bereits nach fünf Minuten automatisch. Wer zusätzlich Ollama lokal betreibt, kann das Tool sogar vollständig offline nutzen.'}
+        </p>
+      </div>
+
+      <!-- Card 2: Confirmation step -->
+      <div class="card card-glow animate-slide-up animate-delay-2">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'You stay in control' : 'Du behältst die Kontrolle'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'Every message is shown in a colour-coded preview that reflects the four-level data classification used internally (Public, Internal, Confidential and Restricted). Instead of generic placeholders, AUSTR.AI uses semantic codes like [DATE_OF_BIRTH_1], so that the context of every anonymised entity stays clear. You can confirm, adjust or cancel the request before anything is transmitted.'
+            : 'Jede Nachricht wird in einer farblich hervorgehobenen Vorschau angezeigt, die der vierstufigen Klassifizierung entspricht (Public, Internal, Confidential und Restricted). Statt generischer Platzhalter setzt AUSTR.AI auf semantische Codes wie [DATE_OF_BIRTH_1], sodass der Kontext jedes anonymisierten Begriffs nachvollziehbar bleibt. Du bestätigst, bearbeitest oder brichst die Anfrage ab, bevor etwas übertragen wird.'}
+        </p>
+      </div>
+
+      <!-- Card 3: Flexible providers -->
+      <div class="card card-glow-purple animate-slide-up animate-delay-3">
+        <div class="card-icon card-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Your choice of AI' : 'Deine Wahl der KI'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'You decide which AI model should process your requests. Ollama offers a fully local option for maximum privacy, while Claude, GPT, Mistral and Gemini are available through your own API keys. The provider can be switched at any time — for a single message or permanently in the settings.'
+            : 'Du entscheidest, welches KI-Modell deine Anfragen bearbeitet. Ollama bietet eine vollständig lokale Variante für maximale Privatsphäre, während Claude, GPT, Mistral und Gemini über deine eigenen API-Schlüssel angebunden werden können. Der Anbieter lässt sich jederzeit wechseln — entweder für eine einzelne Nachricht oder dauerhaft in den Einstellungen.'}
+        </p>
+      </div>
+
+      <!-- Card 4: Tools -->
+      <div class="card card-glow-purple animate-slide-up animate-delay-4">
+        <div class="card-icon card-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'More than just chat' : 'Mehr als nur Chat'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'Beyond plain conversations, AUSTR.AI can analyse PDFs and Office documents, redact sensitive areas in images and transcribe audio recordings. Files are uploaded directly inside the chat. Allow and deny lists give you precise control over which terms are always or never anonymised.'
+            : 'Neben klassischen Chats analysiert AUSTR.AI auch PDFs und Office-Dokumente, schwärzt sensible Stellen in Bildern und transkribiert Audio-Aufnahmen. Dateien werden direkt im Chat hochgeladen. Mit Allow- und Deny-Listen steuerst du präzise, welche Begriffe immer oder nie anonymisiert werden sollen.'}
+        </p>
+      </div>
+
+      <!-- Card 5: Free to use -->
+      <div class="card card-glow animate-slide-up animate-delay-5">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Free to use' : 'Kostenlos nutzbar'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'AUSTR.AI is free of charge for private individuals and small teams, with no telemetry and no hidden data flows. If you want to use the tool commercially, reach out to info@austr.ai for a licence.'
+            : 'Für Privatpersonen und kleinere Teams ist die Nutzung kostenfrei, ohne Telemetrie und ohne versteckte Datenflüsse. Für den kommerziellen Einsatz melde dich bitte unter info@austr.ai — wir besprechen dann die passende Lizenzform.'}
+        </p>
+      </div>
+
+      <!-- Card 6: Server-capable -->
+      <div class="card card-glow animate-slide-up animate-delay-6">
+        <div class="card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+        </div>
+        <h3>{isEn ? 'Server-ready' : 'Server-fähig'}</h3>
+        <p class="why-desc">
+          {isEn
+            ? 'AUSTR.AI can be deployed on your own server and used via any browser — from your desktop, your phone or any other device in your network. Your data never leaves the infrastructure you control.'
+            : 'AUSTR.AI kann ebenso auf einem eigenen Server betrieben werden und ist dann bequem über den Browser erreichbar — vom Desktop, vom Handy oder von jedem anderen Gerät in deinem Netzwerk. Deine Daten bleiben dabei vollständig in der von dir kontrollierten Infrastruktur.'}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .why-austrai {
+    position: relative;
+    background: var(--color-bg-alt);
+  }
+
+  .why-austrai::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border), transparent);
+  }
+
+  .why-grid {
+    gap: 1.5rem;
+  }
+
+  .why-grid .card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .why-grid h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .why-desc {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    margin: 0;
+  }
+</style>

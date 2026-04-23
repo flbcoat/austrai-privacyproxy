@@ -8,7 +8,7 @@ import { useState, useEffect } from 'preact/hooks';
 import htm from 'htm';
 import { signals, batch, toast } from './state.js';
 import * as api from './api.js';
-import { t } from './i18n.js';
+import { t, setLang } from './i18n.js';
 
 const html = htm.bind(h);
 
@@ -213,7 +213,23 @@ function SettingsView({ onClose }) {
     <div class="aai-settings-page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
         <h2>${t('settingsTitle')}</h2>
-        <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${onClose}>← Zurück</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary)">
+            ${signals.language.value === 'de' ? 'Sprache' : 'Language'}
+            <select
+              class="aai-select"
+              style="padding:4px 8px;font-size:13px"
+              value=${signals.language.value}
+              onChange=${(e) => setLang(e.target.value)}
+            >
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${onClose}>
+            ${signals.language.value === 'de' ? '← Zurück' : '← Back'}
+          </button>
+        </div>
       </div>
 
       <div class="aai-tabs" role="tablist">
