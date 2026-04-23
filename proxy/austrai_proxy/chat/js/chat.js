@@ -451,8 +451,29 @@ async function sendConfirmed(text) {
   const attachments = signals.pendingAttachments.value;
   let fullMessage = text;
   if (attachments.length) {
-    const attachTexts = attachments.map((a) => `[Datei: ${a.filename}]\n${a.extracted_text || a.anonymized_text || ''}`).join('\n\n');
-    fullMessage = `${attachTexts}\n\n${text}`;
+    // CRITICAL: only the anonymized version may be forwarded to the AI.
+    // The previous fallback chain `extracted_text || anonymized_text` leaked
+    // the ORIGINAL text (which the server sends as a 500-char preview for
+    // the UI only). That defeats the whole purpose of the tool. The server
+    // guarantees `anonymized_text` contains the full anonymised content,
+    // so we use it exclusively.
+    const attachTexts = attachments
+      .map((a) => {
+        const body = (a.anonymized_text || '').trim();
+        if (!body) {
+          // Image-redact / empty-document uploads: tell the AI a file is
+          // attached but no textual content was extracted.
+          return `[Datei angehängt: ${a.filename} — kein Textinhalt]`;
+        }
+        return `[Datei: ${a.filename}]\n${body}`;
+      })
+      .join('\n\n');
+    // Put the user's question AFTER the file content so the AI reads the
+    // material first and then the instruction ("was siehst du?" -> answer
+    // about the anonymised document instead of guessing it was an image).
+    fullMessage = text
+      ? `${attachTexts}\n\nFrage zur angehängten Datei: ${text}`
+      : attachTexts;
     signals.pendingAttachments.value = [];
   }
 
