@@ -25,9 +25,20 @@ function Svg({ src }) {
 
 function handleToolClick(tool) {
   if (tool === 'text-anon') {
-    // Simulate clicking the "Werkzeuge" sidebar nav button
-    const toolBtn = document.querySelector('.aai-sidebar-nav-btn[data-mode="tools"]');
-    if (toolBtn) toolBtn.click();
+    // Focus the chat input so the user can paste text and see the
+    // anonymization preview via the standard confirm-send flow. No need
+    // for a separate 5-step pipeline — the normal chat already shows the
+    // colour-coded preview before anything leaves the device.
+    const msgInput = document.getElementById('msg-input');
+    if (msgInput) {
+      msgInput.focus();
+      // Flash a quick placeholder hint without permanently changing it.
+      const originalPlaceholder = msgInput.placeholder;
+      msgInput.placeholder = signals.language.value === 'de'
+        ? 'Text zum Anonymisieren hier einfügen und Enter drücken …'
+        : 'Paste the text to anonymize here and press Enter …';
+      setTimeout(() => { msgInput.placeholder = originalPlaceholder; }, 6000);
+    }
     return;
   }
 

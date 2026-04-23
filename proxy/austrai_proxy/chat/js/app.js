@@ -142,16 +142,22 @@ function wireGlobalEvents() {
 
       const isTool = mode === 'tools';
       if (isTool) {
-        showView('tool-view');
+        // "Werkzeuge" brings the user to the home screen with the tool
+        // cards — identical to starting fresh. Any conversation stays in
+        // the sidebar; clicking "Chat" returns to it.
+        showView('welcome-view');
       } else {
         const viewId = signals.currentConversationId.value ? 'chat-view' : 'welcome-view';
         showView(viewId);
       }
 
+      // Conversation list and "Neuer Chat" button remain visible in both
+      // modes — users should be able to jump between their chats and the
+      // home screen without losing sidebar access.
       const newChatBtn = document.getElementById('btn-new-chat');
-      if (newChatBtn) newChatBtn.hidden = isTool;
+      if (newChatBtn) newChatBtn.hidden = false;
       const convList = document.getElementById('conversation-list');
-      if (convList) convList.hidden = isTool;
+      if (convList) convList.hidden = false;
 
       if (window.innerWidth <= 768) {
         sidebarEl.classList.remove('open');

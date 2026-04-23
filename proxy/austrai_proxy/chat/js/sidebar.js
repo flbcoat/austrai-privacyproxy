@@ -65,15 +65,24 @@ function ConversationList() {
 /* ---- Actions ---- */
 
 export async function newChat() {
-  const provider = signals.provider.value;
-  const model = signals.model.value;
-  try {
-    const { id } = await api.createConversation({ provider, model });
-    await refreshList();
-    selectConversation(id);
-  } catch (err) {
-    console.error('Failed to create conversation:', err);
-  }
+  // "Neuer Chat" takes the user back to the home screen (Welcome view) with
+  // the tool cards and the chat input. A conversation is created lazily the
+  // moment the user actually types a message or triggers a tool — that way
+  // we don't accumulate empty conversations and the mental model stays
+  // consistent: Home = nothing started yet, every real action produces a
+  // new conversation entry in the sidebar.
+  batch({
+    currentConversationId: null,
+    currentView: 'welcome',
+    messages: [],
+  });
+  signals.pendingAttachments.value = [];
+  signals.pendingPreview.value = null;
+  if (window.innerWidth <= 768) signals.sidebarOpen.value = false;
+
+  // Also un-highlight any currently selected conversation item in the
+  // sidebar. The <ConversationList> reads currentConversationId reactively,
+  // so clearing it above already handles the visual state.
 }
 
 async function selectConversation(id) {

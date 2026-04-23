@@ -12,10 +12,111 @@
 import { h, render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import htm from 'htm';
-import { signals, toast } from './state.js';
+import { signals, toast, batch, saveMessages } from './state.js';
 import * as api from './api.js';
 import { t } from './i18n.js';
 import { renderAttachments } from './chat.js';
+import { refreshList } from './sidebar.js';
+
+/* ---- Conversation helpers ----
+ * The home-screen tools (upload, anonymize, redact) used to dump their
+ * result with insertAdjacentHTML into #messages — which Preact's
+ * <MessageList> then overwrote on its next render, leaving the user with
+ * the impression that "nothing happened". The fix is to treat every tool
+ * invocation as a real conversation entry: create a conversation on
+ * demand, push a user message describing the action and an assistant
+ * message containing the formatted result into signals.messages, and let
+ * Preact render everything reactively.
+ */
+
+async function ensureConversation() {
+  if (signals.currentConversationId.value) return signals.currentConversationId.value;
+  const provider = signals.provider.value;
+  const model = signals.model.value;
+  try {
+    const { id } = await api.createConversation({ provider, model });
+    signals.currentConversationId.value = id;
+    await refreshList();
+    return id;
+  } catch (err) {
+    console.error('Failed to create conversation:', err);
+    return null;
+  }
+}
+
+function switchToChatView() {
+  // Activate the "Chat" sidebar nav button so the mode matches the view.
+  const chatBtn = document.querySelector('.aai-sidebar-nav-btn[data-mode="chat"]');
+  if (chatBtn && !chatBtn.classList.contains('active')) chatBtn.click();
+  signals.currentView.value = 'chat';
+}
+
+function ellipsize(s, n) {
+  const str = String(s ?? '').trim();
+  return str.length > n ? str.slice(0, n) + '…' : str;
+}
+
+function markdownForUpload(result, filename) {
+  const entities = result.entity_count || 0;
+  const pages = result.pages ? ` · Seiten: ${result.pages}` : '';
+  const chars = result.chars ? ` · Zeichen: ${result.chars}` : '';
+  const warnings = Array.isArray(result.warnings) && result.warnings.length
+    ? `\n\n> ⓘ ${result.warnings.join(' · ')}`
+    : '';
+  const header = `**📄 ${filename}**  \nTyp: ${result.type || 'document'} · Entitäten: ${entities}${pages}${chars}${warnings}`;
+  const original = ellipsize(result.extracted_text, 600);
+  const anonymized = ellipsize(result.anonymized_text, 600);
+  const mappings = result.mappings && Object.keys(result.mappings).length
+    ? '\n\n**Anonymisierungs-Zuordnungen:**\n' +
+      Object.entries(result.mappings)
+        .slice(0, 20)
+        .map(([code, orig]) => `- \`${orig}\` → \`${code}\``)
+        .join('\n')
+    : '';
+  return `${header}
+
+**Original (Auszug):**
+\`\`\`
+${original || '(kein Text extrahiert)'}
+\`\`\`
+
+**Anonymisiert (so sieht die KI den Inhalt):**
+\`\`\`
+${anonymized || '(leer)'}
+\`\`\`${mappings}`;
+}
+
+function markdownForRedact(result, filename) {
+  const mimeType = result.mime_type || 'image/png';
+  const dataUrl = `data:${mimeType};base64,${result.redacted_base64}`;
+  return `**📷 ${filename} — geschwärzt**  \n${result.entities_redacted || 0} Bereiche entfernt.
+
+![${filename} geschwärzt](${dataUrl})
+
+[Geschwärzte Datei herunterladen](${dataUrl})`;
+}
+
+async function addToolResultToChat(kind, result, filename) {
+  const convId = await ensureConversation();
+  switchToChatView();
+
+  const userContent = kind === 'redact'
+    ? `📷 ${filename} zum Schwärzen hochgeladen`
+    : `📄 ${filename} zur Anonymisierung hochgeladen`;
+
+  const assistantContent = kind === 'redact'
+    ? markdownForRedact(result, filename)
+    : markdownForUpload(result, filename);
+
+  const newMessages = [
+    ...signals.messages.value,
+    { role: 'user', content: userContent, meta: null },
+    { role: 'assistant', content: assistantContent, meta: null },
+  ];
+  signals.messages.value = newMessages;
+  if (convId) saveMessages(convId, newMessages);
+  await refreshList();
+}
 
 const html = htm.bind(h);
 
@@ -78,26 +179,27 @@ async function processFiles(files, mode) {
     try {
       if (mode === 'redact') {
         const result = await api.redactImage(file);
-        showResultInChat(renderRedactResult(result));
-        const attachInfo = {
-          filename: result.filename,
-          extracted_text: `[Geschwärztes Bild: ${result.filename}, ${result.entities_redacted || 0} Bereiche geschwärzt]`,
-          anonymized_text: null,
-          entity_count: result.entities_redacted || 0,
-        };
-        signals.pendingAttachments.value = [...signals.pendingAttachments.value, attachInfo];
-        renderAttachments();
+        await addToolResultToChat('redact', result, file.name);
+        toast(`${file.name} geschwärzt ✓ — ${result.entities_redacted || 0} Bereiche entfernt`, 'success', 5000);
       } else if (mode === 'anonymize') {
         const result = await api.uploadFile(file);
-        showResultInChat(renderUploadResult(result));
+        await addToolResultToChat('anonymize', result, file.name);
+        const entities = result.entity_count || 0;
+        toast(`${file.name} anonymisiert ✓ — ${entities} sensible Begriff(e) erkannt`, 'success', 5000);
+        if (Array.isArray(result.warnings)) {
+          for (const w of result.warnings) toast(w, 'info', 9000);
+        }
       } else {
+        // mode === 'attach' — attach the file for the next chat message.
+        // We still create a conversation so the sidebar shows the chat and
+        // the user doesn't feel stranded. The attachment appears as a rich
+        // card above the input; the user can then type a question and send.
         const result = await api.uploadFile(file);
+        await ensureConversation();
+        switchToChatView();
         signals.pendingAttachments.value = [...signals.pendingAttachments.value, result];
         renderAttachments();
 
-        // Build a toast message that actually tells the user what happened.
-        // The old message ("N Entitäten anonymisiert") made people think nothing
-        // worked when N was 0 — even though the upload was successful.
         const entities = result.entity_count || 0;
         const chars = result.chars || (result.extracted_text || '').length;
         let status;
@@ -109,9 +211,6 @@ async function processFiles(files, mode) {
           status = 'keine sensiblen Daten erkannt, wird unverändert mitgesendet';
         }
         toast(`${file.name} hochgeladen ✓ — ${status}`, 'success', 6000);
-
-        // Server-side warnings (e.g. OCR fallback used, Tesseract missing).
-        // Show them as separate info toasts so they don't get buried.
         if (Array.isArray(result.warnings)) {
           for (const w of result.warnings) toast(w, 'info', 9000);
         }
