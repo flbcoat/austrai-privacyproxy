@@ -883,6 +883,7 @@ async def upload_file(request: Request) -> JSONResponse:
                     "mappings": anon_result.mappings,
                     "entity_count": len(anon_result.mappings),
                     "format": ex.format,
+                    "warnings": list(ex.warnings),
                 })
             except ImportError:
                 return JSONResponse({"error": "Image/OCR support not installed. Run: pip install austrai (Neuinstallation nötig)"}, status_code=400)
@@ -919,6 +920,7 @@ async def upload_file(request: Request) -> JSONResponse:
                     "pages": ex.pages,
                     "chars": len(ex.text),
                     "spreadsheet_mode": is_spreadsheet,
+                    "warnings": list(ex.warnings),
                 })
             except ImportError:
                 return JSONResponse({"error": "Document support not installed. Run: pip install austrai (Neuinstallation nötig)"}, status_code=400)

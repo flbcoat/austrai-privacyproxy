@@ -53,7 +53,56 @@ def _extract_pdf(data: bytes) -> ExtractionResult:
         raise ImportError("PDF-Support braucht PyMuPDF: pip install austrai")
     doc = fitz.open(stream=data, filetype="pdf")
     pages = [page.get_text() for page in doc]
-    return ExtractionResult(text="\n\n".join(pages), format="PDF", pages=len(pages))
+    text = "\n\n".join(pages).strip()
+    warnings: list[str] = []
+
+    # Scanned / image-only PDFs have no extractable text layer. Without OCR
+    # the user sees "0 entities" and wonders why — with OCR we rasterise each
+    # page and run Tesseract over it. 20 characters is the threshold: real
+    # PDFs almost always have more (page headers alone tend to exceed it),
+    # while an "empty" scan returns e.g. only a single form-feed or footer
+    # line from get_text().
+    if len(text) < 20:
+        try:
+            import pytesseract
+            from PIL import Image
+
+            ocr_parts = []
+            for page in doc:
+                mat = fitz.Matrix(2, 2)  # 2x zoom improves OCR quality
+                pix = page.get_pixmap(matrix=mat)
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                ocr_parts.append(pytesseract.image_to_string(img, lang="deu+eng"))
+            ocr_text = "\n\n".join(ocr_parts).strip()
+
+            if ocr_text:
+                text = ocr_text
+                warnings.append(
+                    "PDF ohne Textschicht (vermutlich gescannt) — OCR wurde "
+                    "automatisch verwendet."
+                )
+            else:
+                warnings.append(
+                    "PDF enthält keinen erkennbaren Text. Falls gescannt: "
+                    "Qualität prüfen oder leistungsfähigeres OCR-Tool nutzen."
+                )
+        except ImportError:
+            warnings.append(
+                "PDF ohne Textschicht erkannt (vermutlich gescannt). Tesseract-OCR "
+                "ist nicht installiert — sonst könnte der Text automatisch "
+                "gelesen werden. macOS: 'brew install tesseract'. Linux: "
+                "'sudo apt install tesseract-ocr tesseract-ocr-deu'. Windows: "
+                "https://github.com/UB-Mannheim/tesseract/wiki"
+            )
+        except Exception as e:
+            warnings.append(f"OCR-Versuch fehlgeschlagen: {e}")
+
+    return ExtractionResult(
+        text=text,
+        format="PDF",
+        pages=len(doc),
+        warnings=warnings,
+    )
 
 
 def _extract_docx(data: bytes) -> ExtractionResult:

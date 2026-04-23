@@ -204,12 +204,25 @@ function PreviewPanel() {
     return html`
       <div class="aai-preview-loading">
         <span dangerouslySetInnerHTML=${{ __html: SVG_SHIELD }} />
-        ${slowLoad
-          ? 'Anonymisierung wird geprüft… (KI-Modelle werden beim ersten Mal geladen, bis zu 1 Minute)'
-          : 'Anonymisierung wird geprüft…'}
+        <span class="aai-preview-loading-text">
+          ${slowLoad
+            ? 'Anonymisierung wird geprüft… (KI-Modelle werden beim ersten Mal geladen, bis zu 1 Minute)'
+            : 'Anonymisierung wird geprüft…'}
+        </span>
+        <button
+          class="aai-btn aai-btn--ghost aai-btn--icon aai-btn--sm"
+          onClick=${closePreview}
+          title="Abbrechen"
+        >×</button>
       </div>
     `;
   }
+
+  // A user can reach this panel with an empty original text (e.g. by pressing
+  // "Prüfen" without having typed anything yet). The old code still rendered a
+  // "Bearbeiten" button that led nowhere. We now disable it in that case so
+  // people don't click into a dead end.
+  const hasEditableText = Boolean((result.original || '').trim());
 
   const hasChanges = result.is_changed;
   const statusColor = hasChanges ? 'var(--accent)' : 'var(--success)';
@@ -279,7 +292,12 @@ function PreviewPanel() {
       ` : null}
 
       <div class="aai-preview-actions">
-        <button class=${`aai-btn aai-btn--ghost aai-btn--sm${editMode ? ' active' : ''}`} onClick=${() => setEditMode(!editMode)}>Bearbeiten</button>
+        <button
+          class=${`aai-btn aai-btn--ghost aai-btn--sm${editMode ? ' active' : ''}`}
+          onClick=${() => hasEditableText && setEditMode(!editMode)}
+          disabled=${!hasEditableText}
+          title=${hasEditableText ? 'Text markieren um Begriffe zur Deny-Liste hinzuzufügen' : 'Kein Text zum Bearbeiten'}
+        >Bearbeiten</button>
         <button class="aai-btn aai-btn--primary aai-btn--sm" onClick=${() => sendConfirmed(text)}>
           Absenden <span class="aai-key-hint">Enter</span>
         </button>
@@ -309,13 +327,47 @@ function AttachmentList() {
 
   return html`
     <${Fragment}>
-      ${items.map((a, i) => html`
-        <div key=${i} class="aai-attachment">
-          <span>${a.filename}</span>
-          <span class="aai-attachment-info">${a.entity_count || 0} entities</span>
-          <button class="aai-attachment-remove" onClick=${() => removeAt(i)}>×</button>
-        </div>
-      `)}
+      ${items.map((a, i) => {
+        const warns = Array.isArray(a.warnings) ? a.warnings : [];
+        const extracted = ((a.extracted_text || '') + '').trim();
+        const hasContent = extracted.length > 0;
+        const preview = hasContent
+          ? extracted.slice(0, 160) + (extracted.length > 160 ? '…' : '')
+          : '';
+        const entities = a.entity_count || 0;
+
+        let statusLabel;
+        let statusClass;
+        if (!hasContent) {
+          statusLabel = 'Kein Text lesbar';
+          statusClass = 'warning';
+        } else if (entities > 0) {
+          statusLabel = `${entities} sensible${entities === 1 ? 'r Begriff' : ' Begriffe'} erkannt`;
+          statusClass = 'accent';
+        } else {
+          statusLabel = 'Keine sensiblen Daten';
+          statusClass = 'success';
+        }
+
+        return html`
+          <div key=${i} class="aai-attachment-detail">
+            <div class="aai-attachment-header">
+              <span dangerouslySetInnerHTML=${{ __html: SVG_SHIELD }} class="aai-attachment-icon" />
+              <span class="aai-attachment-name">${a.filename}</span>
+              <span class=${`aai-attachment-badge aai-attachment-badge--${statusClass}`}>
+                ${statusLabel}
+              </span>
+              <button class="aai-attachment-remove" onClick=${() => removeAt(i)} title="Entfernen">×</button>
+            </div>
+            ${preview ? html`
+              <div class="aai-attachment-preview">${preview}</div>
+            ` : null}
+            ${warns.length ? html`
+              <div class="aai-attachment-warning">ⓘ ${warns.join(' · ')}</div>
+            ` : null}
+          </div>
+        `;
+      })}
     <//>
   `;
 }

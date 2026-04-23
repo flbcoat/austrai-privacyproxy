@@ -702,6 +702,61 @@ a:hover { text-decoration: underline; }
 }
 .aai-attachment-remove:hover { color: var(--danger); }
 
+/* Rich attachment card — shown when a file has been uploaded and parsed.
+ * Forces a line break on its own so multiple attachments stack vertically
+ * inside the flex-wrap parent.
+ */
+.aai-attachment-detail {
+  flex-basis: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+  background: var(--bg-sidebar);
+  font-size: 12px;
+  color: var(--text);
+}
+.aai-attachment-header {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.aai-attachment-icon {
+  display: inline-flex; width: 14px; height: 14px; color: var(--accent);
+  flex-shrink: 0;
+}
+.aai-attachment-icon svg { width: 14px; height: 14px; }
+.aai-attachment-name {
+  font-weight: 500; color: var(--text);
+  flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.aai-attachment-badge {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+  flex-shrink: 0;
+}
+.aai-attachment-badge--accent {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+.aai-attachment-badge--success {
+  background: color-mix(in srgb, var(--success, #16A34A) 14%, transparent);
+  color: var(--success, #16A34A);
+}
+.aai-attachment-badge--warning {
+  background: color-mix(in srgb, #D97706 14%, transparent);
+  color: #D97706;
+}
+.aai-attachment-preview {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  white-space: pre-wrap; word-break: break-word;
+  line-height: 1.45; max-height: 90px; overflow: hidden;
+  font-size: 11.5px;
+}
+.aai-attachment-warning {
+  margin-top: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.4;
+}
+
 /* Anonymization Preview */
 .aai-anon-preview {
   max-width: var(--content-max); margin: 0 auto 8px;

@@ -94,7 +94,27 @@ async function processFiles(files, mode) {
         const result = await api.uploadFile(file);
         signals.pendingAttachments.value = [...signals.pendingAttachments.value, result];
         renderAttachments();
-        toast(`${file.name} — ${result.entity_count || 0} Entitäten anonymisiert`, 'success');
+
+        // Build a toast message that actually tells the user what happened.
+        // The old message ("N Entitäten anonymisiert") made people think nothing
+        // worked when N was 0 — even though the upload was successful.
+        const entities = result.entity_count || 0;
+        const chars = result.chars || (result.extracted_text || '').length;
+        let status;
+        if (chars === 0) {
+          status = 'kein Text erkannt (Datei evtl. leer oder Bild-PDF)';
+        } else if (entities > 0) {
+          status = `${entities} sensible Begriff(e) erkannt — werden beim Absenden anonymisiert`;
+        } else {
+          status = 'keine sensiblen Daten erkannt, wird unverändert mitgesendet';
+        }
+        toast(`${file.name} hochgeladen ✓ — ${status}`, 'success', 6000);
+
+        // Server-side warnings (e.g. OCR fallback used, Tesseract missing).
+        // Show them as separate info toasts so they don't get buried.
+        if (Array.isArray(result.warnings)) {
+          for (const w of result.warnings) toast(w, 'info', 9000);
+        }
       }
     } catch (err) {
       console.error('Upload error:', err);
