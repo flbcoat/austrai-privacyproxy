@@ -249,15 +249,53 @@ def _entity_type_for_codename(codename: str, entities: list) -> str:
 # GET /chat — Serve the chat UI
 # ---------------------------------------------------------------------------
 
+# Shared cache-control headers for chat assets. Without these, Safari (and
+# to a lesser extent Chrome) aggressively cache ES modules by URL. A user who
+# upgraded from 2.2.x to 2.3.x could end up with the new app.js but an old
+# cached state.js — which produces the notorious
+# "SyntaxError: Importing binding name 'signals' is not found" because the
+# old state.js never exported `signals`. must-revalidate forces the browser
+# to ask the server on every load, with If-Modified-Since/ETag; 304 when
+# unchanged, fresh 200 after an upgrade.
+_NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, must-revalidate",
+    "Pragma": "no-cache",
+}
+
+
 async def serve_chat(request: Request) -> FileResponse:
-    return FileResponse(CHAT_DIR / "index.html", media_type="text/html")
+    return FileResponse(
+        CHAT_DIR / "index.html",
+        media_type="text/html",
+        headers=_NO_CACHE_HEADERS,
+    )
 
 
 async def serve_favicon(request: Request) -> FileResponse:
     # index.html references <link rel="icon" href="favicon.svg"> relative to
     # /chat/, so the browser requests /chat/favicon.svg. Without this route
     # that lookup 404s and the tab icon falls back to the browser default.
-    return FileResponse(CHAT_DIR / "favicon.svg", media_type="image/svg+xml")
+    return FileResponse(
+        CHAT_DIR / "favicon.svg",
+        media_type="image/svg+xml",
+        headers=_NO_CACHE_HEADERS,
+    )
+
+
+class NoCacheStaticFiles(StaticFiles):
+    """StaticFiles subclass that adds no-cache headers to every response.
+
+    Starlette's stock StaticFiles sets `Last-Modified` and lets the browser
+    decide — which Safari does wrong: it serves from its disk cache without
+    revalidation when pages are re-loaded from the same origin. Overriding
+    `file_response` lets us inject Cache-Control on every served asset.
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        for k, v in _NO_CACHE_HEADERS.items():
+            response.headers[k] = v
+        return response
 
 
 # ---------------------------------------------------------------------------
@@ -1198,7 +1236,7 @@ def create_chat_app() -> Starlette:
         Route("/api/conversations/{id}", get_conversation_messages, methods=["GET"]),
         Route("/api/conversations/{id}", update_conversation, methods=["PUT"]),
         Route("/api/conversations/{id}", delete_conversation, methods=["DELETE"]),
-        Mount("/css", StaticFiles(directory=str(CHAT_DIR / "css")), name="chat-css"),
-        Mount("/js", StaticFiles(directory=str(CHAT_DIR / "js")), name="chat-js"),
+        Mount("/css", NoCacheStaticFiles(directory=str(CHAT_DIR / "css")), name="chat-css"),
+        Mount("/js", NoCacheStaticFiles(directory=str(CHAT_DIR / "js")), name="chat-js"),
     ]
     return Starlette(routes=routes, on_startup=[_warmup_engine])
