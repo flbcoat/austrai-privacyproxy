@@ -1,0 +1,311 @@
+---
+interface Props { lang?: 'de' | 'en'; }
+const { lang = 'de' } = Astro.props;
+const isEn = lang === 'en';
+---
+
+<section class="faq-troubleshooting-section" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">{isEn ? 'Troubleshooting' : 'Hilfe'}</span>
+      <h2>{isEn ? 'Installation &amp; browser questions' : 'Installation &amp; Browser-Fragen'}</h2>
+      <p class="section-desc">
+        {isEn
+          ? 'The common pitfalls after installing AUSTR.AI — browser choice, updates, your data, stopping the server.'
+          : 'Die häufigsten Fragen nach der Installation — Browserwahl, Updates, deine Daten, Server stoppen.'}
+      </p>
+    </div>
+
+    <div class="faq-list">
+
+      <details class="faq-item">
+        <summary>{isEn ? 'I ran `aai chat` and no browser opened' : 'Ich habe `aai chat` gestartet und es öffnet sich kein Browser'}</summary>
+        <p>
+          {isEn
+            ? 'That is intentional since version 3.0: the server prints the URL and you open it in whichever browser you prefer. Copy the line that starts with http://localhost:8282/chat from your terminal and paste it into Safari, Chrome, Firefox, Ecosia, or any other browser.'
+            : 'Das ist seit Version 3.0 so gewollt: Der Server zeigt die URL im Terminal an und du öffnest sie im Browser deiner Wahl. Kopiere die Zeile mit http://localhost:8282/chat aus dem Terminal und füge sie in Safari, Chrome, Firefox, Ecosia oder einem anderen Browser ein.'}
+        </p>
+        <p>
+          {isEn
+            ? 'If you want the browser to open automatically, use:'
+            : 'Wenn der Browser automatisch öffnen soll:'}
+          <code>aai chat --open</code>
+          {isEn
+            ? ' — that starts your macOS/Windows default browser. To choose a different default, change it in your OS settings.'
+            : ' — das startet den macOS/Windows-Standardbrowser. Für einen anderen Default: in den Betriebssystem-Einstellungen anpassen.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'How do I open AUSTR.AI in a different browser than Safari?' : 'Wie öffne ich AUSTR.AI in einem anderen Browser als Safari?'}</summary>
+        <p>
+          {isEn
+            ? 'Start the server without auto-opening:'
+            : 'Starte den Server ohne Browser-Auto-Öffnen:'}
+          <code>aai chat</code>
+          {isEn
+            ? ' — then paste http://localhost:8282/chat into any browser you want. The server binds to both IPv4 (127.0.0.1) and IPv6 (::1) on localhost only, so every modern browser reaches it.'
+            : ' — und füge dann http://localhost:8282/chat in deinen gewünschten Browser ein. Der Server hört auf IPv4 (127.0.0.1) und IPv6 (::1) — jeder moderne Browser erreicht ihn.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'The chat window is frozen — nothing clicks, nothing works' : 'Das Chat-Fenster ist gefreezet — nichts geht'}</summary>
+        <p>
+          {isEn
+            ? 'That is a browser cache issue if you upgraded from an older version. Clear the cache:'
+            : 'Das ist ein Browser-Cache-Problem, wenn du von einer älteren Version kommst. Cache leeren:'}
+        </p>
+        <ul>
+          <li><strong>Safari:</strong> {isEn ? 'Develop menu → Empty caches, then Cmd+Q and restart Safari.' : 'Menü Entwickler → Caches leeren, dann Cmd+Q und Safari neu starten.'}</li>
+          <li><strong>Chrome:</strong> Cmd+Shift+⌫ (Mac) / Ctrl+Shift+⌫ (Windows) → {isEn ? 'tick "Cached images and files" and clear.' : '"Bilder und Dateien im Cache" anhaken und löschen.'}</li>
+          <li><strong>Firefox:</strong> Cmd+Shift+⌫ → {isEn ? 'select "Cache" and clear.' : '"Cache" auswählen und löschen.'}</li>
+        </ul>
+        <p>
+          {isEn
+            ? 'Since version 3.0 the server itself sends Cache-Control: no-cache headers, so this problem no longer occurs on fresh installs.'
+            : 'Seit Version 3.0 sendet der Server selbst Cache-Control: no-cache Header — das Problem tritt bei neuen Installationen nicht mehr auf.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'How do I update to the latest version?' : 'Wie update ich auf die neueste Version?'}</summary>
+        <p>{isEn ? 'One command:' : 'Ein Befehl:'}</p>
+        <p><code>pip install --upgrade austrai</code></p>
+        <p>
+          {isEn
+            ? 'If pip shows the right version but `aai` still runs the old one, clear the pip cache:'
+            : 'Wenn pip die richtige Version anzeigt, `aai` aber trotzdem die alte benutzt, pip-Cache leeren:'}
+        </p>
+        <p><code>pip uninstall -y austrai &amp;&amp; pip install --no-cache-dir austrai</code></p>
+        <p>
+          {isEn
+            ? 'AUSTR.AI also checks for updates itself on start-up (once per 24 hours, no telemetry) and shows a hint in the terminal when a new version is available.'
+            : 'AUSTR.AI prüft beim Start selbst auf Updates (einmal pro 24 Stunden, keine Telemetrie) und zeigt im Terminal einen Hinweis, wenn eine neue Version verfügbar ist.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'What happens to my data when I reinstall or uninstall?' : 'Was passiert mit meinen Daten bei Neuinstall oder Deinstall?'}</summary>
+        <p>
+          {isEn
+            ? 'Your data lives in ~/.austrai/ (your user home directory). pip uninstall removes only the Python package — never your data. You keep:'
+            : 'Deine Daten liegen in ~/.austrai/ (dein User-Home-Verzeichnis). pip uninstall entfernt nur das Python-Paket — nie deine Daten. Erhalten bleiben:'}
+        </p>
+        <ul>
+          <li><code>proxy.yaml</code> — {isEn ? 'API keys, allow/deny lists, settings' : 'API-Keys, Allow/Deny-Listen, Einstellungen'}</li>
+          <li><code>mappings.db</code> / <code>mappings.key</code> — {isEn ? 'encrypted vault + encryption key' : 'verschlüsselter Vault + Schlüssel'}</li>
+          <li><code>conversations.db</code> — {isEn ? 'your chat history' : 'dein Chat-Verlauf'}</li>
+        </ul>
+        <p>
+          {isEn
+            ? 'Permissions are restrictive (0700 on the directory, 0600 on the key file) — only your OS user can read them. Other users on the same machine cannot. If you want a fresh start:'
+            : 'Die Rechte sind streng (0700 auf dem Verzeichnis, 0600 auf dem Key-File) — nur dein OS-User kann lesen. Andere User auf demselben Rechner nicht. Für einen sauberen Neustart:'}
+          <code>rm -rf ~/.austrai/</code>
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'How do I stop the server?' : 'Wie stoppe ich den Server?'}</summary>
+        <p>
+          {isEn
+            ? 'Two cases, depending on how you started it.'
+            : 'Zwei Fälle, je nachdem wie du gestartet hast.'}
+        </p>
+        <p>
+          {isEn ? 'Default (foreground mode):' : 'Standard (Vordergrund-Modus):'} <code>Ctrl+C</code> {isEn ? 'in the terminal that runs aai chat.' : 'im Terminal in dem aai chat läuft.'}
+        </p>
+        <p>
+          {isEn ? 'Background mode (started with --background):' : 'Hintergrund-Modus (mit --background gestartet):'} <code>aai stop</code>
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'Is my API key hardcoded in the package? Can other users see it?' : 'Ist mein API-Key im Paket hardgecoded? Können andere ihn sehen?'}</summary>
+        <p>
+          {isEn
+            ? 'No. Your API key is stored only in ~/.austrai/proxy.yaml on your machine, with file permissions that allow only your OS user to read it. It is never bundled into the PyPI package. Every user has their own ~/.austrai/ — no one else has access.'
+            : 'Nein. Dein API-Key liegt ausschließlich in ~/.austrai/proxy.yaml auf deinem Rechner, mit Rechten, die nur dein OS-User lesen kann. Er wird nie ins PyPI-Paket gebündelt. Jeder User hat sein eigenes ~/.austrai/ — niemand sonst hat Zugriff.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'Does AUSTR.AI work on Windows and Linux?' : 'Funktioniert AUSTR.AI auf Windows und Linux?'}</summary>
+        <p>
+          {isEn
+            ? 'Yes. Clipboard, background processes, port management, process termination, RAM detection and terminal encoding are all OS-aware since 2.3.0. On Windows: open PowerShell, run pip install austrai, then aai chat. On Linux: same in your shell of choice.'
+            : 'Ja. Clipboard, Hintergrundprozesse, Port-Verwaltung, Prozess-Beendigung, RAM-Erkennung und Terminal-Encoding sind seit 2.3.0 OS-bewusst. Windows: PowerShell öffnen, pip install austrai, dann aai chat. Linux: gleich, in deiner bevorzugten Shell.'}
+        </p>
+        <p>
+          {isEn
+            ? 'If something on Windows looks broken after an upgrade, pip did not pick up the new version properly. Force clean install:'
+            : 'Wenn auf Windows nach einem Upgrade etwas kaputt aussieht, hat pip die neue Version nicht sauber übernommen. Saubere Neuinstallation erzwingen:'}
+        </p>
+        <p><code>pip uninstall -y austrai &amp;&amp; pip install --no-cache-dir austrai</code></p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'I see `Importing binding name \'signals\' is not found`' : 'Ich sehe `Importing binding name \'signals\' is not found`'}</summary>
+        <p>
+          {isEn
+            ? 'That is the browser-cache issue — your browser is serving an old JavaScript module together with newly-downloaded files. Clear the browser cache (see "chat window frozen" above) and restart the browser. Version 3.0 prevents the problem by sending no-cache headers on every asset.'
+            : 'Das ist der Browser-Cache-Bug — dein Browser serviert ein altes JavaScript-Modul zusammen mit neuen Dateien. Browser-Cache leeren (siehe "Chat-Fenster gefreezet" oben) und Browser neu starten. Version 3.0 verhindert das Problem durch no-cache Header auf allen Assets.'}
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>{isEn ? 'The terminal shows "Ready" then immediately returns to the prompt — is the server running?' : 'Das Terminal zeigt "Bereit" und springt sofort zurück zum Prompt — läuft der Server?'}</summary>
+        <p>
+          {isEn
+            ? 'That behaviour was a quirk of versions before 3.0 (detached background mode by default). Since 3.0, `aai chat` stays in the foreground and the terminal stays occupied until you press Ctrl+C. If you want the old detached behaviour: aai chat --background.'
+            : 'Dieses Verhalten war ein Eigentümlichkeit von Versionen vor 3.0 (Detached-Modus als Default). Seit 3.0 bleibt `aai chat` im Vordergrund und das Terminal ist belegt, bis du Ctrl+C drückst. Für das alte Detach-Verhalten: aai chat --background.'}
+        </p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-troubleshooting-section {
+    padding: 4rem 0;
+    background: var(--color-bg);
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .section-label {
+    display: inline-block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 1rem;
+    line-height: 1.2;
+  }
+
+  .section-desc {
+    font-size: 1.0625rem;
+    color: var(--color-text-muted);
+    max-width: 640px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .faq-item {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .faq-item:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+  }
+
+  .faq-item[open] {
+    background: color-mix(in srgb, var(--color-accent) 4%, var(--color-bg-card));
+    border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  }
+
+  .faq-item summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+    padding: 1rem 1.25rem;
+    list-style: none;
+    position: relative;
+    padding-right: 2.5rem;
+    line-height: 1.4;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+    transition: transform 0.15s ease;
+  }
+
+  .faq-item[open] summary::after {
+    content: '−';
+    color: var(--color-accent);
+  }
+
+  .faq-item p {
+    margin: 0 1.25rem 0.75rem;
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.65;
+  }
+
+  .faq-item p:first-of-type {
+    margin-top: 0.5rem;
+  }
+
+  .faq-item p:last-of-type {
+    margin-bottom: 1.25rem;
+  }
+
+  .faq-item ul {
+    margin: 0.5rem 1.25rem 0.75rem 2.5rem;
+    padding: 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  .faq-item ul li {
+    margin-bottom: 0.375rem;
+  }
+
+  .faq-item code {
+    font-family: var(--font-mono, 'JetBrains Mono', Menlo, monospace);
+    font-size: 0.8125rem;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-accent);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .faq-troubleshooting-section { padding: 3rem 0; }
+    .section-header h2 { font-size: 1.625rem; }
+    .faq-item summary { font-size: 0.9375rem; padding: 0.875rem 1rem; padding-right: 2.25rem; }
+    .faq-item p, .faq-item ul { margin-left: 1rem; margin-right: 1rem; }
+    .faq-item code { white-space: normal; word-break: break-all; }
+  }
+</style>

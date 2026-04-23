@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import ProblemStatement from '../../components/ProblemStatement.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import Demo from '../../components/Demo.astro';
+import WhyAustrai from '../../components/WhyAustrai.astro';
+import UseCases from '../../components/UseCases.astro';
+import Audiences from '../../components/Audiences.astro';
+import Download from '../../components/Download.astro';
+import FAQTroubleshooting from '../../components/FAQTroubleshooting.astro';
+import Roadmap from '../../components/Roadmap.astro';
+import OpenSourceCTA from '../../components/OpenSourceCTA.astro';
+import AboutUs from '../../components/AboutUs.astro';
+
+const lang = 'en';
+---
+
+<Base
+  lang={lang}
+  title="AUSTR.AI — Local AI Assistant with Built-in Privacy | Chat with AI without Exposing Your Data"
+  description="AUSTR.AI is a local AI assistant that automatically anonymizes personal data before it reaches the AI. Chat with Claude, GPT, Mistral, or Ollama — your data stays on your device. Confirmation step before every send. Free for personal use. Made in Austria."
+>
+  <Hero lang={lang} />
+  <ProblemStatement lang={lang} />
+  <HowItWorks lang={lang} />
+  <Demo lang={lang} />
+  <WhyAustrai lang={lang} />
+  <UseCases lang={lang} />
+  <Audiences lang={lang} />
+  <Download lang={lang} />
+  <FAQTroubleshooting lang={lang} />
+  <Roadmap lang={lang} />
+  <OpenSourceCTA lang={lang} />
+  <AboutUs lang={lang} />
+</Base>
