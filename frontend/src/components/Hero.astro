@@ -24,7 +24,8 @@ const isEn = lang === 'en';
         {isEn ? 'AUSTR.AI automatically anonymizes your data before it ever reaches an AI model and transparently restores it in the response. Everything runs locally on your own machine, the service is free for personal use, and it is developed in Vienna, Austria.' : 'AUSTR.AI anonymisiert deine Daten automatisch, bevor sie ein KI-Modell erreichen, und stellt sie in der Antwort transparent wieder her. Die Verarbeitung findet vollständig auf deinem eigenen Rechner statt, die Nutzung ist für Privatanwender kostenlos — entwickelt in Wien.'}
       </p>
       <p class="hero-beta-notice animate-slide-up animate-delay-1">
-        {isEn ? 'AUSTR.AI is currently in BETA. Features evolve quickly, the privacy guarantees stay constant. Feedback welcome.' : 'AUSTR.AI ist derzeit in der BETA-Phase. Die Funktionen entwickeln sich schnell weiter, die Datenschutz-Garantien bleiben konstant. Feedback willkommen.'}
+        <span aria-hidden="true">⚠️</span>
+        {isEn ? 'AUSTR.AI is in BETA — features evolve quickly, privacy guarantees stay constant.' : 'AUSTR.AI ist in der BETA-Phase — die Funktionen entwickeln sich schnell, die Datenschutz-Garantien bleiben konstant.'}
       </p>
       <div class="hero-actions animate-slide-up animate-delay-2">
         <a href={isEn ? '/en#install' : '#install'} class="btn btn-primary btn-lg">{isEn ? 'Get started free' : 'Kostenlos starten'}</a>
@@ -266,6 +267,7 @@ const isEn = lang === 'en';
   .hero-version-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
@@ -292,13 +294,22 @@ const isEn = lang === 'en';
     color: var(--color-text-muted);
     font-size: 0.8125rem;
   }
+  /* Centered, pill-style notice — matches the centered hero-text layout
+     and renders consistently across mobile + desktop. The earlier
+     border-left version sat off-axis under the centered subtitle. */
   .hero-beta-notice {
-    margin-top: 0.75rem;
+    margin: 1rem auto 0;
     font-size: 0.8125rem;
     color: var(--color-text-muted);
-    border-left: 2px solid #fbbf24;
-    padding-left: 0.75rem;
     line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 6px 14px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 999px;
+    max-width: max-content;
   }
 
   .pipeline-preview {

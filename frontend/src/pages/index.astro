@@ -6,7 +6,6 @@ import HowItWorks from '../components/HowItWorks.astro';
 import Demo from '../components/Demo.astro';
 import WhyAustrai from '../components/WhyAustrai.astro';
 import UseCases from '../components/UseCases.astro';
-import Audiences from '../components/Audiences.astro';
 import Download from '../components/Download.astro';
 import FAQTroubleshooting from '../components/FAQTroubleshooting.astro';
 import Roadmap from '../components/Roadmap.astro';
@@ -15,16 +14,19 @@ import AboutUs from '../components/AboutUs.astro';
 ---
 
 <Base>
+  <!-- Reordered 27.04.2026 (Florian's Feedback): wichtigstes oben,
+       Installation gleich nach dem Hero, neue Funktionen weiter rauf,
+       beschreibende Sektionen folgen. Audiences entfernt (überlappte
+       mit UseCases). -->
   <Hero />
-  <ProblemStatement />
+  <Download />
+  <Roadmap />
   <HowItWorks />
   <Demo />
   <WhyAustrai />
   <UseCases />
-  <Audiences />
-  <Download />
+  <ProblemStatement />
   <FAQTroubleshooting />
-  <Roadmap />
   <OpenSourceCTA />
   <AboutUs />
 </Base>

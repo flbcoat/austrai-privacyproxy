@@ -11,8 +11,8 @@ interface Props {
 }
 
 const {
-  title = 'AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz | Chatte mit KI ohne deine Daten preiszugeben',
-  description = 'AUSTR.AI anonymisiert deine Daten automatisch, bevor sie ein KI-Modell erreichen. Du kannst mit Claude, GPT, Mistral oder Ollama arbeiten — deine Daten bleiben dabei auf dem eigenen Rechner. Vor jedem Senden siehst du genau, was an die KI übergeben wird. Die Nutzung ist für Privatanwender kostenlos. Entwickelt in Wien, Österreich.',
+  title = 'AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz (v3.2 Beta)',
+  description = 'AUSTR.AI anonymisiert deine Daten automatisch, bevor sie ein KI-Modell erreichen. Mit Skills, lokaler Wissensbasis und Österreich-spezifischer Erkennung von Adressen, Behörden und Hochschulen. Funktioniert mit Claude, GPT, Mistral und lokalen Modellen via Ollama oder LM Studio. Deine Daten bleiben auf dem eigenen Rechner. Kostenlos für Privatanwender. Entwickelt in Wien.',
   noindex = false,
   lang = 'de',
 } = Astro.props;
@@ -88,17 +88,17 @@ const altLangURL = new URL(altLangPath, Astro.site);
     "url": "https://austr.ai",
     "downloadUrl": "https://pypi.org/project/austrai/",
     "installUrl": "https://pypi.org/project/austrai/",
-    "softwareVersion": "3.0.0",
+    "softwareVersion": "3.2.1",
     "license": "https://austr.ai/en/legal",
     "isAccessibleForFree": true,
     "inLanguage": [lang, isEn ? "de" : "en"],
     "keywords": isEn
-      ? "AI privacy, AI security, GDPR compliance, data anonymization, PII detection, Austrian AI, free AI privacy, LLM security, ChatGPT privacy, prompt anonymization"
-      : "KI Datenschutz, KI Sicherheit, DSGVO Konformitaet, Datenanonymisierung, PII Erkennung, Oesterreich KI, kostenlose KI Datenschutz, LLM Sicherheit, ChatGPT Datenschutz, Prompt Anonymisierung",
+      ? "AI privacy, AI security, GDPR compliance, data anonymization, PII detection, Austrian AI, free AI privacy, LLM security, ChatGPT privacy, prompt anonymization, AI skills, knowledge base RAG, Austrian address detection, Claude Sonnet, Claude Opus"
+      : "KI Datenschutz, KI Sicherheit, DSGVO Konformitaet, Datenanonymisierung, PII Erkennung, Oesterreich KI, kostenlose KI Datenschutz, LLM Sicherheit, ChatGPT Datenschutz, Prompt Anonymisierung, KI Skills, Wissensbasis RAG, oesterreichische Adresserkennung, Claude Sonnet, Claude Opus",
     "screenshot": "https://austr.ai/og-image.png",
     "featureList": isEn
-      ? ["AI chat with built-in privacy", "3-layer PII detection (GLiNER + Presidio + first names DB)", "4-tier data classification (Public/Internal/Confidential/Restricted)", "Semantic codes (e.g. DATE_OF_BIRTH_1)", "Tiered vault with auto-expiry", "Confirmation step before every send", "Untraceable codename anonymization", "Automatic response restoration", "Multiple AI providers (Ollama, Claude, GPT, Mistral, Gemini)", "Image redaction (OCR)", "Document analysis (PDF, DOCX)", "Audio transcription + anonymization", "Allow-list and deny-list", "Encrypted local storage (AES)", "Server deployment with responsive web UI"]
-      : ["KI-Chat mit eingebautem Datenschutz", "3-Schichten PII-Erkennung (GLiNER + Presidio + Vornamen-DB)", "4-stufige Datenklassifizierung (Public/Internal/Confidential/Restricted)", "Semantische Codes (z.B. DATE_OF_BIRTH_1)", "Gestufter Vault mit Auto-Expiry", "Bestaetigungsschritt vor jedem Senden", "Nicht-rueckverfolgbare Codename-Anonymisierung", "Automatische Antwort-Wiederherstellung", "Mehrere KI-Anbieter (Ollama, Claude, GPT, Mistral, Gemini)", "Bildschwärzung (OCR)", "Dokumentenanalyse (PDF, DOCX)", "Audio-Transkription + Anonymisierung", "Allow-List und Deny-List", "Verschluesselte lokale Speicherung (AES)", "Server-Deployment mit responsiver Web-Oberflaeche"],
+      ? ["AI chat with built-in privacy", "Skills — user-defined specialists with system prompt + recommended model", "Local knowledge base — upload PDF/Docx/Txt, anonymised before indexing, real-time snippet preview before send", "Slash commands for power users (/opus, /sonnet, /haiku, /lokal, /<skill-slug>)", "Visible reasoning — Extended Thinking from Claude and o-series rendered in collapsible block", "Austria-specific PII detection (addresses, federal states, academic titles, universities, government bodies)", "3-layer PII detection (GLiNER + Presidio + first names DB)", "4-tier data classification (Public/Internal/Confidential/Restricted)", "Semantic codes (e.g. DATE_OF_BIRTH_1)", "Tiered vault with auto-expiry", "Multiple AI providers (Anthropic Claude, OpenAI GPT, Mistral, Google Gemini, Ollama, LM Studio)", "Image redaction with OCR", "Document analysis (PDF, DOCX, XLSX)", "Audio transcription + anonymisation", "Allow-list and deny-list", "Encrypted local storage (Fernet)", "Server deployment with responsive web UI"]
+      : ["KI-Chat mit eingebautem Datenschutz", "Skills — eigene Profis mit System-Prompt + empfohlenem Modell", "Lokale Wissensbasis — PDF/Docx/Txt hochladen, vor Indexierung anonymisiert, Echtzeit-Snippet-Vorschau vor dem Senden", "Slash-Befehle für Power-User (/opus, /sonnet, /haiku, /lokal, /<skill-slug>)", "Sichtbares Reasoning — Extended Thinking von Claude und o-Series in aufklappbarem Block", "Österreich-spezifische PII-Erkennung (Adressen, Bundesländer, akademische Titel, Hochschulen, Behörden)", "3-Schichten PII-Erkennung (GLiNER + Presidio + Vornamen-DB)", "4-stufige Datenklassifizierung (Public/Internal/Confidential/Restricted)", "Semantische Codes (z.B. DATE_OF_BIRTH_1)", "Gestufter Vault mit Auto-Expiry", "Mehrere KI-Anbieter (Anthropic Claude, OpenAI GPT, Mistral, Google Gemini, Ollama, LM Studio)", "Bildschwärzung mit OCR", "Dokumentenanalyse (PDF, DOCX, XLSX)", "Audio-Transkription + Anonymisierung", "Allow-List und Deny-List", "Verschlüsselte lokale Speicherung (Fernet)", "Server-Deployment mit responsiver Web-Oberfläche"],
     "softwareRequirements": "Python 3.10+",
     "releaseNotes": "https://pypi.org/project/austrai/#history"
   })} />
