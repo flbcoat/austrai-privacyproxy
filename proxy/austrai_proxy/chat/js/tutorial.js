@@ -1,7 +1,14 @@
 /**
- * AUSTR.AI — Tutorial Page (Preact)
- * Click-to-expand steps with live mini-demos.
- * Always accessible from sidebar.
+ * AUSTR.AI — Help & Tutorial Page (Preact)
+ *
+ * Zwei Abschnitte, beide als Accordion:
+ *   1. Tutorial — die wichtigsten Funktionen Schritt für Schritt erklärt,
+ *      inkl. Live-Demo, die den lokalen /debug/test Endpoint aufruft.
+ *   2. FAQ — häufige Fragen zu Privatsphäre, Erkennung, Lizenz, Providern.
+ *
+ * Alle Strings kommen aus i18n.js und reagieren reaktiv auf Sprachwechsel
+ * (die Komponente liest signals.language.value, d.h. Preact-Signals re-rendern
+ * die gesamte View bei einem setLang()-Aufruf automatisch).
  */
 
 import { h, render, Fragment } from 'preact';
@@ -9,12 +16,11 @@ import { useState } from 'preact/hooks';
 import htm from 'htm';
 import { signals } from './state.js';
 import * as api from './api.js';
+import { t } from './i18n.js';
 
 const html = htm.bind(h);
 
 const TUTORIAL_HELP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-
-const EXAMPLE_TEXT = 'Dr. Müller wohnt in der Mariahilfer Straße 45, 1060 Wien. Seine IBAN ist AT48 2011 1820 8120 0100 und seine Mail ist mueller@example.at';
 
 function highlightAnon(text) {
   return String(text || '').replace(
@@ -26,12 +32,27 @@ function highlightAnon(text) {
 /* ---- Accordion step ---- */
 
 function Step({ num, title, open, onToggle, children }) {
+  // Keyboard-Support: Enter/Space togglen genauso wie Mausklick. Ohne das
+  // waren die Accordion-Header nicht keyboard-erreichbar.
+  function onHeaderKey(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onToggle();
+    }
+  }
   return html`
     <div class=${`aai-tutorial-step${open ? ' open' : ''}`}>
-      <div class="aai-tutorial-step-header" onClick=${onToggle}>
-        <span class="aai-tutorial-step-num">${num}</span>
+      <div
+        class="aai-tutorial-step-header"
+        role="button"
+        tabIndex="0"
+        aria-expanded=${open ? 'true' : 'false'}
+        onClick=${onToggle}
+        onKeyDown=${onHeaderKey}
+      >
+        ${num ? html`<span class="aai-tutorial-step-num">${num}</span>` : null}
         <span class="aai-tutorial-step-title">${title}</span>
-        <span class="aai-tutorial-step-arrow">▼</span>
+        <span class="aai-tutorial-step-arrow" aria-hidden="true">▼</span>
       </div>
       <div class="aai-tutorial-step-body">${children}</div>
     </div>
@@ -44,23 +65,23 @@ function DemoResult({ result }) {
   if (!result.is_changed) {
     return html`
       <div class="aai-tut-result-box" style="border-color:var(--success)">
-        <strong style="color:var(--success)">✓ Keine personenbezogenen Daten erkannt</strong>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:4px">Dieser Text würde unverändert an die KI gehen.</p>
+        <strong style="color:var(--success)">✓ ${t('tutDemoNone')}</strong>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:4px">${t('tutDemoNoneHint')}</p>
       </div>
     `;
   }
 
   return html`
     <div class="aai-tut-result-box">
-      <strong style="color:var(--accent)">🛡 ${result.entity_count} Begriff(e) anonymisiert</strong>
+      <strong style="color:var(--accent)">🛡 ${t('tutDemoAnonymized', { n: result.entity_count })}</strong>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">
         <div>
-          <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Dein Text</div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">${t('tutDemoOrig')}</div>
           <div class="aai-tut-text-box">${result.original}</div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--accent);margin-bottom:4px">Was die KI sieht</div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--accent);margin-bottom:4px">${t('tutDemoSeen')}</div>
           <div
             class="aai-tut-text-box"
             style="border-color:var(--accent-border)"
@@ -69,7 +90,7 @@ function DemoResult({ result }) {
         </div>
       </div>
 
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Ersetzungen</div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${t('tutDemoReplacements')}</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px">
         ${result.entities.map((e, i) => html`
           <span key=${i} style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-sidebar);border-radius:var(--r-full);padding:3px 10px;font-size:12px">
@@ -107,25 +128,59 @@ function LiveDemo() {
 
   return html`
     <${Fragment}>
-      <p style="margin-bottom:10px">Gib Text mit persönlichen Daten ein und sieh was passiert:</p>
+      <p style="margin-bottom:10px">${t('tutDemoIntro')}</p>
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-        <button class="aai-chip aai-tut-example" onClick=${() => setDemoText(EXAMPLE_TEXT)}>Beispiel laden</button>
+        <button class="aai-chip aai-tut-example" onClick=${() => setDemoText(t('tutDemoExampleText'))}>${t('tutDemoExampleBtn')}</button>
       </div>
       <textarea
         class="aai-input"
         rows="3"
-        placeholder="Text mit Namen, Adressen, IBANs, E-Mails eingeben…"
+        placeholder=${t('tutDemoPlaceholder')}
         style="font-size:14px;line-height:1.6;resize:vertical;margin-bottom:8px"
         value=${demoText}
         onInput=${(e) => setDemoText(e.target.value)}
       ></textarea>
       <button class="aai-btn aai-btn--primary aai-btn--sm" onClick=${runDemo} disabled=${loading}>
-        ${loading ? 'Wird analysiert…' : 'Anonymisieren'}
+        ${loading ? t('tutDemoLoading') : t('tutDemoButton')}
       </button>
       <div style="margin-top:12px">
-        ${error ? html`<p style="color:var(--danger);font-size:13px">Fehler: ${error}</p>` : null}
+        ${error ? html`<p style="color:var(--danger);font-size:13px">${error}</p>` : null}
         ${result ? html`<${DemoResult} result=${result} />` : null}
       </div>
+    <//>
+  `;
+}
+
+/* ---- FAQ ---- */
+
+const FAQ_KEYS = [
+  ['faqQ1', 'faqA1'],
+  ['faqQ2', 'faqA2'],
+  ['faqQ3', 'faqA3'],
+  ['faqQ4', 'faqA4'],
+  ['faqQ5', 'faqA5'],
+  ['faqQ6', 'faqA6'],
+  ['faqQ7', 'faqA7'],
+  ['faqQ8', 'faqA8'],
+  ['faqQ9', 'faqA9'],
+  ['faqQ10', 'faqA10'],
+];
+
+function FaqSection() {
+  const [openFaq, setOpenFaq] = useState(-1);
+  return html`
+    <${Fragment}>
+      ${FAQ_KEYS.map(([qKey, aKey], i) => html`
+        <${Step}
+          key=${qKey}
+          num=${null}
+          title=${t(qKey)}
+          open=${openFaq === i}
+          onToggle=${() => setOpenFaq(openFaq === i ? -1 : i)}
+        >
+          <p style="font-size:14px;line-height:1.65">${t(aKey)}</p>
+        <//>
+      `)}
     <//>
   `;
 }
@@ -133,107 +188,88 @@ function LiveDemo() {
 /* ---- Tutorial View ---- */
 
 function TutorialView({ onBack }) {
-  // Accordion state: only step 0 open by default
+  // Subscribe reaktiv auf language-Wechsel — so rendert alles neu wenn
+  // der User in den Einstellungen DE↔EN umschaltet.
+  const lang = signals.language.value; // eslint-disable-line no-unused-vars
+
   const [openStep, setOpenStep] = useState(0);
   const toggle = (i) => setOpenStep(openStep === i ? -1 : i);
 
   return html`
     <div class="aai-tutorial">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <h2>Hilfe & Tutorial</h2>
-        <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${onBack}>← Zurück</button>
+        <h2>${t('tutTitle')}</h2>
+        <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${onBack}>${t('tutBack')}</button>
       </div>
-      <p>Klicke auf ein Thema um es zu öffnen. Dieses Tutorial ist jederzeit über die Sidebar erreichbar.</p>
+      <p>${t('tutIntro')}</p>
 
-      <${Step} num="1" title="So funktioniert AUSTR.AI" open=${openStep === 0} onToggle=${() => toggle(0)}>
+      <${Step} num="1" title=${t('tutSectionHow')} open=${openStep === 0} onToggle=${() => toggle(0)}>
         <div class="aai-tutorial-visual" style="padding:20px;text-align:center">
           <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-            <div class="aai-tut-box aai-tut-box--danger">Dr. Müller<br/>IBAN AT48 2011...</div>
+            <div class="aai-tut-box aai-tut-box--danger">Dr. Müller<br/>IBAN AT48 2011…</div>
             <div class="aai-tut-arrow">→</div>
             <div class="aai-tut-box aai-tut-box--accent">[PERSON_1]<br/>[AT_IBAN_1]</div>
-            <div class="aai-tut-arrow">→ KI →</div>
-            <div class="aai-tut-box aai-tut-box--success">Dr. Müller<br/>IBAN AT48 2011...</div>
+            <div class="aai-tut-arrow">→ AI →</div>
+            <div class="aai-tut-box aai-tut-box--success">Dr. Müller<br/>IBAN AT48 2011…</div>
           </div>
-          <p style="color:var(--text-muted);font-size:13px">Deine Daten werden <strong>lokal</strong> anonymisiert. Die KI sieht nur Platzhalter. Die Antwort wird automatisch wiederhergestellt.</p>
+          <p style="color:var(--text-muted);font-size:13px">${t('tutHowFlow')}</p>
         </div>
+        <p style="font-size:14px;line-height:1.65;margin-top:10px">${t('tutHowBody1')}</p>
+        <p style="font-size:14px;line-height:1.65;margin-top:8px">${t('tutHowBody2')}</p>
       <//>
 
-      <${Step} num="2" title="Probier es aus — Live-Demo" open=${openStep === 1} onToggle=${() => toggle(1)}>
+      <${Step} num="2" title=${t('tutSectionChat')} open=${openStep === 1} onToggle=${() => toggle(1)}>
+        <p style="font-size:14px;line-height:1.65">${t('tutChatBody')}</p>
+        <p style="font-size:14px;line-height:1.65;margin-top:8px">💡 ${t('tutChatPreview')}</p>
+        <p style="font-size:14px;line-height:1.65;margin-top:8px">✏️ ${t('tutChatRename')}</p>
+      <//>
+
+      <${Step} num="3" title=${t('tutSectionAttach')} open=${openStep === 2} onToggle=${() => toggle(2)}>
+        <p style="font-size:14px;line-height:1.65">${t('tutAttachBody')}</p>
+        <ul style="font-size:14px;line-height:1.7;padding-left:20px;margin-top:8px">
+          <li><strong>📎</strong> ${t('tutAttachOpt1')}</li>
+          <li style="margin-top:6px"><strong>🔒</strong> ${t('tutAttachOpt2')}</li>
+        </ul>
+        <p style="font-size:14px;line-height:1.65;margin-top:10px;color:var(--text-muted)">${t('tutAttachDrag')}</p>
+      <//>
+
+      <${Step} num="4" title=${t('tutSectionRedact')} open=${openStep === 3} onToggle=${() => toggle(3)}>
+        <p style="font-size:14px;line-height:1.65">${t('tutRedactBody')}</p>
+        <ul style="font-size:14px;line-height:1.7;padding-left:20px;margin-top:8px">
+          <li>${t('tutRedactPath1')}</li>
+          <li style="margin-top:6px">${t('tutRedactPath2')}</li>
+        </ul>
+        <p style="font-size:13px;margin-top:10px;color:var(--text-muted)">${t('tutRedactFormats')}</p>
+      <//>
+
+      <${Step} num="5" title=${t('tutSectionToolsTab')} open=${openStep === 4} onToggle=${() => toggle(4)}>
+        <p style="font-size:14px;line-height:1.65">${t('tutToolsTabBody')}</p>
+        <ul style="font-size:14px;line-height:1.7;padding-left:20px;margin-top:8px">
+          <li>${t('tutToolsCard1')}</li>
+          <li>${t('tutToolsCard2')}</li>
+          <li>${t('tutToolsCard3')}</li>
+          <li>${t('tutToolsCard4')}</li>
+        </ul>
+        <p style="font-size:14px;line-height:1.65;margin-top:10px;color:var(--text-muted)">${t('tutToolsTabNote')}</p>
+      <//>
+
+      <${Step} num="6" title=${t('tutSectionSettings')} open=${openStep === 5} onToggle=${() => toggle(5)}>
+        <p style="font-size:14px;line-height:1.65">${t('tutSettingsBody')}</p>
+        <ul style="font-size:14px;line-height:1.7;padding-left:20px;margin-top:8px">
+          <li>${t('tutSettingsProvider')}</li>
+          <li style="margin-top:6px">${t('tutSettingsAllow')}</li>
+          <li style="margin-top:6px">${t('tutSettingsDeny')}</li>
+          <li style="margin-top:6px">${t('tutSettingsThreshold')}</li>
+          <li style="margin-top:6px">${t('tutSettingsLang')}</li>
+        </ul>
+      <//>
+
+      <${Step} num="7" title=${t('tutSectionDemo')} open=${openStep === 6} onToggle=${() => toggle(6)}>
         <${LiveDemo} />
       <//>
 
-      <${Step} num="3" title="Chat mit Privacy-Schutz" open=${openStep === 2} onToggle=${() => toggle(2)}>
-        <div class="aai-tutorial-visual" style="padding:16px">
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;gap:8px;align-items:start">
-              <div class="aai-tut-avatar" style="background:var(--bg-active)">Du</div>
-              <div>
-                <div style="font-size:14px">Schreibe eine Antwort an Dr. Müller…</div>
-                <div style="display:flex;gap:4px;margin-top:4px">
-                  <span class="aai-tut-badge">🛡 1 Begriff anonymisiert</span>
-                  <span class="aai-tut-entity">PERSON → [PERSON_1]</span>
-                </div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:start">
-              <div class="aai-tut-avatar" style="background:var(--accent);color:white">KI</div>
-              <div style="font-size:14px;color:var(--text-secondary)">Sehr geehrter Dr. Müller, …</div>
-            </div>
-          </div>
-        </div>
-        <p style="margin-top:10px;font-size:13px">Wechsle links auf <strong>Chat</strong>, wähle ein Modell, und chatte los. Unter jeder Nachricht siehst du, welche Daten geschützt wurden.</p>
-        <p style="font-size:13px;margin-top:4px">💡 <strong>Tipp:</strong> Klicke auf das <strong>Auge-Symbol</strong> neben dem Senden-Button für eine Vorschau bevor die Nachricht rausgeht.</p>
-      <//>
-
-      <${Step} num="4" title="Werkzeuge: Manuell anonymisieren" open=${openStep === 3} onToggle=${() => toggle(3)}>
-        <div class="aai-tutorial-visual" style="padding:16px">
-          <div style="display:flex;gap:3px;margin-bottom:12px">
-            <span class="aai-tut-step-pill active">1 Original</span>
-            <span class="aai-tut-step-pill active">2 Erkennung</span>
-            <span class="aai-tut-step-pill active">3 Anonymisiert</span>
-            <span class="aai-tut-step-pill">4 LLM</span>
-            <span class="aai-tut-step-pill">5 Re-hydriert</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-secondary)">Schritt für Schritt siehst du, was passiert: Text eingeben → Entitäten erkennen → Anonymisieren → optional an LLM senden → Antwort wiederherstellen.</p>
-        </div>
-        <p style="margin-top:8px;font-size:13px">Wechsle links auf <strong>Werkzeuge</strong>. Dort kannst du Texte anonymisieren, Entitäten entfernen und die Mapping-Tabelle einsehen — ohne etwas an eine KI zu senden.</p>
-      <//>
-
-      <${Step} num="5" title="Einstellungen & KI-Anbieter" open=${openStep === 4} onToggle=${() => toggle(4)}>
-        <div class="aai-tutorial-visual" style="padding:16px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="aai-tut-setting-card">
-              <strong>Ollama</strong><br/><span style="font-size:12px;color:var(--text-muted)">Komplett lokal, kein API-Key</span>
-            </div>
-            <div class="aai-tut-setting-card">
-              <strong>Claude / GPT</strong><br/><span style="font-size:12px;color:var(--text-muted)">Cloud, API-Key nötig</span>
-            </div>
-          </div>
-        </div>
-        <p style="margin-top:8px;font-size:13px">Klicke unten links auf <strong>Einstellungen</strong>. Dort konfigurierst du deinen KI-Anbieter, die Erkennungs-Schwelle und die Allow-/Deny-Listen.</p>
-        <p style="font-size:13px;margin-top:4px">💡 <strong>Für maximale Privatsphäre</strong> nutze Ollama — dann verlassen keine Daten deinen Rechner.</p>
-      <//>
-
-      <${Step} num="6" title="Du hast die volle Kontrolle" open=${openStep === 5} onToggle=${() => toggle(5)}>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div class="aai-tut-control-card">
-            <strong>✓ Bestätigungsschritt</strong>
-            <p>Jede Nachricht zeigt dir die Anonymisierung <em>bevor</em> sie gesendet wird.</p>
-          </div>
-          <div class="aai-tut-control-card">
-            <strong>✓ Allow-List</strong>
-            <p>Begriffe die nie anonymisiert werden sollen.</p>
-          </div>
-          <div class="aai-tut-control-card">
-            <strong>✓ Transparenz-Log</strong>
-            <p>Prüfe jederzeit, was wirklich ans LLM ging.</p>
-          </div>
-          <div class="aai-tut-control-card">
-            <strong>✓ Verschlüsselt</strong>
-            <p>Gespräche lokal mit AES gespeichert.</p>
-          </div>
-        </div>
-      <//>
+      <h3 style="margin-top:32px;margin-bottom:8px">${t('tutSectionFaq')}</h3>
+      <${FaqSection} />
     </div>
   `;
 }
@@ -241,7 +277,6 @@ function TutorialView({ onBack }) {
 /* ---- Navigation helpers ---- */
 
 function goBack() {
-  // Return to the view that was active before the tutorial was opened.
   const mode = document.querySelector('.aai-sidebar-nav-btn.active')?.dataset.mode;
   if (mode === 'tools') {
     if (window.__aai_showView) window.__aai_showView('tool-view');
@@ -259,16 +294,20 @@ export function init() {
   container = document.getElementById('tutorial-view');
   if (!container) return;
 
-  // Inject a "Hilfe & Tutorial" button into the sidebar footer. This is a
-  // side-effectful DOM mutation into a container that isn't managed by
-  // Preact yet (sidebar footer is still static HTML). Phase 11 removes it.
+  // Inject a "Help & Tutorial" button into the sidebar footer. The label is
+  // set reactively below (subscribe to signals.language) so it switches
+  // languages without a reload.
   const footer = document.querySelector('.aai-sidebar-footer');
   if (footer && !document.getElementById('btn-tutorial')) {
     const btn = document.createElement('button');
     btn.id = 'btn-tutorial';
     btn.className = 'aai-btn aai-btn--ghost';
     btn.style.cssText = 'width:100%;justify-content:flex-start';
-    btn.innerHTML = `${TUTORIAL_HELP_ICON}<span>Hilfe & Tutorial</span>`;
+    const updateLabel = () => {
+      btn.innerHTML = `${TUTORIAL_HELP_ICON}<span>${t('helpTutorial')}</span>`;
+    };
+    updateLabel();
+    signals.language.subscribe(updateLabel);
     btn.addEventListener('click', show);
     footer.insertBefore(btn, footer.firstChild);
   }

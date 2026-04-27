@@ -93,15 +93,18 @@ class AustrianPhoneRecognizer(PatternRecognizer):
     """Erkennung österreichischer Telefonnummern."""
 
     def __init__(self) -> None:
+        # Bounded \d-Quantifier ({0,15} statt {0,}) um ReDoS-Backtracking
+        # auf lange Ziffernketten auszuschließen. Telefonnummern haben nie
+        # mehr als ~15 Ziffern (E.164 Standard).
         patterns = [
             Pattern(
                 name="at_phone_international",
-                regex=r"\+43\s?\d{1,4}[\s/\-]?\d{3,}[\s/\-]?\d{0,}",
+                regex=r"\+43\s?\d{1,4}[\s/\-]?\d{3,15}[\s/\-]?\d{0,15}",
                 score=0.85,
             ),
             Pattern(
                 name="at_phone_local",
-                regex=r"\b0\d{1,4}[\s/\-]?\d{3,}[\s/\-]?\d{0,}",
+                regex=r"\b0\d{1,4}[\s/\-]?\d{3,15}[\s/\-]?\d{0,15}",
                 score=0.7,
             ),
         ]
@@ -916,6 +919,14 @@ class FirstNameRecognizer(EntityRecognizer):
     ) -> list[RecognizerResult]:
         results = []
 
+        # Cap input length: bei einem hochgeladenen Text mit 10 MB würde
+        # `text.find(word, pos)` innerhalb der Wort-Schleife O(n²) Verhalten
+        # zeigen und die CPU minutenlang auslasten. 200 KB reicht für jedes
+        # realistische Dokument — Spreadsheet-Modus extrahiert ohnehin
+        # separat und gibt uns normalisierte Zellentexte.
+        if len(text) > 200_000:
+            text = text[:200_000]
+
         # Tokenize by whitespace, check each capitalized word
         words = text.split()
         pos = 0
@@ -950,6 +961,330 @@ class FirstNameRecognizer(EntityRecognizer):
         return results
 
 
+class AustrianAddressRecognizer(EntityRecognizer):
+    """Erkennung österreichischer Adressen.
+
+    Adressen sind in deutschsprachigen Texten heterogen: Straßenname (oft mit
+    "-straße", "-gasse", "-platz", "-weg", "-ring", "-allee", "-promenade",
+    "-steig", "-zeile", "-kai") + Hausnummer, plus 4-stellige PLZ + Ortsname.
+    GLiNER ist auf englische Patterns trainiert und erkennt diese Form
+    unzuverlässig — diese Klasse schließt die Lücke deterministisch.
+
+    Drei Match-Modi (jeweils als LOCATION emittiert):
+      1. Vollständige Adresse (Straße + Hausnummer + PLZ + Ort) — höchste Confidence
+      2. Straße + Hausnummer (auch ohne PLZ-Teil im selben Token-Fenster)
+      3. PLZ + Ortsname (4-stellige PLZ vor Ortsname)
+    """
+
+    # Straßennamen-Suffixe (case-insensitive). Liste aus typischen
+    # österreichischen Adress-Beobachtungen. "ring", "kai" usw. brauchen
+    # keinen Bindestrich-Match weil sie als ganzes Wort erkannt werden.
+    _STREET_SUFFIXES = (
+        r"stra(?:ß|ss)e", r"gasse", r"platz", r"weg", r"ring",
+        r"allee", r"promenade", r"steig", r"zeile", r"kai",
+        r"ufer", r"berg", r"hof", r"markt", r"feld", r"park",
+    )
+    _STREET_SUFFIX_RE = "|".join(_STREET_SUFFIXES)
+
+    # Beispiele: "Ferdinand Porsche-Ring 3", "Mariahilfer Straße 88-92",
+    # "Kärntner Ring 5", "Stephansplatz 1", "Margaretengürtel 100".
+    # Akzeptiert: 1-3 Wörter Straßenname (inkl. Bindestrich-Komponenten),
+    # gefolgt von Hausnummer (1-4 Ziffern, optional "/Stiege" oder Buchstabe).
+    # Suffix-Match ist case-insensitive, damit "Ring" / "Straße" / "Gasse"
+    # mit Eigenname-Großschreibung ebenso matchen wie "ring" / "straße".
+    # Inline-Group `(?i:...)` macht NUR den Suffix-Teil case-insensitive,
+    # damit "Ring" / "Straße" / "ring" / "straße" alle matchen, aber die
+    # Großschreibungs-Anker am Anfang der Straßennamen-Wörter erhalten bleiben.
+    # Sonst greift IGNORECASE auf das ganze Pattern und matcht auch
+    # Verb-Wörter wie "wohnen".
+    STREET_RE = re.compile(
+        rf"\b(?:[A-ZÄÖÜ][a-zäöüß]+(?:[- ][A-ZÄÖÜ][a-zäöüß]+){{0,3}})"
+        rf"[- ]?(?i:{_STREET_SUFFIX_RE})\s+\d{{1,4}}[a-zA-Z]?(?:[\-/]\d{{1,3}})?",
+        re.UNICODE,
+    )
+
+    # 4-stellige österreichische PLZ + Ortsname (1-3 Worte, Großbuchstabe-Anfang).
+    # Beispiel: "2700 Wiener Neustadt", "1010 Wien", "5020 Salzburg".
+    PLZ_CITY_RE = re.compile(
+        r"\b\d{4}\s+[A-ZÄÖÜ][a-zäöüß]+(?:[- ][A-ZÄÖÜ][a-zäöüß]+){0,2}\b",
+        re.UNICODE,
+    )
+
+    FULL_ADDRESS_RE = re.compile(
+        rf"\b(?:[A-ZÄÖÜ][a-zäöüß]+(?:[- ][A-ZÄÖÜ][a-zäöüß]+){{0,3}})"
+        rf"[- ]?(?i:{_STREET_SUFFIX_RE})\s+\d{{1,4}}[a-zA-Z]?(?:[\-/]\d{{1,3}})?"
+        r",?\s*\d{4}\s+[A-ZÄÖÜ][a-zäöüß]+(?:[- ][A-ZÄÖÜ][a-zäöüß]+){0,2}\b",
+        re.UNICODE,
+    )
+
+    def __init__(self) -> None:
+        super().__init__(
+            supported_entities=["LOCATION"],
+            name="Austrian Address Recognizer",
+            supported_language="de",
+        )
+
+    def load(self) -> None:
+        pass
+
+    def analyze(self, text: str, entities=None, nlp_artifacts=None):
+        if entities and "LOCATION" not in entities:
+            return []
+        results: list[RecognizerResult] = []
+        consumed: list[tuple[int, int]] = []
+
+        def _overlaps(s: int, e: int) -> bool:
+            return any(not (e <= cs or s >= ce) for cs, ce in consumed)
+
+        # Pass 1: full address (highest score)
+        for m in self.FULL_ADDRESS_RE.finditer(text):
+            results.append(RecognizerResult(
+                entity_type="LOCATION", start=m.start(), end=m.end(), score=0.95,
+            ))
+            consumed.append((m.start(), m.end()))
+
+        # Pass 2: street + number (street-only match, e.g. "Mariahilfer Straße 88")
+        for m in self.STREET_RE.finditer(text):
+            if _overlaps(m.start(), m.end()):
+                continue
+            results.append(RecognizerResult(
+                entity_type="LOCATION", start=m.start(), end=m.end(), score=0.85,
+            ))
+            consumed.append((m.start(), m.end()))
+
+        # Pass 3: PLZ + city
+        for m in self.PLZ_CITY_RE.finditer(text):
+            if _overlaps(m.start(), m.end()):
+                continue
+            results.append(RecognizerResult(
+                entity_type="LOCATION", start=m.start(), end=m.end(), score=0.85,
+            ))
+            consumed.append((m.start(), m.end()))
+
+        return results
+
+
+class AustrianStateAndCityRecognizer(PatternRecognizer):
+    """Erkennung österreichischer Bundesländer und großer Städte als LOCATION.
+
+    Reine Wortliste — präzise und kontextfrei. Bewusst konservativ gehalten
+    (nur Hauptstädte und Bundesländer), damit Texte über andere Themen
+    nicht fälschlich anonymisiert werden ("Salzburg" als Mozart-Geburtsort
+    ist Public Knowledge, aber als Adress-Bestandteil ist es PII)."""
+
+    AT_PLACES = (
+        # Bundesländer
+        "Wien", "Niederösterreich", "Oberösterreich", "Steiermark", "Kärnten",
+        "Salzburg", "Tirol", "Vorarlberg", "Burgenland",
+        # Hauptstädte / große Bezirksstädte
+        "Graz", "Linz", "Innsbruck", "Klagenfurt", "Villach", "Wels",
+        "St. Pölten", "Sankt Pölten", "Dornbirn", "Bregenz", "Wiener Neustadt",
+        "Eisenstadt", "Steyr", "Krems", "Leoben", "Mödling", "Baden",
+    )
+
+    def __init__(self) -> None:
+        # \b vor und nach jedem Ort, damit "Wien" nicht in "Wiener" matcht
+        # (Wiener Neustadt ist ein eigener Listeneintrag).
+        patterns = [
+            Pattern(name=f"at_place_{i}", regex=rf"\b{re.escape(p)}\b", score=0.7)
+            for i, p in enumerate(self.AT_PLACES)
+        ]
+        super().__init__(
+            supported_entity="LOCATION",
+            patterns=patterns,
+            name="Austrian Place Recognizer",
+            supported_language="de",
+        )
+
+
+class AustrianAcademicTitleRecognizer(PatternRecognizer):
+    """Erkennt österreichische akademische Titel und Grade.
+
+    Beispiele: "Ing. Peter Völkl", "Dr. Maria Huber", "Univ.-Prof. Schmidt",
+    "Mag. (FH) Wagner", "DI Dr. Müller", "BA MA MSc Bauer".
+
+    Wir erkennen den Titel selbst als PERSON-Bestandteil. Der nachfolgende
+    Personenname wird durch GLiNER/spaCy ohnehin gefangen — der Titel ist
+    der Verstärker, der oft den Unterschied zwischen "ist Person" und
+    "wird ignoriert" macht.
+    """
+
+    # Titel die mit `.` enden — Punkt grenzt sauber ab, kein Extra-Boundary
+    # nötig. Auch zusammengesetzte Formen ("Univ.-Prof.", "Ao. Univ.-Prof.").
+    TITLES_WITH_DOT = (
+        r"Ing\.", r"Dipl\.[- ]?Ing\.", r"Dr\.", r"DDr\.",
+        r"Mag\.(?:\s*\(FH\))?", r"Mag\.[a]",
+        r"Univ\.[- ]?Prof\.", r"Prof\.", r"FH[- ]?Prof\.",
+        r"Doz\.", r"Priv\.[- ]?Doz\.", r"Ao\.\s*Univ\.[- ]?Prof\.",
+        r"LL\.M\.",
+    )
+    # Titel ohne Punkt — kurze Akronyme. Brauchen einen Negative-Lookahead
+    # gegen Kleinbuchstaben am Ende, sonst matcht "BA" in "Bachelor" und
+    # "Ma" in "Maria".
+    TITLES_NO_DOT = (
+        r"DI", r"DIin", r"Drin", r"Magin", r"PD", r"LLM",
+        r"BA", r"BSc", r"MA", r"MSc", r"MBA", r"PhD",
+        r"BEd", r"MEd", r"BBA",
+    )
+
+    def __init__(self) -> None:
+        with_dot = "|".join(self.TITLES_WITH_DOT)
+        no_dot = "|".join(self.TITLES_NO_DOT)
+        # Pattern für Titel-Ketten — beliebige Mischung aus mit-Punkt und
+        # ohne-Punkt-Titeln, durch Whitespace getrennt. Jeder ohne-Punkt-
+        # Titel hat seinen eigenen Negative-Lookahead damit "MA" nicht in
+        # "Maria" matcht.
+        any_title = rf"(?:(?:{with_dot})|(?:{no_dot})(?![a-zäöüß]))"
+        patterns = [
+            Pattern(
+                name="at_academic_title",
+                regex=rf"\b{any_title}(?:\s+{any_title}){{0,4}}",
+                score=0.7,
+            ),
+        ]
+        super().__init__(
+            supported_entity="PERSON",
+            patterns=patterns,
+            name="Austrian Academic Title Recognizer",
+            supported_language="de",
+            context=["Autor", "Verfasser", "Studiengangsleiter", "Vortragender",
+                     "Dozent", "Professor", "Lektor", "Mitarbeiter"],
+        )
+
+
+class AustrianEducationalInstitutionRecognizer(PatternRecognizer):
+    """Erkennt österreichische Bildungseinrichtungen.
+
+    Universitäten, Fachhochschulen, Schulen und Akronyme. Pattern-basiert
+    weil die Liste überschaubar und stabil ist — eine Universität verschwindet
+    selten und neue kommen langsam.
+
+    Die Kategorisierung als ORGANIZATION ist defensiv: streng genommen ist
+    der Name einer Universität öffentliches Wissen, aber in Verbindung mit
+    Personen (Autor, Studiengangsleiter, Mitarbeiter) wird die Institution
+    zum identifying Information. Im Anonymisierungs-Kontext lieber ein
+    bisschen mehr maskieren als zu wenig.
+    """
+
+    AT_INSTITUTIONS = (
+        # Universitäten (Vollnamen + Akronyme)
+        "Universität Wien", "Uni Wien",
+        "Universität Graz", "Uni Graz", "Karl-Franzens-Universität",
+        "Universität Innsbruck", "Uni Innsbruck",
+        "Universität Salzburg", "Uni Salzburg",
+        "Universität Linz", "Uni Linz", "Johannes Kepler Universität", "JKU",
+        "Universität Klagenfurt", "Uni Klagenfurt", "Alpen-Adria-Universität",
+        "Wirtschaftsuniversität Wien", "Wirtschaftsuniversität", "WU Wien", "WU",
+        "Technische Universität Wien", "TU Wien",
+        "Technische Universität Graz", "TU Graz",
+        "Medizinische Universität Wien", "MedUni Wien", "MUW",
+        "Medizinische Universität Graz", "MedUni Graz",
+        "Medizinische Universität Innsbruck", "MedUni Innsbruck",
+        "Universität für Bodenkultur", "BOKU",
+        "Universität für angewandte Kunst", "Angewandte",
+        "Akademie der bildenden Künste",
+        "Veterinärmedizinische Universität", "VetMedUni",
+        "Montanuniversität Leoben", "Montan-Uni",
+        # Fachhochschulen
+        "FH Technikum Wien", "Technikum Wien",
+        "FH Wien", "FH Wien der WKW",
+        "FH Campus Wien",
+        "FH Burgenland", "Fachhochschule Burgenland",
+        "FH St. Pölten", "FH Sankt Pölten",
+        "FH Krems", "IMC Krems",
+        "FH Wiener Neustadt", "Ferdinand Porsche FernFH", "FernFH",
+        "FH Salzburg", "Fachhochschule Salzburg",
+        "FH Joanneum", "Joanneum",
+        "FH Kärnten", "Fachhochschule Kärnten",
+        "FH Vorarlberg", "Fachhochschule Vorarlberg",
+        "FH Kufstein", "Kufstein Tirol",
+        "FH Oberösterreich", "FH OÖ", "Fachhochschule Oberösterreich",
+        "MCI Innsbruck", "MCI Management Center Innsbruck",
+        # Schultypen (Akronyme)
+        "HTBLuVA", "HTBLA", "HTL", "BHAK", "HAK", "HAS", "BAfEP",
+        "BORG", "BG", "BRG", "AHS", "NMS", "PTS", "WMS",
+    )
+
+    def __init__(self) -> None:
+        # Längste zuerst, damit "Universität Wien" matched bevor "Wien"
+        # einzeln greift.
+        sorted_inst = sorted(self.AT_INSTITUTIONS, key=len, reverse=True)
+        patterns = [
+            Pattern(name=f"at_inst_{i}", regex=rf"\b{re.escape(inst)}\b", score=0.85)
+            for i, inst in enumerate(sorted_inst)
+        ]
+        super().__init__(
+            supported_entity="ORGANIZATION",
+            patterns=patterns,
+            name="Austrian Educational Institution Recognizer",
+            supported_language="de",
+        )
+
+
+class AustrianPublicBodyRecognizer(PatternRecognizer):
+    """Erkennt österreichische Behörden, öffentliche Stellen und große NPOs."""
+
+    AT_BODIES = (
+        # Bundesministerien
+        "Bundesministerium für Inneres", "BMI",
+        "Bundesministerium für Justiz", "BMJ",
+        "Bundesministerium für Finanzen", "BMF",
+        "Bundesministerium für Landesverteidigung", "BMLV",
+        "Bundesministerium für Bildung", "BMBWF",
+        "Bundesministerium für Soziales", "BMSGPK",
+        "Bundesministerium für Klimaschutz", "BMK",
+        "Bundesministerium für Arbeit", "BMA",
+        # Gerichte und Gerichtsbarkeit
+        "Verfassungsgerichtshof", "VfGH",
+        "Verwaltungsgerichtshof", "VwGH",
+        "Oberster Gerichtshof", "OGH",
+        "Bundesverwaltungsgericht", "BVwG",
+        "Bezirksgericht", "Landesgericht",
+        # Sicherheitsbehörden
+        "Bundespolizei", "Landespolizeidirektion",
+        "Bundeskriminalamt", "BK",
+        "Bundesheer", "Österreichisches Bundesheer",
+        "Heeres-Nachrichtenamt", "Heeresabwehramt",
+        "Direktion Staatsschutz und Nachrichtendienst", "DSN",
+        # Sozialversicherung + Gesundheit
+        "Österreichische Gesundheitskasse", "ÖGK",
+        "Pensionsversicherungsanstalt", "PVA",
+        "Sozialversicherungsanstalt der Selbständigen", "SVS",
+        "Arbeiterkammer", "AK", "AK Wien",
+        "Wirtschaftskammer", "WKO", "WK Österreich",
+        # Statistik / Datenschutz
+        "Statistik Austria", "Datenschutzbehörde", "DSB",
+        # Infrastruktur
+        "ÖBB", "Österreichische Bundesbahnen",
+        "ASFINAG", "Wiener Linien", "Post AG",
+        "Energie AG", "Verbund AG",
+        # Rundfunk
+        "ORF", "Österreichischer Rundfunk",
+        # Große NPOs
+        "Österreichisches Rotes Kreuz", "Rotes Kreuz",
+        "Caritas", "Caritas Österreich",
+        "Diakonie", "Volkshilfe", "Hilfswerk",
+        "Samariterbund", "Arbeiter-Samariter-Bund",
+        # Banken (Marktteilnehmer mit hoher Identifikationskraft)
+        "Österreichische Nationalbank", "OeNB",
+        "Erste Bank", "Erste Group", "Bank Austria",
+        "Raiffeisen Bank International", "RBI", "BAWAG",
+    )
+
+    def __init__(self) -> None:
+        sorted_bodies = sorted(self.AT_BODIES, key=len, reverse=True)
+        patterns = [
+            Pattern(name=f"at_body_{i}", regex=rf"\b{re.escape(b)}\b", score=0.85)
+            for i, b in enumerate(sorted_bodies)
+        ]
+        super().__init__(
+            supported_entity="ORGANIZATION",
+            patterns=patterns,
+            name="Austrian Public Body Recognizer",
+            supported_language="de",
+        )
+
+
 def get_all_austrian_recognizers() -> list[EntityRecognizer]:
     """Returns a list of all custom recognizers."""
     return [
@@ -968,4 +1303,13 @@ def get_all_austrian_recognizers() -> list[EntityRecognizer]:
         EUDataProtectionRecognizer(),  # remaining: IBANs, credit cards, tax numbers
         SensitiveDataRecognizer(),
         FirstNameRecognizer(),
+        # Austrian address coverage (added 26.04.2026 after a real-world miss
+        # of "Ferdinand Porsche-Ring 3, 2700 Wiener Neustadt" in a study booklet)
+        AustrianAddressRecognizer(),
+        AustrianStateAndCityRecognizer(),
+        # Austrian academic + institutional coverage (added 27.04.2026 after
+        # a study-booklet author bio leaked names + universities + employer)
+        AustrianAcademicTitleRecognizer(),
+        AustrianEducationalInstitutionRecognizer(),
+        AustrianPublicBodyRecognizer(),
     ]

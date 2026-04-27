@@ -52,6 +52,12 @@ def _extract_pdf(data: bytes) -> ExtractionResult:
     except ImportError:
         raise ImportError("PDF-Support braucht PyMuPDF: pip install austrai")
     doc = fitz.open(stream=data, filetype="pdf")
+    # PDF-Bombe abwehren: eine PDF mit 100.000 Seiten würde hier einen
+    # OOM auslösen. Reale Dokumente haben selten >500 Seiten.
+    MAX_PDF_PAGES = 1000
+    if len(doc) > MAX_PDF_PAGES:
+        doc.close()
+        raise ValueError(f"PDF has too many pages ({len(doc)}). Max supported: {MAX_PDF_PAGES}")
     pages = [page.get_text() for page in doc]
     text = "\n\n".join(pages).strip()
     warnings: list[str] = []

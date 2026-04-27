@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "austrai"
-version = "3.1.2"
+version = "3.2.0"
 description = "AUSTR.AI — Lokaler KI-Assistent mit eingebautem Datenschutz. Chat, Anonymisierung, Bildschwärzung."
 requires-python = ">=3.10"
 dependencies = [
@@ -33,7 +33,11 @@ dependencies = [
 [project.optional-dependencies]
 memory = ["chromadb>=0.5", "sentence-transformers>=3.0"]
 llm = ["llama-cpp-python>=0.3"]
-all = ["austrai[memory,llm]"]
+# Auto-Router Stage 2 (embedding-based intent classifier). Without this,
+# the router falls back to keyword rules (Stage 3). Local LLM (Stage 1)
+# works whenever Ollama or LMStudio is reachable, no extra dependency.
+routing = ["sentence-transformers>=3.0"]
+all = ["austrai[memory,llm,routing]"]
 
 [project.scripts]
 aai = "austrai_proxy.cli:main"
@@ -48,4 +52,7 @@ austrai_proxy = [
     "chat/css/*.css",
     "chat/js/*.js",
     "chat/js/vendor/*.js",
+    "chat/js/vendor/katex/*.js",
+    "chat/js/vendor/katex/*.css",
+    "chat/js/vendor/katex/fonts/*.woff2",
 ]

@@ -9,7 +9,7 @@
  * in Phase 10 when chat.js switches to reactive <AttachmentList>.
  */
 
-import { h, render } from 'preact';
+import { h, render, Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import htm from 'htm';
 import { signals, toast, batch, saveMessages } from './state.js';
@@ -29,12 +29,12 @@ import { refreshList } from './sidebar.js';
  * Preact render everything reactively.
  */
 
-async function ensureConversation() {
+async function ensureConversation(title) {
   if (signals.currentConversationId.value) return signals.currentConversationId.value;
   const provider = signals.provider.value;
   const model = signals.model.value;
   try {
-    const { id } = await api.createConversation({ provider, model });
+    const { id } = await api.createConversation({ provider, model, title: title || t('newChatDefault') });
     signals.currentConversationId.value = id;
     await refreshList();
     return id;
@@ -86,36 +86,131 @@ ${anonymized || '(leer)'}
 \`\`\`${mappings}`;
 }
 
-function markdownForRedact(result, filename) {
-  const mimeType = result.mime_type || 'image/png';
-  const dataUrl = `data:${mimeType};base64,${result.redacted_base64}`;
-  return `**📷 ${filename} — geschwärzt**  \n${result.entities_redacted || 0} Bereiche entfernt.
-
-![${filename} geschwärzt](${dataUrl})
-
-[Geschwärzte Datei herunterladen](${dataUrl})`;
-}
+// NOTE: `markdownForRedact` wurde in 3.1.10 entfernt. Früher hat es einen
+// Markdown-String mit data:-URL für das geschwärzte Bild erzeugt — das
+// wurde durch den markdown.js Link-Parser geschleust und produzierte
+// kaputte Links im Chat (Safari öffnet große data-URLs nicht im neuen
+// Tab). Der neue Flow nutzt `msg.attachment = { kind: 'redact', base64 }`
+// und der MessageBubble-Renderer erzeugt daraus eine Blob-URL. Siehe
+// chat.js::RedactEmbed.
 
 async function addToolResultToChat(kind, result, filename) {
-  const convId = await ensureConversation();
+  // Conversation wird mit dem Dateinamen (gekürzt) betitelt — so ist der
+  // Sidebar-Eintrag sofort aussagekräftig ("Rechnung-2026.pdf") statt "New Chat".
+  const shortName = filename.length > 60 ? filename.slice(0, 57) + '…' : filename;
+  const convId = await ensureConversation(shortName);
   switchToChatView();
 
   const userContent = kind === 'redact'
     ? `📷 ${filename} zum Schwärzen hochgeladen`
     : `📄 ${filename} zur Anonymisierung hochgeladen`;
 
-  const assistantContent = kind === 'redact'
-    ? markdownForRedact(result, filename)
-    : markdownForUpload(result, filename);
+  let assistantMsg;
+  if (kind === 'redact') {
+    // Redact-Ergebnisse als strukturiertes Attachment speichern — der
+    // MessageBubble-Renderer erkennt `attachment.kind === 'redact'` und
+    // erzeugt daraus ein <img> + Download-Button mit Blob-URL. So bleibt
+    // die data-URL nicht im Markdown stecken (wo Safari sie in neuen Tabs
+    // blockiert).
+    assistantMsg = {
+      role: 'assistant',
+      content: `**📷 ${filename}** — ${result.entities_redacted || 0} Bereiche geschwärzt`,
+      meta: null,
+      attachment: {
+        kind: 'redact',
+        base64: result.redacted_base64,
+        mimeType: result.mime_type || 'image/png',
+        filename,
+        entitiesRedacted: result.entities_redacted || 0,
+      },
+    };
+  } else {
+    assistantMsg = {
+      role: 'assistant',
+      content: markdownForUpload(result, filename),
+      meta: null,
+    };
+  }
 
   const newMessages = [
     ...signals.messages.value,
     { role: 'user', content: userContent, meta: null },
-    { role: 'assistant', content: assistantContent, meta: null },
+    assistantMsg,
   ];
   signals.messages.value = newMessages;
   if (convId) saveMessages(convId, newMessages);
   await refreshList();
+}
+
+/* Redact im Chat mit Loading-Placeholder ----
+ * Fügt User-Message + Loading-Assistant-Message in den Chat ein BEVOR der
+ * Server-Call startet, damit der User sofort sieht dass etwas passiert.
+ * Beim Erfolg wird der Placeholder durch das echte Redact-Attachment
+ * ersetzt; bei Fehler wird er entfernt und die Exception propagiert. */
+async function redactInChat(file) {
+  const shortName = file.name.length > 60 ? file.name.slice(0, 57) + '…' : file.name;
+  const convId = await ensureConversation(shortName);
+  switchToChatView();
+
+  const tempId = `tmp-redact-${Date.now()}-${Math.random()}`;
+  const userMsg = { role: 'user', content: `📷 ${file.name} zum Schwärzen hochgeladen`, meta: null };
+  const placeholder = {
+    role: 'assistant',
+    content: '',
+    meta: null,
+    _tempId: tempId,
+    attachment: { kind: 'redact', filename: file.name, loading: true },
+  };
+  signals.messages.value = [...signals.messages.value, userMsg, placeholder];
+
+  try {
+    const result = await api.redactImage(file);
+    const finalMsg = {
+      role: 'assistant',
+      content: `**📷 ${file.name}** — ${result.entities_redacted || 0} Bereiche geschwärzt`,
+      meta: null,
+      attachment: {
+        kind: 'redact',
+        base64: result.redacted_base64,
+        mimeType: result.mime_type || 'image/png',
+        filename: file.name,
+        entitiesRedacted: result.entities_redacted || 0,
+      },
+    };
+    // Guard: falls der User während des Redact-Uploads die Konversation
+    // gewechselt hat (z.B. "Neuer Chat" geklickt), darf die Ersetzung
+    // nicht in die aktuelle UI-View geschrieben werden — das würde der
+    // neuen Konversation einen falschen Eintrag spendieren.
+    const stillActive = convId === signals.currentConversationId.value;
+    if (stillActive) {
+      const updated = signals.messages.value.map((m) => m._tempId === tempId ? finalMsg : m);
+      signals.messages.value = updated;
+      if (convId) saveMessages(convId, updated);
+    } else if (convId) {
+      // Konversation wurde gewechselt: Nachricht dennoch für die alte
+      // Konversation persistieren, damit der User sie findet wenn er
+      // zurückwechselt. Wir können die cached messages aus dem alten
+      // Closure nicht nutzen (wurden überschrieben), also laden wir
+      // den aktuellen Stand und hängen die finale Message an.
+      try {
+        const cached = JSON.parse(localStorage.getItem(`aai_msg_${convId}`) || '[]');
+        const filtered = cached.filter((m) => m._tempId !== tempId);
+        filtered.push(finalMsg);
+        saveMessages(convId, filtered);
+      } catch { /* localStorage nicht verfügbar — DB-Record bleibt */ }
+    }
+    await refreshList();
+    return result;
+  } catch (err) {
+    // Placeholder auch bei Fehler nur entfernen wenn wir noch in der
+    // ursprünglichen Konversation sind — sonst lassen wir die aktuelle
+    // View unberührt.
+    if (convId === signals.currentConversationId.value) {
+      const updated = signals.messages.value.filter((m) => m._tempId !== tempId);
+      signals.messages.value = updated;
+    }
+    throw err;
+  }
 }
 
 const html = htm.bind(h);
@@ -171,19 +266,49 @@ function DropOverlay() {
   `;
 }
 
-/* ---- File processing ---- */
+/* ---- File processing ----
+ *
+ * `source` controls where the result lands:
+ *   - 'chat'  (default): create/reuse a conversation and insert tool-user +
+ *                        tool-assistant messages, switch to chat-view.
+ *   - 'tools': render the result below the Werkzeuge tool cards via
+ *              `signals.toolResult`. No conversation is created and nothing
+ *              is written to the sidebar.
+ */
 
-async function processFiles(files, mode) {
+function publishToolResult(kind, result, filename) {
+  // Werkzeuge-Tab rendert das Ergebnis selbst (tools.js) — wir übergeben
+  // nur die Rohdaten, damit das Panel voll interaktiv sein kann (voller
+  // Text, editierbare Textarea, Copy/Download-Buttons, echtes <img>).
+  signals.toolResult.value = { kind, result, filename };
+}
+
+async function processFiles(files, mode, source = 'chat') {
   for (const file of files) {
-    toast(`${t('uploadProcessing')} ${file.name}…`, 'info', 2000);
+    const useToolsPanel = source === 'tools' && (mode === 'redact' || mode === 'anonymize');
+    if (useToolsPanel) {
+      signals.toolResult.value = null;
+      signals.toolLoading.value = { kind: mode, filename: file.name };
+    } else {
+      toast(`${t('uploadProcessing')} ${file.name}…`, 'info', 2000);
+    }
     try {
       if (mode === 'redact') {
-        const result = await api.redactImage(file);
-        await addToolResultToChat('redact', result, file.name);
-        toast(`${file.name} geschwärzt ✓ — ${result.entities_redacted || 0} Bereiche entfernt`, 'success', 5000);
+        if (source === 'tools') {
+          const result = await api.redactImage(file);
+          publishToolResult('redact', result, file.name);
+          toast(`${file.name} geschwärzt ✓ — ${result.entities_redacted || 0} Bereiche entfernt`, 'success', 5000);
+        } else {
+          // Chat-Flow: redactInChat fügt selbst einen Loading-Placeholder
+          // ein und ersetzt ihn beim Erfolg — so sieht der User sofort,
+          // dass etwas passiert, und muss nicht blind auf den Toast warten.
+          const result = await redactInChat(file);
+          toast(`${file.name} geschwärzt ✓ — ${result.entities_redacted || 0} Bereiche entfernt`, 'success', 5000);
+        }
       } else if (mode === 'anonymize') {
         const result = await api.uploadFile(file);
-        await addToolResultToChat('anonymize', result, file.name);
+        if (source === 'tools') publishToolResult('anonymize', result, file.name);
+        else await addToolResultToChat('anonymize', result, file.name);
         const entities = result.entity_count || 0;
         toast(`${file.name} anonymisiert ✓ — ${entities} sensible Begriff(e) erkannt`, 'success', 5000);
         if (Array.isArray(result.warnings)) {
@@ -192,15 +317,47 @@ async function processFiles(files, mode) {
       } else {
         // mode === 'attach' — attach the file for the next chat message.
         // We still create a conversation so the sidebar shows the chat and
-        // the user doesn't feel stranded. The attachment appears as a rich
-        // card above the input; the user can then type a question and send.
-        const result = await api.uploadFile(file);
-        await ensureConversation();
+        // the user doesn't feel stranded.
+        //
+        // Placeholder-Attachment: Der User sieht sofort eine Karte mit
+        // Spinner + Dateiname während der Server PDF-Extraktion und
+        // Anonymisierung laufen lässt (kann bei großen PDFs 10-30s dauern).
+        // Beim Erfolg ersetzen wir den Placeholder durch das echte Result.
+        const shortName = file.name.length > 60 ? file.name.slice(0, 57) + '…' : file.name;
+        await ensureConversation(shortName);
         switchToChatView();
-        signals.pendingAttachments.value = [...signals.pendingAttachments.value, result];
+
+        const tempId = `tmp-attach-${Date.now()}-${Math.random()}`;
+        const placeholder = { _tempId: tempId, filename: file.name, loading: true };
+        signals.pendingAttachments.value = [...signals.pendingAttachments.value, placeholder];
         renderAttachments();
 
+        let result;
+        try {
+          result = await api.uploadFile(file);
+        } catch (err) {
+          signals.pendingAttachments.value = signals.pendingAttachments.value.filter((a) => a._tempId !== tempId);
+          throw err;
+        }
+        signals.pendingAttachments.value = signals.pendingAttachments.value.map((a) =>
+          a._tempId === tempId ? result : a
+        );
+        renderAttachments();
+
+        // Privacy-Shield sofort reagieren lassen: die Anonymisierung ist hier
+        // bereits passiert (im Upload-Response), auch wenn noch keine Chat-
+        // Nachricht gesendet wurde. Der User soll sehen "X Begriffe erkannt"
+        // im Header-Badge, ohne erst eine Frage abschicken zu müssen.
         const entities = result.entity_count || 0;
+        if (entities > 0) {
+          const total = (signals.lastMeta.value?.anonymized_count || 0) + entities;
+          const existing = signals.lastMeta.value?.mappings_preview || {};
+          signals.lastMeta.value = {
+            ...(signals.lastMeta.value || {}),
+            anonymized_count: total,
+            mappings_preview: { ...existing, ...(result.mappings || {}) },
+          };
+        }
         const chars = result.chars || (result.extracted_text || '').length;
         let status;
         if (chars === 0) {
@@ -218,6 +375,8 @@ async function processFiles(files, mode) {
     } catch (err) {
       console.error('Upload error:', err);
       toast(`Upload fehlgeschlagen: ${err.message}`, 'error', 5000);
+    } finally {
+      if (useToolsPanel) signals.toolLoading.value = null;
     }
   }
 }
@@ -313,6 +472,82 @@ function renderRedactResult(result) {
 
 /* ---- Init ---- */
 
+/* ---- Upload-Popover Menü (Paperclip → Auswahl) ----
+ *
+ * Beim Klick auf die Büroklammer im Chat-Input öffnet sich ein kleines Menü
+ * mit zwei Aktionen:
+ *   1. "Datei anhängen"  → mode='attach' (PDF/DOCX/XLSX/TXT/Bild/Audio)
+ *                          Datei wird anonymisiert, als Attachment
+ *                          angehängt und der User stellt dann eine Frage.
+ *   2. "Bild/PDF schwärzen" → mode='redact' (PNG/JPG/PDF)
+ *                          Sensible Bereiche werden pixelgenau geschwärzt,
+ *                          Ergebnis als Chat-Message mit Inline-Vorschau +
+ *                          Download-Button.
+ *
+ * Schließt bei Klick außerhalb oder Escape. Positionierung absolut
+ * oberhalb der Büroklammer via CSS.
+ */
+function UploadMenu() {
+  const isDE = signals.language.value === 'de';
+  const open = signals.uploadMenuOpen.value;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    function onDocClick(e) {
+      if (e.target.closest('.aai-upload-menu') || e.target.closest('#btn-upload')) return;
+      signals.uploadMenuOpen.value = false;
+    }
+    function onKey(e) { if (e.key === 'Escape') signals.uploadMenuOpen.value = false; }
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  function pick(mode, accept) {
+    signals.uploadMenuOpen.value = false;
+    const fileInput = document.getElementById('file-input');
+    if (!fileInput) return;
+    fileInput.dataset.mode = mode;
+    fileInput.accept = accept;
+    delete fileInput.dataset.source;
+    fileInput.click();
+  }
+
+  return html`
+    <div class="aai-upload-menu" role="menu">
+      <button class="aai-upload-menu-item" role="menuitem"
+        onClick=${() => pick('attach', '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a')}>
+        <span class="aai-upload-menu-icon" dangerouslySetInnerHTML=${{ __html:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>'
+        }} />
+        <div class="aai-upload-menu-body">
+          <strong>${isDE ? 'Datei anhängen' : 'Attach file'}</strong>
+          <span>${isDE
+            ? 'PDF, DOCX, Excel, TXT, Bild, Audio — wird anonymisiert und kann danach befragt werden'
+            : 'PDF, DOCX, Excel, TXT, image, audio — anonymized first, then chat about it'}</span>
+        </div>
+      </button>
+      <button class="aai-upload-menu-item" role="menuitem"
+        onClick=${() => pick('redact', '.png,.jpg,.jpeg,.tiff,.bmp,.webp,.pdf')}>
+        <span class="aai-upload-menu-icon" dangerouslySetInnerHTML=${{ __html:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+        }} />
+        <div class="aai-upload-menu-body">
+          <strong>${isDE ? 'Bild / PDF schwärzen' : 'Redact image / PDF'}</strong>
+          <span>${isDE
+            ? 'Sensible Bereiche pixelgenau entfernen — Ergebnis als Vorschau und Download'
+            : 'Pixel-accurate redaction — result as preview and download'}</span>
+        </div>
+      </button>
+    </div>
+  `;
+}
+
 export function init() {
   const fileInput = document.getElementById('file-input');
   if (!fileInput) {
@@ -320,18 +555,21 @@ export function init() {
     return;
   }
 
-  document.getElementById('btn-upload')?.addEventListener('click', () => {
-    fileInput.dataset.mode = 'attach';
-    fileInput.accept = '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
-    fileInput.click();
+  document.getElementById('btn-upload')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    signals.uploadMenuOpen.value = !signals.uploadMenuOpen.value;
   });
 
   fileInput.addEventListener('change', () => {
     if (!fileInput.files.length) return;
     const mode = fileInput.dataset.mode || 'attach';
+    const source = fileInput.dataset.source || 'chat';
     const files = [...fileInput.files];
     fileInput.value = '';
-    processFiles(files, mode);
+    // Reset the source flag after consumption so a subsequent chat-side
+    // upload does not accidentally inherit 'tools' routing.
+    delete fileInput.dataset.source;
+    processFiles(files, mode, source);
   });
 
   // Mount drop-overlay into document.body
@@ -339,4 +577,14 @@ export function init() {
   overlayHost.id = 'aai-drop-overlay-host';
   document.body.appendChild(overlayHost);
   render(html`<${DropOverlay} />`, overlayHost);
+
+  // Mount Upload-Popover (relative zum .aai-input-row)
+  const inputRow = document.querySelector('.aai-input-row');
+  if (inputRow) {
+    const menuHost = document.createElement('div');
+    menuHost.id = 'aai-upload-menu-host';
+    menuHost.className = 'aai-upload-menu-host';
+    inputRow.appendChild(menuHost);
+    render(html`<${UploadMenu} />`, menuHost);
+  }
 }

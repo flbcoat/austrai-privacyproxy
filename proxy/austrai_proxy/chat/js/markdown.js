@@ -127,6 +127,12 @@ function renderTable(tableLines) {
   return html;
 }
 
+// URL-Schemes die wir in Markdown-Links erlauben. `javascript:`,
+// `data:`, `vbscript:`, `file:` etc. sind explizit ausgeschlossen — eine
+// Prompt-Injection im LLM-Output könnte sonst `[click](javascript:...)`
+// produzieren, das bei Klick localStorage exfiltriert.
+const SAFE_URL_SCHEME = /^(https?:|mailto:|tel:|#|\/|\.\/|\.\.\/)/i;
+
 function inline(text) {
   text = esc(text);
   text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -136,6 +142,18 @@ function inline(text) {
   text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
   text = text.replace(/_(.+?)_/g, '<em>$1</em>');
   text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Markdown-Links: [label](url). Nur whitelisted Schemes werden zu echten
+  // <a>-Tags; alles andere bleibt als Plaintext stehen (das Label wird
+  // trotzdem angezeigt, aber nicht klickbar).
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, label, url) => {
+    const trimmedUrl = url.trim();
+    if (!SAFE_URL_SCHEME.test(trimmedUrl)) {
+      return label; // fall back to plain text — no <a> element at all
+    }
+    // URL in Attribut-Kontext doppel-quoten absichern (esc() hat bereits
+    // alle `"` zu `&quot;` gemacht, aber defense-in-depth).
+    const safeUrl = trimmedUrl.replace(/"/g, '&quot;');
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
   return text;
 }

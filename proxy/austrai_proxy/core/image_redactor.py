@@ -158,6 +158,13 @@ def redact_pdf_pages(
     import tempfile
 
     doc = fitz.open(pdf_path)
+    # Hard-Cap auf Seitenzahl: ein maliziös erstelltes PDF mit 10.000 Seiten
+    # würde pytesseract (OCR) + Detector stundenlang beschäftigen. 500
+    # Seiten reicht für reale Use-Cases; wer mehr braucht, teilt das PDF.
+    MAX_REDACT_PAGES = 500
+    if len(doc) > MAX_REDACT_PAGES:
+        doc.close()
+        raise ValueError(f"PDF has too many pages ({len(doc)}). Max supported: {MAX_REDACT_PAGES}")
     engine = get_engine(memory_enabled=False)
     total_redacted = 0
     all_text = []

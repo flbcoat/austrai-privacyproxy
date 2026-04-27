@@ -27,6 +27,32 @@ class ProxyConfig:
     ollama_url: str = "http://localhost:11434"
     lmstudio_url: str = "http://localhost:1234"
 
+    # Advanced mode (opt-in). Basic users never see the following fields in
+    # the UI; they stay at default. Power users enable advanced_mode in
+    # Settings > Erweitert to expose reasoning/temperature/slash-commands.
+    #
+    # auto_route is retained for backward compat in stored configs, but the
+    # field is no longer surfaced in the UI and the chat send path ignores
+    # it. See project_austrai_pivot_skills_kb_plan.md (25.04.2026 pivot).
+    advanced_mode: bool = False
+    auto_route: bool = False
+    slash_commands: bool = False   # opt-in flag; aliases below apply only when on
+    # User-defined alias map: { "opus": {provider, model}, ... }. Curated
+    # defaults below ship as a starting point; user can add, edit, delete.
+    # Special model value "__local__" picks the first configured local
+    # provider (lmstudio > ollama) at send time, so the alias keeps
+    # working even when the local model name changes.
+    slash_aliases: dict = field(default_factory=lambda: {
+        "opus":   {"provider": "anthropic", "model": "claude-opus-4-7"},
+        "sonnet": {"provider": "anthropic", "model": "claude-sonnet-4-6"},
+        "haiku": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
+        "lokal": {"provider": "lmstudio", "model": "__local__"},
+    })
+    reasoning_effort: str = "medium"   # "off" | "low" | "medium" | "high"
+    temperature: float = 1.0
+    top_p: float = 1.0
+    max_tokens: int = 2048   # conservative default; raise via Advanced for long answers
+
     @classmethod
     def load(cls) -> "ProxyConfig":
         """Load config from file, env vars override file values."""
@@ -48,6 +74,23 @@ class ProxyConfig:
                 config.default_model = data.get("default_model", "")
                 config.ollama_url = data.get("ollama_url", "http://localhost:11434")
                 config.lmstudio_url = data.get("lmstudio_url", "http://localhost:1234")
+                config.advanced_mode = bool(data.get("advanced_mode", False))
+                config.auto_route = bool(data.get("auto_route", False))
+                config.slash_commands = bool(data.get("slash_commands", False))
+                if isinstance(data.get("slash_aliases"), dict):
+                    cleaned = {}
+                    for k, v in data["slash_aliases"].items():
+                        if isinstance(k, str) and isinstance(v, dict):
+                            cleaned[k.strip().lower()] = {
+                                "provider": str(v.get("provider", "")),
+                                "model": str(v.get("model", "")),
+                            }
+                    if cleaned:
+                        config.slash_aliases = cleaned
+                config.reasoning_effort = data.get("reasoning_effort", "medium")
+                config.temperature = float(data.get("temperature", 1.0))
+                config.top_p = float(data.get("top_p", 1.0))
+                config.max_tokens = int(data.get("max_tokens", 4096))
             except Exception:
                 pass
 
@@ -82,6 +125,14 @@ class ProxyConfig:
             "default_model": self.default_model,
             "ollama_url": self.ollama_url,
             "lmstudio_url": self.lmstudio_url,
+            "advanced_mode": self.advanced_mode,
+            "auto_route": self.auto_route,
+            "slash_commands": self.slash_commands,
+            "slash_aliases": self.slash_aliases,
+            "reasoning_effort": self.reasoning_effort,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "max_tokens": self.max_tokens,
         }
         CONFIG_FILE.write_text(
             yaml.dump(data, default_flow_style=False, allow_unicode=True),

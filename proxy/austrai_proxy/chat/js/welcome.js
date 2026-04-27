@@ -43,15 +43,18 @@ function handleToolClick(tool) {
   }
 
   const fileInput = document.getElementById('file-input');
-  if (tool === 'excel') {
-    fileInput.accept = '.xlsx,.csv,.xls';
-    fileInput.dataset.mode = 'attach';
-  } else if (tool === 'redact') {
+  if (tool === 'redact') {
     fileInput.accept = '.png,.jpg,.jpeg,.tiff,.bmp,.webp,.pdf';
-    fileInput.dataset.mode = tool;
+    fileInput.dataset.mode = 'redact';
   } else {
-    fileInput.accept = '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
-    fileInput.dataset.mode = tool;
+    // excel + anonymize: beide hängen das Dokument als echtes Chat-Attachment
+    // an (Paperclip-Flow). Der User sieht dann oberhalb der Eingabezeile eine
+    // editierbare Original/Anonymisiert-Split-View und kann den anonymisierten
+    // Text noch verfeinern, bevor er eine Frage an die KI schickt.
+    fileInput.accept = tool === 'excel'
+      ? '.xlsx,.csv,.xls'
+      : '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg,.mp3,.wav,.m4a';
+    fileInput.dataset.mode = 'attach';
   }
   fileInput.click();
 }

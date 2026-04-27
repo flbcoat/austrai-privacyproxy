@@ -386,16 +386,18 @@ async def handle_anthropic(request: Request) -> Response:
     try:
         return await _proxy_request(request, "anthropic")
     except Exception as e:
+        from .security_middleware import safe_error_message
         logger.error("Proxy error (anthropic): %s", e, exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+        return JSONResponse({"error": safe_error_message(e, fallback="Proxy error")}, status_code=500)
 
 
 async def handle_openai(request: Request) -> Response:
     try:
         return await _proxy_request(request, "openai")
     except Exception as e:
+        from .security_middleware import safe_error_message
         logger.error("Proxy error (openai): %s", e, exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+        return JSONResponse({"error": safe_error_message(e, fallback="Proxy error")}, status_code=500)
 
 
 async def handle_health(request: Request) -> JSONResponse:
@@ -420,16 +422,29 @@ def create_app(config: ProxyConfig | None = None) -> Starlette:
     from .chat_api import create_chat_app
     from starlette.middleware import Middleware
     from starlette.middleware.cors import CORSMiddleware
+    from .security_middleware import SecurityMiddleware
 
     chat_app = create_chat_app()
 
     return Starlette(
         middleware=[
+            # Reihenfolge: SecurityMiddleware ZUERST — sie wirft Cross-Origin
+            # Requests raus bevor CORS sie sehen kann. Sonst käme der Request
+            # bei einer Route an und könnte State ändern, auch wenn die
+            # Response später CORS-geblockt würde.
+            Middleware(SecurityMiddleware),
             Middleware(
                 CORSMiddleware,
                 allow_origins=["http://127.0.0.1:8282", "http://localhost:8282"],
                 allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                allow_headers=["*"],
+                # Gezielte Header-Allowlist statt "*": nur was wir wirklich
+                # akzeptieren. Schließt x-csrf-token oder Tracing-Header aus.
+                allow_headers=[
+                    "content-type",
+                    "authorization",
+                    "x-api-key",
+                    "anthropic-version",
+                ],
             ),
         ],
         routes=[

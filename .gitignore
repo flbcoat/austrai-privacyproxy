@@ -3,6 +3,10 @@
 .env.local
 .env.production
 
+# Local backups (tar.gz of proxy/ before risky changes — large + may
+# contain plaintext keys persisted in the original yaml at backup time)
+_backups/
+
 # Python
 __pycache__/
 *.py[cod]

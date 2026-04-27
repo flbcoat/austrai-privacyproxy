@@ -12,8 +12,14 @@ import os
 
 logger = logging.getLogger("austrai.gliner")
 
-# PII-Label-Kategorien für GLiNER
+# PII-Label-Kategorien für GLiNER.
+# GLiNER ist zero-shot: mehr Labels heißen mehr semantische Aufmerksamkeit
+# auf die jeweiligen Patterns, ohne Re-Training. Wir nutzen das, um
+# österreichische Spezifika (Universitäten, Behörden, akademische Titel)
+# explizit zu signalisieren statt sie als generisches "organization" oder
+# "person" laufen zu lassen.
 PII_LABELS = [
+    # Original PII-Kern
     "person",
     "organization",
     "phone number",
@@ -28,11 +34,24 @@ PII_LABELS = [
     "social security number",
     "passport number",
     "license plate",
+    # Österreich-spezifische Verstärker (alle gemappt auf Standard-Entity-Types,
+    # aber GLiNER greift sie zuverlässiger weil die Labels die Domain spiegeln)
+    "austrian university or college",
+    "austrian school",
+    "austrian government agency",
+    "academic title",
+    "academic degree",
+    "street address with house number",
+    "postal code with city",
+    "non-profit organization",
+    "company name",
+    "website url",
 ]
 
 # Map GLiNER labels to AUSTR.AI entity types.
 # Each type gets a SEMANTIC bracket code so the LLM understands the data category.
 LABEL_MAP = {
+    # Standard PII
     "person": "PERSON",
     "organization": "ORGANIZATION",
     "phone number": "PHONE_NUMBER",
@@ -47,6 +66,17 @@ LABEL_MAP = {
     "social security number": "AT_SVNR",
     "passport number": "PASSPORT_NUMBER",
     "license plate": "LICENSE_PLATE",
+    # Österreich-Verstärker → bestehende Entity-Types
+    "austrian university or college": "ORGANIZATION",
+    "austrian school": "ORGANIZATION",
+    "austrian government agency": "ORGANIZATION",
+    "non-profit organization": "ORGANIZATION",
+    "company name": "ORGANIZATION",
+    "academic title": "PERSON",
+    "academic degree": "PERSON",
+    "street address with house number": "LOCATION",
+    "postal code with city": "LOCATION",
+    "website url": "EMAIL_ADDRESS",
 }
 
 # Common German terms that GLiNER falsely detects as persons/orgs

@@ -8,33 +8,99 @@
  */
 
 import { h, render, Fragment } from 'preact';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import htm from 'htm';
-import { signals, batch, deleteMessages, loadMessages, saveMessages } from './state.js';
+import { signals, batch, deleteMessages, loadMessages, saveMessages, toast } from './state.js';
 import * as api from './api.js';
 import { t } from './i18n.js';
 
 const html = htm.bind(h);
 
 const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
 
 function ConvIcon() {
   return html`<span class="aai-conv-icon" dangerouslySetInnerHTML=${{ __html: ICON_CHAT }} />`;
 }
 
-function ConversationItem({ conv, active, onSelect, onDelete }) {
+function EditIcon() {
+  return html`<span dangerouslySetInnerHTML=${{ __html: ICON_EDIT }} />`;
+}
+
+function ConversationItem({ conv, active, onSelect, onDelete, onRename }) {
   const lang = signals.language.value === 'de' ? 'de-AT' : 'en-US';
+  const isDE = signals.language.value === 'de';
   const date = new Date(conv.updated_at * 1000).toLocaleDateString(lang, { day: 'numeric', month: 'short' });
 
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(conv.title);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  function startEdit(e) {
+    e.stopPropagation();
+    setDraft(conv.title);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+    setDraft(conv.title);
+  }
+
+  async function commit() {
+    const next = draft.trim();
+    if (!next || next === conv.title) { cancelEdit(); return; }
+    setEditing(false);
+    try {
+      await onRename(conv.id, next);
+    } catch (err) {
+      toast(isDE ? 'Umbenennen fehlgeschlagen' : 'Rename failed', 'error', 3000);
+      setDraft(conv.title);
+    }
+  }
+
   return html`
-    <div class=${`aai-conv-item${active ? ' active' : ''}`} onClick=${() => onSelect(conv.id)}>
+    <div class=${`aai-conv-item${active ? ' active' : ''}`}
+         onClick=${editing ? null : () => onSelect(conv.id)}>
       <${ConvIcon} />
-      <span class="aai-conv-title">${conv.title}</span>
-      <span class="aai-conv-meta">${date}</span>
-      <button
-        class="aai-conv-delete"
-        title=${t('deleteConv')}
-        onClick=${(e) => { e.stopPropagation(); onDelete(conv.id); }}
-      >×</button>
+      ${editing ? html`
+        <input
+          ref=${inputRef}
+          class="aai-conv-title-edit"
+          aria-label=${isDE ? 'Chat-Titel bearbeiten' : 'Edit chat title'}
+          value=${draft}
+          onInput=${(e) => setDraft(e.target.value)}
+          onKeyDown=${(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+            else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+          }}
+          onBlur=${commit}
+          onClick=${(e) => e.stopPropagation()}
+          maxlength="120"
+        />
+      ` : html`
+        <span class="aai-conv-title" onDblClick=${startEdit}>${conv.title}</span>
+      `}
+      ${!editing ? html`
+        <span class="aai-conv-meta">${date}</span>
+        <button
+          class="aai-conv-rename"
+          title=${isDE ? 'Umbenennen' : 'Rename'}
+          onClick=${startEdit}
+        ><${EditIcon} /></button>
+        <button
+          class="aai-conv-delete"
+          title=${t('deleteConv')}
+          onClick=${(e) => { e.stopPropagation(); onDelete(conv.id); }}
+        >×</button>
+      ` : null}
     </div>
   `;
 }
@@ -56,10 +122,26 @@ function ConversationList() {
           active=${c.id === activeId}
           onSelect=${selectConversation}
           onDelete=${removeConversation}
+          onRename=${renameConversation}
         />
       `)}
     <//>
   `;
+}
+
+export async function renameConversation(id, title) {
+  const next = (title || '').trim().slice(0, 120);
+  if (!next) return;
+  // Optimistic update: Sidebar reflektiert den neuen Titel sofort; wenn das
+  // Backend-Update fehlschlägt, rollen wir zurück.
+  const prev = signals.conversations.value;
+  signals.conversations.value = prev.map((c) => c.id === id ? { ...c, title: next } : c);
+  try {
+    await api.updateConversation(id, { title: next });
+  } catch (err) {
+    signals.conversations.value = prev;
+    throw err;
+  }
 }
 
 /* ---- Actions ---- */

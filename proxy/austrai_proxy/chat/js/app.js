@@ -22,8 +22,13 @@ import * as onboarding from './onboarding.js';
 import * as privacy from './privacy.js';
 import * as upload from './upload.js';
 import * as debug from './debug.js';
-import * as anonymize from './anonymize.js';
+import * as tools from './tools.js';
 import * as tutorial from './tutorial.js';
+import { h, render as preactRender } from 'preact';
+import htm from 'htm';
+import { HeaderSkillProject, KnowledgeSnippetPreview } from './skills_kb.js';
+
+const html = htm.bind(h);
 
 /* ---- View Management ---- */
 
@@ -67,16 +72,25 @@ function populateProviderDropdowns(providers, activeProvider, activeModel) {
   const selModel = document.getElementById('sel-model');
   if (!selProvider || !selModel) return;
 
-  selProvider.innerHTML = Object.entries(providers).map(([pid, prov]) => {
-    const configured = prov.configured;
-    const suffix = configured ? '' : ' (kein Key)';
-    const disabled = configured ? '' : 'disabled';
-    return `<option value="${pid}" ${pid === activeProvider ? 'selected' : ''} ${disabled}>${prov.name}${suffix}</option>`;
-  }).join('');
+  // Skip meta-keys (underscore-prefixed) that the backend uses to ship
+  // router-status and other non-provider info in the same response.
+  selProvider.innerHTML = Object.entries(providers)
+    .filter(([pid]) => !pid.startsWith('_'))
+    .map(([pid, prov]) => {
+      const configured = prov.configured;
+      const suffix = configured ? '' : ' (kein Key)';
+      const disabled = configured ? '' : 'disabled';
+      return `<option value="${pid}" ${pid === activeProvider ? 'selected' : ''} ${disabled}>${prov.name}${suffix}</option>`;
+    })
+    .join('');
 
   updateModelDropdown(providers, activeProvider, activeModel);
 
-  selProvider.onchange = () => {
+  // Header dropdown is the single source of truth for the default provider/model.
+  // Every change persists immediately to ~/.austrai/proxy.yaml via the settings
+  // API, so the selection survives app restarts. Settings UI no longer offers
+  // these fields (avoids the "two-places-for-one-thing" UX).
+  selProvider.onchange = async () => {
     const pid = selProvider.value;
     signals.provider.value = pid;
     const prov = providers[pid] || {};
@@ -84,16 +98,35 @@ function populateProviderDropdowns(providers, activeProvider, activeModel) {
     const firstModel = models.length ? models[0].id : '';
     updateModelDropdown(providers, pid, firstModel);
     signals.model.value = firstModel;
-    if (firstModel) {
-      toast(`${prov.name} — ${models.find((m) => m.id === firstModel)?.name || firstModel}`, 'info', 2000);
+    try {
+      await api.putSettings({ default_provider: pid, default_model: firstModel });
+      signals.settings.value = {
+        ...(signals.settings.value || {}),
+        default_provider: pid,
+        default_model: firstModel,
+      };
+      if (firstModel) {
+        toast(`${prov.name} — ${models.find((m) => m.id === firstModel)?.name || firstModel}`, 'info', 1500);
+      }
+    } catch (e) {
+      toast(`Konnte Modell-Wahl nicht speichern: ${e?.message || e}`, 'error', 4000);
     }
   };
 
-  selModel.onchange = () => {
+  selModel.onchange = async () => {
     const modelId = selModel.value;
     signals.model.value = modelId;
     const modelName = selModel.options[selModel.selectedIndex]?.text || modelId;
-    toast(`Modell: ${modelName}`, 'info', 1500);
+    try {
+      await api.putSettings({ default_model: modelId });
+      signals.settings.value = {
+        ...(signals.settings.value || {}),
+        default_model: modelId,
+      };
+      toast(`Modell: ${modelName}`, 'info', 1200);
+    } catch (e) {
+      toast(`Konnte Modell-Wahl nicht speichern: ${e?.message || e}`, 'error', 4000);
+    }
   };
 }
 
@@ -142,10 +175,11 @@ function wireGlobalEvents() {
 
       const isTool = mode === 'tools';
       if (isTool) {
-        // "Werkzeuge" brings the user to the home screen with the tool
-        // cards — identical to starting fresh. Any conversation stays in
-        // the sidebar; clicking "Chat" returns to it.
-        showView('welcome-view');
+        // "Werkzeuge" is a separate surface: tools run standalone, the
+        // result stays local to this view and no conversation is created.
+        // (Home/Chat path: tool clicks on the welcome-view DO create a
+        // conversation — that is intentionally distinct from this tab.)
+        showView('tool-view');
       } else {
         const viewId = signals.currentConversationId.value ? 'chat-view' : 'welcome-view';
         showView(viewId);
@@ -193,11 +227,52 @@ function wireGlobalEvents() {
     populateProviderDropdowns(providers, signals.provider.value, signals.model.value);
   });
 
+  // Auto-Routing badge logic was removed in the 04/2026 pivot — the
+  // header dropdowns are always live and reflect the user's manual
+  // choice (or a slash-command override per-send).
+
   // View switching based on currentView signal
   signals.currentView.subscribe((view) => {
     if (view === 'chat') showView('chat-view');
     else if (view === 'welcome') showView('welcome-view');
   });
+
+  // Reaktive Sidebar/Input-Labels — index.html hat statisch deutsche Labels
+  // hardcoded ("Chat", "Werkzeuge", "Neuer Chat", "Einstellungen", …), damit
+  // der First-Paint ohne JavaScript-Bundle sinnvoll aussieht. Nach dem Boot
+  // übernimmt die Sprach-Subscription und setzt sie bei jedem DE↔EN-Wechsel
+  // neu.
+  function applyStaticLabels() {
+    const navBtns = document.querySelectorAll('.aai-sidebar-nav-btn');
+    navBtns.forEach((btn) => {
+      const mode = btn.dataset.mode;
+      const label = mode === 'tools' ? t('modeTools') : t('modeChat');
+      const svg = btn.querySelector('svg');
+      btn.setAttribute('aria-label', label);
+      // Preserve the SVG icon and replace only the text node.
+      const textNodes = Array.from(btn.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE);
+      if (textNodes.length) textNodes.forEach((tn) => tn.remove());
+      btn.appendChild(document.createTextNode(label));
+      if (svg) btn.insertBefore(svg, btn.firstChild);
+    });
+
+    const newChatBtn = document.getElementById('btn-new-chat');
+    if (newChatBtn) {
+      const span = newChatBtn.querySelector('span');
+      if (span) span.textContent = t('newChat');
+    }
+
+    const settingsBtn = document.getElementById('btn-settings');
+    if (settingsBtn) {
+      const span = settingsBtn.querySelector('span');
+      if (span) span.textContent = t('settings');
+    }
+
+    const msgInput = document.getElementById('msg-input');
+    if (msgInput) msgInput.placeholder = t('placeholder');
+  }
+  applyStaticLabels();
+  signals.language.subscribe(applyStaticLabels);
 }
 
 /* ---- Boot ---- */
@@ -211,21 +286,41 @@ async function boot() {
   privacy.init();
   upload.init();
   debug.init();
-  anonymize.init();
+  tools.init();
   tutorial.init();
 
   wireGlobalEvents();
 
   try {
-    const [settingsData, providersData, convs] = await Promise.all([
+    const [settingsData, providersData, convs, skillsData, projectsData] = await Promise.all([
       api.getSettings(),
       api.getProviders(),
       api.listConversations(),
+      api.listSkills().catch(() => ({ skills: [] })),
+      api.listProjects().catch(() => ({ projects: [] })),
     ]);
 
-    const provider = settingsData.default_provider || findFirstConfigured(providersData) || 'ollama';
-    const provModels = providersData[provider]?.models || [];
-    const model = settingsData.default_model || (provModels.length ? provModels[0].id : '');
+    let provider = settingsData.default_provider || findFirstConfigured(providersData) || 'ollama';
+    let provModels = providersData[provider]?.models || [];
+    // If the persisted default_provider is configured but has no models
+    // (LMStudio not running, Ollama empty), switch to the next configured
+    // provider that actually exposes models. Otherwise the header dropdown
+    // ends up empty and the model display shows "—".
+    if (!provModels.length) {
+      const fallbackPid = findFirstConfigured(providersData);
+      if (fallbackPid && providersData[fallbackPid]?.models?.length) {
+        provider = fallbackPid;
+        provModels = providersData[provider].models;
+      }
+    }
+    let model = settingsData.default_model || (provModels.length ? provModels[0].id : '');
+    // If the persisted default_model is not in the discovered model list
+    // (e.g. LMStudio model name changed, Anthropic discovery returned a
+    // different ID set), fall back to the first available so the header
+    // always shows a valid value instead of "—".
+    if (model && !provModels.some((m) => m.id === model)) {
+      model = provModels.length ? provModels[0].id : '';
+    }
 
     batch({
       settings: settingsData,
@@ -233,10 +328,22 @@ async function boot() {
       conversations: convs,
       provider,
       model,
+      skills: skillsData?.skills || [],
+      projects: projectsData?.projects || [],
       onboardingDone: settingsData.onboarding_done,
     });
 
     populateProviderDropdowns(providersData, provider, model);
+
+    // Mount Skill + Project header dropdowns and the KB-snippet preview.
+    // These live as separate Preact render-trees alongside the existing
+    // legacy DOM (sidebar, msg-input, etc.) — same pattern as <Sidebar />
+    // already follows.
+    const skillProjectMount = document.getElementById('aai-skill-project-mount');
+    if (skillProjectMount) preactRender(html`<${HeaderSkillProject} />`, skillProjectMount);
+    const kbPreviewMount = document.getElementById('aai-kb-preview-mount');
+    if (kbPreviewMount) preactRender(html`<${KnowledgeSnippetPreview} />`, kbPreviewMount);
+
     const msgInput = document.getElementById('msg-input');
     if (msgInput) msgInput.placeholder = t('placeholder');
 

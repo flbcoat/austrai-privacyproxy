@@ -303,7 +303,37 @@ def _start_proxy_background(config) -> None:
     if _is_proxy_running():
         return
 
-    _kill_port(config.port)
+    # Port-Cleanup nur wenn wir sicher sind, dass der Process auf dem
+    # Port ein alter AUSTR.AI-Zombie ist (unsere PID-Datei zeigt auf ihn).
+    # Sonst würde `_kill_port` fremde User-Services killen (z.B. ein
+    # paralleles localhost-Dev-Setup auf Port 8282). Lieber freundlich
+    # fehlschlagen und dem User sagen was blockiert.
+    import socket
+    port_in_use = False
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        port_in_use = s.connect_ex(("127.0.0.1", config.port)) == 0
+        s.close()
+    except Exception:
+        pass
+
+    if port_in_use:
+        # Nur killen wenn unser eigenes PID-File existiert und auf einen
+        # toten Prozess zeigt — dann räumen wir unsere eigenen Reste auf.
+        our_pid = _read_pid()
+        if our_pid and not is_process_alive(our_pid):
+            _kill_port(config.port)
+            PROXY_PID_FILE.unlink(missing_ok=True)
+        else:
+            click.echo(
+                click.style(
+                    f"Port {config.port} ist von einem anderen Prozess belegt. "
+                    "Beende ihn manuell oder nutze `aai chat --port <andere>`.",
+                    fg="red",
+                )
+            )
+            sys.exit(1)
 
     cmd = [sys.executable, "-m", "austrai_proxy", "start", "--port", str(config.port)]
     proc = start_detached_process(cmd)

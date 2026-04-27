@@ -226,8 +226,29 @@ a:hover { text-decoration: underline; }
   transition: all var(--t-fast);
 }
 
-.aai-conv-item:hover .aai-conv-delete { opacity: 1; }
+.aai-conv-item:hover .aai-conv-delete,
+.aai-conv-item:hover .aai-conv-rename { opacity: 1; }
 .aai-conv-delete:hover { color: var(--danger); }
+
+.aai-conv-rename {
+  opacity: 0;
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer;
+  padding: 2px 4px; border-radius: var(--r-sm);
+  display: inline-flex; align-items: center;
+  transition: all var(--t-fast);
+}
+.aai-conv-rename:hover { color: var(--accent); }
+
+.aai-conv-title-edit {
+  flex: 1; min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 2px 6px;
+  font-size: 13px; font-family: inherit; color: var(--text);
+  outline: none;
+}
 
 .aai-conv-empty { padding: 20px 12px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
@@ -668,6 +689,7 @@ a:hover { text-decoration: underline; }
 }
 
 .aai-input-row {
+  position: relative;
   display: flex; align-items: flex-end; gap: 6px;
   max-width: var(--content-max); margin: 0 auto;
   background: var(--bg-card);
@@ -755,6 +777,45 @@ a:hover { text-decoration: underline; }
 }
 .aai-attachment-warning {
   margin-top: 6px; font-size: 11px; color: var(--text-muted); line-height: 1.4;
+}
+
+/* Collapsible Original/Anonymized editable split-view inside an attachment.
+ * Shares markup with the Werkzeuge-Tab panel (.aai-anon-pane / .aai-anon-pane-content)
+ * but stays inside the chat input area. Max-height is tighter so the input
+ * area doesn't push the conversation out of view. */
+.aai-attachment-toggle {
+  background: none; border: none;
+  cursor: pointer; padding: 0 6px;
+  font-size: 12px; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.aai-attachment-toggle:hover { color: var(--text); }
+.aai-attachment-split {
+  margin-top: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.aai-attachment-pane {
+  min-height: 160px !important;
+  max-height: 320px !important;
+}
+.aai-attachment-mappings {
+  margin-top: 8px; font-size: 11px;
+}
+.aai-attachment-mappings summary {
+  cursor: pointer; color: var(--text-muted);
+  padding: 4px 0;
+}
+.aai-attachment-mappings ul {
+  list-style: none; padding: 6px 0 0; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2px 10px; max-height: 140px; overflow-y: auto;
+}
+.aai-attachment-mappings li {
+  font-family: var(--mono); font-size: 10.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .aai-attachment-split { grid-template-columns: 1fr; }
 }
 
 /* Anonymization Preview */
@@ -1239,6 +1300,261 @@ a:hover { text-decoration: underline; }
 }
 .aai-upload-stats { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
 .aai-upload-stats span { color: var(--accent); font-weight: 600; }
+
+/* ---- Werkzeuge standalone tool result ----
+ * Rendered by tools.js below the tool cards. Visually a card — not a chat
+ * bubble — to reinforce "this stays local to the Werkzeuge view and doesn't
+ * become a conversation".
+ */
+.aai-tools-view .aai-tool-result {
+  margin-top: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.aai-tool-result-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+.aai-tool-result-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.aai-tool-result-title strong { font-size: 14px; font-weight: 600; word-break: break-word; }
+.aai-tool-result-meta { font-size: 12px; color: var(--text-muted); }
+.aai-tool-result-close {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 4px 6px; cursor: pointer;
+  color: var(--text-muted); flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.aai-tool-result-close:hover { background: var(--bg-sidebar); color: var(--text); }
+.aai-tool-result-body {
+  padding: 16px 20px;
+  font-size: 13px; line-height: 1.65;
+}
+
+/* Redact preview (Werkzeuge-Tab) — fixed 250x250 Thumbnail mit Klick zum
+ * Vergrößern im neuen Tab. Schachbrett-Hintergrund zeigt Transparenz
+ * geschwärzter PNG-Bereiche. */
+.aai-redact-preview {
+  width: 250px; height: 250px;
+  display: flex; justify-content: center; align-items: center;
+  background: repeating-conic-gradient(var(--bg-sidebar) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+  border-radius: var(--r-md);
+  padding: 8px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.aai-redact-preview img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border-radius: var(--r-sm); box-shadow: var(--shadow-sm);
+  transition: transform var(--t-fast);
+}
+.aai-redact-preview img:hover { transform: scale(1.02); }
+.aai-redact-placeholder {
+  text-align: center; padding: 40px 16px;
+  color: var(--text-muted); font-size: 13px;
+  background: var(--bg-sidebar); border-radius: var(--r-md);
+}
+
+/* ---- Upload-Popover Menü (Paperclip-Dropdown) ----
+ * Der Menü-Host wird an .aai-input-row angehängt; position:relative auf dem
+ * Parent sorgt für lokale Positionierung. Das Menü fliegt direkt über der
+ * Büroklammer nach oben auf. */
+.aai-upload-menu-host {
+  position: absolute;
+  left: 8px;
+  bottom: calc(100% + 8px);
+  z-index: 60;
+}
+.aai-upload-menu {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  min-width: 280px;
+  display: flex; flex-direction: column;
+  animation: popup-in 0.12s ease-out;
+}
+.aai-upload-menu-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: transparent; border: none;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer; text-align: left;
+  color: var(--text);
+  transition: background var(--t-fast);
+}
+.aai-upload-menu-item:hover { background: var(--bg-hover); }
+.aai-upload-menu-icon {
+  flex-shrink: 0; color: var(--accent);
+  display: inline-flex; padding-top: 1px;
+}
+.aai-upload-menu-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.aai-upload-menu-body strong { font-size: 13px; font-weight: 600; }
+.aai-upload-menu-body span { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+
+/* Redact embed (Chat-Message) */
+.aai-redact-embed {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px;
+  max-width: 600px;
+}
+.aai-redact-embed-head {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.aai-redact-embed-head strong { font-size: 14px; word-break: break-word; }
+.aai-redact-embed-meta { font-size: 12px; color: var(--text-muted); }
+.aai-redact-embed-preview {
+  width: 250px; height: 250px;
+  display: flex; justify-content: center; align-items: center;
+  background: repeating-conic-gradient(var(--bg-sidebar) 0% 25%, transparent 0% 50%) 50% / 14px 14px;
+  border-radius: var(--r-sm);
+  padding: 8px; margin-bottom: 10px;
+  overflow: hidden;
+}
+.aai-redact-embed-preview img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border-radius: 4px; box-shadow: var(--shadow-sm);
+  transition: transform var(--t-fast);
+}
+.aai-redact-embed-preview img:hover { transform: scale(1.02); }
+.aai-redact-embed-preview--loading {
+  background: var(--bg-sidebar);
+}
+.aai-redact-embed-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.aai-redact-embed--loading .aai-redact-embed-meta {
+  color: var(--accent);
+}
+
+/* Anonymization split view: Original | Anonymized (editable) */
+.aai-anon-split {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  padding: 16px 20px;
+}
+.aai-anon-pane {
+  display: flex; flex-direction: column; gap: 6px;
+  min-width: 0;
+}
+.aai-anon-pane-label {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-muted);
+}
+.aai-anon-pane-hint {
+  text-transform: none; letter-spacing: 0;
+  font-weight: 400; font-size: 11px; color: var(--accent);
+}
+.aai-anon-pane-content {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  min-height: 260px; max-height: 55vh; overflow-y: auto;
+  margin: 0;
+}
+.aai-anon-pane-edit {
+  width: 100%; resize: vertical;
+  color: var(--text);
+  outline: none;
+}
+.aai-anon-pane-edit:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+/* Action row under the panel */
+.aai-tool-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  padding: 0 20px 16px;
+}
+.aai-tool-actions .aai-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.aai-tool-result--loading .aai-tool-actions,
+.aai-tool-result--loading .aai-tool-result-header { display: none; }
+
+/* Warnings banner inside the anon result */
+.aai-tool-warnings {
+  margin: 12px 20px 0;
+  background: var(--accent-subtle); color: var(--accent);
+  border-radius: var(--r-md);
+  padding: 8px 12px; font-size: 12px; line-height: 1.5;
+}
+
+/* Mappings disclosure */
+.aai-anon-mappings {
+  padding: 0 20px 18px;
+  font-size: 12px;
+}
+.aai-anon-mappings summary {
+  cursor: pointer; font-weight: 600; color: var(--text-muted);
+  padding: 6px 0;
+}
+.aai-anon-mappings ul {
+  list-style: none; padding: 8px 0 0; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 14px; max-height: 260px; overflow-y: auto;
+}
+.aai-anon-mappings li {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.aai-code-orig { color: var(--danger); }
+.aai-code-anon { color: var(--accent); font-weight: 600; }
+
+/* Loading spinner panel */
+.aai-tool-result--loading { padding: 20px 20px; }
+.aai-tool-loading {
+  display: flex; align-items: center; gap: 14px;
+}
+.aai-tool-loading-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.aai-tool-loading-text strong { font-size: 13px; word-break: break-word; }
+.aai-tool-loading-text span { font-size: 12px; color: var(--text-muted); }
+.aai-spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  display: inline-block;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: aai-spin 0.8s linear infinite;
+}
+.aai-spinner--lg {
+  width: 48px; height: 48px;
+  border-width: 4px;
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-top-color: var(--accent);
+}
+@keyframes aai-spin { to { transform: rotate(360deg); } }
+
+/* Attachment-Karte mit "wird verarbeitet"-Spinner während Upload läuft. */
+.aai-attachment-detail--loading .aai-attachment-header {
+  align-items: center;
+}
+.aai-attachment-detail--loading .aai-spinner {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .aai-anon-split { grid-template-columns: 1fr; }
+}
 
 /* ---- 16. Toast ---- */
 

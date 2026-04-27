@@ -41,8 +41,26 @@ class ConversationStore:
                 pass
         return Fernet(key)
 
+    def _connect(self) -> sqlite3.Connection:
+        """Open a SQLite connection with the PRAGMAs we want set on every
+        connection — foreign_keys for CASCADE-Delete integrity, and a
+        5-second busy_timeout so concurrent writes (z.B. SSE-Streaming +
+        Sidebar-Refresh) sich nicht gegenseitig "database is locked" um
+        die Ohren hauen.
+        """
+        conn = sqlite3.connect(str(DB_PATH), timeout=5.0)
+        conn.execute("PRAGMA foreign_keys = ON")
+        # busy_timeout milliseconds — retry statt sofort zu failen.
+        conn.execute("PRAGMA busy_timeout = 5000")
+        return conn
+
     def _init_db(self):
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
+            # WAL-Mode: erlaubt paralleles Lesen während eines Writers,
+            # löst die meisten "database is locked" Situationen. Einmal
+            # gesetzt bleibt der Mode persistent in der DB-Datei.
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute("PRAGMA synchronous = NORMAL")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
@@ -69,7 +87,6 @@ class ConversationStore:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_msg_conv ON messages(conversation_id, created_at)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_conv_updated ON conversations(updated_at DESC)")
-            conn.execute("PRAGMA foreign_keys = ON")
 
     def _encrypt(self, text: str) -> bytes:
         return self._fernet.encrypt(text.encode("utf-8"))
@@ -82,7 +99,7 @@ class ConversationStore:
     def create_conversation(self, title: str = "New Chat", model: str = "", provider: str = "", system_prompt: str = "") -> str:
         conv_id = str(uuid.uuid4())
         now = time.time()
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.execute(
                 "INSERT INTO conversations (id, title, model, provider, system_prompt, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (conv_id, title, model, provider, system_prompt, now, now),
@@ -90,7 +107,7 @@ class ConversationStore:
         return conv_id
 
     def list_conversations(self, limit: int = 50) -> list[dict]:
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
                 """SELECT c.*, COUNT(m.id) as message_count
@@ -101,7 +118,7 @@ class ConversationStore:
         return [dict(r) for r in rows]
 
     def get_conversation(self, conv_id: str) -> dict | None:
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute("SELECT * FROM conversations WHERE id = ?", (conv_id,)).fetchone()
         return dict(row) if row else None
@@ -114,11 +131,11 @@ class ConversationStore:
         updates["updated_at"] = time.time()
         set_clause = ", ".join(f"{k} = ?" for k in updates)
         values = list(updates.values()) + [conv_id]
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.execute(f"UPDATE conversations SET {set_clause} WHERE id = ?", values)
 
     def delete_conversation(self, conv_id: str) -> None:
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.execute("PRAGMA foreign_keys = ON")
             conn.execute("DELETE FROM conversations WHERE id = ?", (conv_id,))
 
@@ -139,7 +156,7 @@ class ConversationStore:
         anon_enc = self._encrypt(anonymized) if anonymized else None
         mappings_enc = self._encrypt(json.dumps(mappings)) if mappings else None
 
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.execute(
                 """INSERT INTO messages (id, conversation_id, role, content_encrypted, anonymized_encrypted, mappings_encrypted, entity_count, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -149,7 +166,7 @@ class ConversationStore:
         return msg_id
 
     def get_messages(self, conversation_id: str) -> list[dict]:
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             rows = conn.execute(
                 "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at",
                 (conversation_id,),
@@ -171,5 +188,5 @@ class ConversationStore:
         return messages
 
     def delete_messages(self, conversation_id: str) -> None:
-        with sqlite3.connect(str(DB_PATH)) as conn:
+        with self._connect() as conn:
             conn.execute("DELETE FROM messages WHERE conversation_id = ?", (conversation_id,))
