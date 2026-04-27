@@ -1064,6 +1064,7 @@ async def chat_message(request: Request) -> Response:
         rehydrator = StreamRehydrator(all_mappings) if all_mappings else None
         full_response = []
         raw_response = []  # Pre-rehydration text (what the LLM actually said)
+        stop_reason = None  # filled from message_delta (Anthropic) / finish_reason (OpenAI)
 
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
@@ -1132,6 +1133,14 @@ async def chat_message(request: Request) -> Response:
                                 error_msg = error_info.get("message", "Unknown API error")
                                 yield f"event: error\ndata: {json.dumps({'error': f'Anthropic: {error_msg}'})}\n\n"
                                 return
+                            # Anthropic emits message_delta with stop_reason
+                            # at the end of the stream. We capture it so the
+                            # frontend can warn the user about token-limit
+                            # cutoffs ("max_tokens"), tool-use stops etc.
+                            if data.get("type") == "message_delta":
+                                delta = data.get("delta", {})
+                                if delta.get("stop_reason"):
+                                    stop_reason = delta["stop_reason"]
                             if data.get("type") == "content_block_delta":
                                 delta = data.get("delta", {})
                                 dtype = delta.get("type")
@@ -1161,6 +1170,11 @@ async def chat_message(request: Request) -> Response:
                             choices = data.get("choices", [])
                             if choices:
                                 delta_text = choices[0].get("delta", {}).get("content")
+                                # OpenAI sets `finish_reason` on the last
+                                # chunk. "length" is the token-limit cutoff.
+                                fr = choices[0].get("finish_reason")
+                                if fr:
+                                    stop_reason = fr
 
                         if delta_text is None:
                             continue
@@ -1191,6 +1205,11 @@ async def chat_message(request: Request) -> Response:
             done_data = {
                 'restored_count': restored_count,
                 'full_response': ''.join(full_response),
+                # Surface the cutoff reason so the frontend can warn the
+                # user about token-limit truncation. Anthropic uses
+                # "max_tokens", OpenAI uses "length", both mean the same.
+                'stop_reason': stop_reason,
+                'truncated': stop_reason in ('max_tokens', 'length'),
             }
             # Include raw (pre-rehydration) response so the UI can show what the LLM actually saw
             if raw_response and restored_count > 0:

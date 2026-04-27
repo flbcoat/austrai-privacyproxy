@@ -6,10 +6,10 @@ const isEn = lang === 'en';
 <section class="section roadmap-section" id="roadmap">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">{isEn ? 'Version 3.0' : 'Version 3.0'}</span>
+      <span class="section-label">{isEn ? 'Version 3.2' : 'Version 3.2'}</span>
       <h2>{isEn ? 'What the new version can do' : 'Was die neue Version kann'}</h2>
       <p>
-        {isEn ? 'AUSTR.AI 3.0 brings free browser choice, real Ctrl+C control, automatic update checks, and cross-platform stability on Windows, macOS and Linux — on top of all the privacy features from 2.x.' : 'AUSTR.AI 3.0 bringt freie Browserwahl, echte Ctrl+C-Kontrolle, automatischen Update-Check und stabile Ausführung auf Windows, macOS und Linux — zusätzlich zu allen Datenschutz-Features aus 2.x.'}
+        {isEn ? 'AUSTR.AI 3.2 introduces Skills (your own specialists), a local knowledge base for your own documents and an Austria-specific detection layer that catches addresses, ministries, universities and academic titles automatically — all without the data ever leaving your device.' : 'AUSTR.AI 3.2 bringt Skills (deine eigenen Profis), eine lokale Wissensbasis für deine Dokumente und einen Österreich-spezifischen Detection-Layer, der Adressen, Behörden, Hochschulen und akademische Titel automatisch erkennt — alles ohne dass die Daten dein Gerät verlassen.'}
       </p>
     </div>
 
@@ -18,37 +18,39 @@ const isEn = lang === 'en';
         <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
         <div class="roadmap-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="M9 12l2 2 4-4"/>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </div>
-        <h3>{isEn ? '4 Protection Levels' : '4 Schutzklassen'}</h3>
-        <p>{isEn ? 'Every recognised piece of data is automatically classified into one of four protection tiers — Public, Internal, Confidential and Restricted. Restricted entries additionally expire after only five minutes inside the encrypted vault, so that highly sensitive mappings cannot persist longer than necessary.' : 'Jeder erkannte Datenpunkt wird automatisch in eine von vier Schutzklassen eingeordnet — öffentlich, intern, vertraulich und streng vertraulich. Streng vertrauliche Einträge verfallen zusätzlich bereits nach fünf Minuten im verschlüsselten Vault, damit besonders sensible Zuordnungen nicht länger als nötig vorgehalten werden.'}</p>
+        <h3>{isEn ? 'Skills — your own specialists' : 'Skills — deine eigenen Profis'}</h3>
+        <p>{isEn ? 'Define your own AI specialists — a legal advisor, a code reviewer, a writing coach. Each skill bundles a system prompt with a recommended model and runs through the same anonymisation pipeline as every other message. Activate via the chat header dropdown or with a slash command like /legal-skill.' : 'Lege deine eigenen KI-Profis an — einen Rechts-Berater, einen Code-Reviewer, einen Lektor. Jeder Skill verbindet einen System-Prompt mit einem empfohlenen Modell und läuft durch dieselbe Anonymisierungs-Pipeline wie jede andere Nachricht. Aktivierung über das Header-Dropdown im Chat oder mit einem Slash-Befehl wie /rechts-skill.'}</p>
       </div>
 
       <div class="roadmap-card roadmap-card-new">
         <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
         <div class="roadmap-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polyline points="16 18 22 12 16 6"/>
-            <polyline points="8 6 2 12 8 18"/>
-            <line x1="14" y1="4" x2="10" y2="20"/>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           </svg>
         </div>
-        <h3>{isEn ? 'Semantic Codes' : 'Semantische Codes'}</h3>
-        <p>{isEn ? 'Instead of generic placeholders, anonymised entities are labelled by their actual type — for example [DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1] or [AT_SVNR_1]. The AI model therefore understands what kind of information is being referenced and never confuses a birth date with a bank account.' : 'Statt generischer Platzhalter werden anonymisierte Begriffe nach ihrem tatsächlichen Typ benannt — zum Beispiel [DATE_OF_BIRTH_1], [MEDICAL_CONDITION_1] oder [AT_SVNR_1]. Das KI-Modell erkennt dadurch, um welche Art von Information es sich handelt, und verwechselt ein Geburtsdatum nicht mit einer Kontonummer.'}</p>
+        <h3>{isEn ? 'Local knowledge base' : 'Lokale Wissensbasis'}</h3>
+        <p>{isEn ? 'Upload your own documents (PDF, Word, text) into a project. They are anonymised before indexing and stored locally — never in the cloud. While you type a question, AUSTR.AI shows in real time which snippets will be attached. The AI receives only the anonymised version; you see the readable original locally.' : 'Lade eigene Dokumente (PDF, Word, Text) in ein Projekt. Sie werden vor der Indexierung anonymisiert und lokal gespeichert — nie in der Cloud. Während du tippst, zeigt AUSTR.AI in Echtzeit, welche Stellen mitgesendet werden. Die KI bekommt nur die anonymisierte Version; du siehst lokal den lesbaren Originaltext.'}</p>
       </div>
 
       <div class="roadmap-card roadmap-card-new">
         <div class="roadmap-badge">{isEn ? 'New' : 'Neu'}</div>
         <div class="roadmap-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0110 0v4"/>
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
           </svg>
         </div>
-        <h3>{isEn ? 'Security Hardening' : 'Maximale Sicherheit'}</h3>
-        <p>{isEn ? 'The entire conversation history is re-anonymised before each message is sent to an AI provider. If an error occurs during processing, the request is blocked rather than silently forwarded. Logs never contain personal data, cross-origin requests are restricted and the encrypted vault keeps a full audit trail of every access.' : 'Der gesamte Gesprächsverlauf wird vor jedem einzelnen Senden an einen KI-Anbieter erneut anonymisiert. Sollte bei der Verarbeitung ein Fehler auftreten, wird die Anfrage blockiert statt stillschweigend weitergereicht. Protokolle enthalten zu keinem Zeitpunkt personenbezogene Daten, Cross-Origin-Zugriffe sind beschränkt, und der verschlüsselte Vault protokolliert jeden Zugriff lückenlos.'}</p>
+        <h3>{isEn ? 'Austria-specific detection' : 'Österreich-spezifische Erkennung'}</h3>
+        <p>{isEn ? 'Five new detection modules tailored for Austrian content: addresses (street + house number + 4-digit postal code + city), nine federal states and seventeen major cities, academic titles (Ing., Dr., Mag., Univ.-Prof., DDr., BA MA MSc), more than fifty universities and schools (FernFH, FH Technikum Wien, BORG, HTBLuVA, ...) plus sixty federal bodies (BMI, OGH, ÖGK, ÖBB, OeNB, Rotes Kreuz, ...). Catches what generic English-trained models miss.' : 'Fünf neue Detection-Module für österreichische Inhalte: Adressen (Straße + Hausnummer + 4-stellige PLZ + Ort), neun Bundesländer und siebzehn Großstädte, akademische Titel (Ing., Dr., Mag., Univ.-Prof., DDr., BA MA MSc), über fünfzig Hochschulen und Schulen (FernFH, FH Technikum Wien, BORG, HTBLuVA, ...) sowie sechzig Behörden (BMI, OGH, ÖGK, ÖBB, OeNB, Rotes Kreuz, ...). Fängt, was generische englischsprachige Modelle übersehen.'}</p>
       </div>
     </div>
 

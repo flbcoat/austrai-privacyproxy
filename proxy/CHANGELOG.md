@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.2.1 — 2026-04-27
+
+Polish-Patch direkt nach 3.2.0.
+
+- **Bug-Fix**: „Im neuen Tab öffnen" bei geschwärzten Bildern hat in Safari/Chrome nichts gemacht — Browser hatten den programmatischen `<a>.click()` als Popup blockiert. Ersetzt durch echtes Anchor-Tag mit `target="_blank"`, klickt jetzt zuverlässig.
+- **Neu**: Token-Limit-Warnung. Wenn das Modell die Antwort wegen `max_tokens` abschneidet, erscheint unter der Antwort ein gelber Banner mit Erklärung und einem **Weiter**-Button, der die Generierung mit „Bitte mach weiter, wo du aufgehört hast" fortsetzt. Plus Hinweis, dass `max_tokens` in Settings → Erweitert dauerhaft erhöht werden kann.
+- Stop-Reason wird jetzt vom Backend (Anthropic `message_delta.stop_reason`, OpenAI `choices[0].finish_reason`) im SSE-`done`-Event mitgeschickt und auf der Message persistiert.
+
 ## 3.2.0 — 2026-04-27
 
 Großes Architektur-Update. Auto-Routing wurde aus dem Default-UX entfernt und durch deklarative Mechanismen ersetzt: Slash-Befehle, Skills und Wissensbasis. Detection-Layer für österreichische Inhalte stark erweitert.

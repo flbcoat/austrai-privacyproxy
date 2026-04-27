@@ -125,13 +125,11 @@ function RedactEmbed({ attachment }) {
     `;
   }
 
-  function openInNewTab() {
-    if (!blobUrl) return;
-    const a = document.createElement('a');
-    a.href = blobUrl; a.target = '_blank'; a.rel = 'noopener';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  }
-
+  // Browser-Sicherheits-Quirk: programmatic <a>.click() aus einem Button-
+  // Handler wird von Safari/Chrome häufig als Popup blockiert (kein direkter
+  // User-Gesture-Trail bis zum Open-Call). Stattdessen rendern wir echte
+  // <a>-Tags mit href + target. Klick auf ein echtes Anchor-Element wird
+  // immer als User-Gesture gewertet, kein Popup-Block.
   function downloadFile() {
     if (!blobUrl) return;
     const a = document.createElement('a');
@@ -157,13 +155,19 @@ function RedactEmbed({ attachment }) {
         </div>
       ` : html`
         <div class="aai-redact-embed-preview">
-          ${blobUrl ? html`<img src=${blobUrl} alt=${attachment.filename} onClick=${openInNewTab} style="cursor: zoom-in" />` : html`<div class="aai-spinner aai-spinner--lg"></div>`}
+          ${blobUrl
+            ? html`<a href=${blobUrl} target="_blank" rel="noopener" style="display:block;cursor:zoom-in"><img src=${blobUrl} alt=${attachment.filename} /></a>`
+            : html`<div class="aai-spinner aai-spinner--lg"></div>`}
         </div>
       `}
       <div class="aai-redact-embed-actions">
-        <button class="aai-btn aai-btn--primary aai-btn--sm" onClick=${openInNewTab} disabled=${!blobUrl}>
-          ${isDE ? 'Im neuen Tab öffnen' : 'Open in new tab'}
-        </button>
+        ${blobUrl
+          ? html`<a class="aai-btn aai-btn--primary aai-btn--sm" href=${blobUrl} target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+              ${isDE ? 'Im neuen Tab öffnen' : 'Open in new tab'}
+            </a>`
+          : html`<button class="aai-btn aai-btn--primary aai-btn--sm" disabled>
+              ${isDE ? 'Im neuen Tab öffnen' : 'Open in new tab'}
+            </button>`}
         <button class="aai-btn aai-btn--ghost aai-btn--sm" onClick=${downloadFile} disabled=${!blobUrl}>
           ${isDE ? 'Herunterladen' : 'Download'}
         </button>
@@ -369,6 +373,42 @@ function MessageBubble({ msg, prevMsg, isLast, isStreaming }) {
     </details>
   ` : null;
 
+  // Truncation banner: surfaces token-limit cutoffs so the user knows
+  // the answer is incomplete. Includes a one-click "Weiter" action that
+  // sends "Bitte mache weiter wo du aufgehört hast." and a hint that
+  // raising max_tokens in Settings → Advanced is the permanent fix.
+  const truncatedBanner = (!isUser && msg.truncated && isLast) ? html`
+    <div style="border:1px solid #f59e0b;background:rgba(245,158,11,0.08);border-radius:6px;padding:8px 12px;margin-top:8px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:14px">⚠️</span>
+      <div style="flex:1;min-width:200px">
+        <div style="font-weight:500;margin-bottom:2px">
+          ${signals.language.value === 'de'
+            ? 'Antwort wurde gekürzt (Token-Limit erreicht)'
+            : 'Answer was truncated (token limit reached)'}
+        </div>
+        <div style="color:var(--text-muted);font-size:11px">
+          ${signals.language.value === 'de'
+            ? 'Klicke „Weiter" damit das Modell fortsetzt, oder erhöhe max_tokens in Einstellungen → Erweitert für längere Antworten.'
+            : 'Click "Continue" to have the model resume, or raise max_tokens in Settings → Advanced for longer answers.'}
+        </div>
+      </div>
+      <button class="aai-btn aai-btn--primary aai-btn--sm" onClick=${() => {
+        const inputEl = document.getElementById('msg-input');
+        const text = signals.language.value === 'de'
+          ? 'Bitte mach weiter, wo du aufgehört hast — ohne den bisherigen Text zu wiederholen.'
+          : 'Please continue where you left off — do not repeat what you already wrote.';
+        if (inputEl) {
+          inputEl.value = text;
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          // Trigger send via the existing chip-submit pathway
+          inputEl.dispatchEvent(new CustomEvent('chip-submit', { detail: text }));
+        }
+      }}>
+        ${signals.language.value === 'de' ? 'Weiter' : 'Continue'}
+      </button>
+    </div>
+  ` : null;
+
   return html`
     <div class=${`aai-message aai-message--${msg.role}`}>
       <div class="aai-msg-inner">
@@ -383,6 +423,7 @@ function MessageBubble({ msg, prevMsg, isLast, isStreaming }) {
           ${badge}
           ${routingBadge}
           ${errorBubble}
+          ${truncatedBanner}
           ${modelBadge}
           ${rehydrate}
           ${!isUser && msg.content && !showTyping ? html`
@@ -1086,6 +1127,11 @@ async function sendConfirmed(text) {
             // the stream finishes. Stays in localStorage; not sent back
             // to the LLM in subsequent turns.
             thinking: thinkingText || null,
+            // Token-limit-cutoff signal for the UI. When true, MessageBubble
+            // shows a warning banner with a "Weiter" button so the user
+            // knows the answer is incomplete.
+            truncated: !!data?.truncated,
+            stopReason: data?.stop_reason || null,
             doneData: data,
             rawResponse: data.raw_response || null,
           };

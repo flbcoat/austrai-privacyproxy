@@ -11,12 +11,20 @@ const isEn = lang === 'en';
 
   <div class="container hero-content">
     <div class="hero-text">
+      <div class="hero-version-badge animate-slide-up">
+        <span class="hero-version-pill">v3.2.1</span>
+        <span class="hero-beta-pill">BETA</span>
+        <span class="hero-version-text">{isEn ? 'Skills, knowledge base, Austria-specific detection' : 'Skills, Wissensbasis, Österreich-Detection'}</span>
+      </div>
       <h1 class="animate-slide-up">
         {isEn ? 'Chat with AI' : 'Chatte mit KI'} —<br />
         <span class="text-gradient">{isEn ? 'without exposing your data.' : 'ohne deine Daten preiszugeben.'}</span>
       </h1>
       <p class="hero-subtitle animate-slide-up animate-delay-1">
         {isEn ? 'AUSTR.AI automatically anonymizes your data before it ever reaches an AI model and transparently restores it in the response. Everything runs locally on your own machine, the service is free for personal use, and it is developed in Vienna, Austria.' : 'AUSTR.AI anonymisiert deine Daten automatisch, bevor sie ein KI-Modell erreichen, und stellt sie in der Antwort transparent wieder her. Die Verarbeitung findet vollständig auf deinem eigenen Rechner statt, die Nutzung ist für Privatanwender kostenlos — entwickelt in Wien.'}
+      </p>
+      <p class="hero-beta-notice animate-slide-up animate-delay-1">
+        {isEn ? 'AUSTR.AI is currently in BETA. Features evolve quickly, the privacy guarantees stay constant. Feedback welcome.' : 'AUSTR.AI ist derzeit in der BETA-Phase. Die Funktionen entwickeln sich schnell weiter, die Datenschutz-Garantien bleiben konstant. Feedback willkommen.'}
       </p>
       <div class="hero-actions animate-slide-up animate-delay-2">
         <a href={isEn ? '/en#install' : '#install'} class="btn btn-primary btn-lg">{isEn ? 'Get started free' : 'Kostenlos starten'}</a>
@@ -252,6 +260,45 @@ const isEn = lang === 'en';
     font-weight: 600;
     color: var(--color-text);
     margin-bottom: 0.5rem;
+  }
+
+  /* Version + BETA badge above the H1, plus a quiet beta notice line. */
+  .hero-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .hero-version-pill {
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .hero-beta-pill {
+    background: #fbbf24;
+    color: #78350f;
+    font-weight: 700;
+    font-size: 0.6875rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+  .hero-version-text {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+  .hero-beta-notice {
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    border-left: 2px solid #fbbf24;
+    padding-left: 0.75rem;
+    line-height: 1.5;
   }
 
   .pipeline-preview {

@@ -46,4 +46,4 @@ _install_hf_stderr_filter()
 
 """AUSTR.AI Privacy Proxy — transparent anonymization layer for LLM APIs."""
 
-__version__ = "3.2.0"
+__version__ = "3.2.1"
